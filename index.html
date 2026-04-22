@@ -2,52 +2,123 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Bestell App D-Schicht</title>
 
 <style>
-body{font-family:Arial;background:#f5f5f5;padding:20px;margin:0;}
-h1{text-align:center;}
-
-.card{background:white;padding:15px;border-radius:10px;margin-bottom:15px;}
-
-input{
-  width:100%;
+body{
+  font-family: Arial;
+  background:#f5f5f5;
+  margin:0;
   padding:10px;
-  margin:8px 0;
-  border-radius:6px;
-  border:1px solid #ccc;
 }
 
+h1{
+  text-align:center;
+  font-size:22px;
+  margin-bottom:15px;
+}
+
+/* Cards */
+.card{
+  background:white;
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Inputs */
+input{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  margin-bottom:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:16px;
+}
+
+/* Buttons */
 button{
-  padding:8px 10px;
-  margin:3px;
+  padding:12px;
   border:none;
-  border-radius:6px;
+  border-radius:10px;
+  font-size:16px;
   cursor:pointer;
 }
 
-.add{background:#22c55e;color:white;}
-.wa{background:#25D366;color:white;}
+/* Add Button */
+.add{
+  width:100%;
+  background:#22c55e;
+  color:white;
+  font-weight:bold;
+}
 
+/* WhatsApp */
+.wa{
+  width:100%;
+  background:#25D366;
+  color:white;
+  font-weight:bold;
+  margin-top:10px;
+}
+
+/* Liste */
 li{
   list-style:none;
   background:#fff;
-  padding:10px;
+  padding:12px;
   margin:8px 0;
-  border-radius:8px;
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+/* Zeile oben */
+.item-top{
   display:flex;
   justify-content:space-between;
-  align-items:center;
+  font-size:16px;
+  font-weight:bold;
+}
+
+/* Buttons unten */
+.controls{
+  display:flex;
+  justify-content:space-between;
 }
 
 .controls button{
-  background:#eee;
+  flex:1;
+  margin:2px;
+  font-size:18px;
 }
 
+/* Farben */
+.plus{background:#22c55e;color:white;}
+.minus{background:#f59e0b;color:white;}
+.delete{background:#ef4444;color:white;}
+
 /* Footer */
-#footer{text-align:center;margin-top:20px;}
-#footer img{width:60px;height:60px;border-radius:50%;}
-#footer span{font-size:12px;color:#555;}
+#footer{
+  text-align:center;
+  margin-top:15px;
+}
+
+#footer img{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+}
+
+#footer span{
+  font-size:12px;
+  color:#666;
+}
 </style>
 </head>
 
@@ -56,19 +127,20 @@ li{
 <h1>🍽️ Bestell App D-Schicht</h1>
 
 <div class="card">
-📍 Restaurant:<br>
-<input id="restaurant" placeholder="Baron"><br>
-🕒 Wann:<br>
+📍 Restaurant
+<input id="restaurant" placeholder="Baron">
+
+🕒 Wann
 <input id="time" placeholder="17:20 Uhr">
 </div>
 
 <div class="card">
-<input id="order" placeholder="Bestellung">
-<button class="add" onclick="addOrder()">+ Hinzufügen</button>
+<input id="order" placeholder="Was willst du essen?">
+<button class="add" onclick="addOrder()">+ Bestellung hinzufügen</button>
 </div>
 
 <div class="card">
-<h3>🧾 Liste</h3>
+<h3>🧾 Bestellungen</h3>
 <ul id="list"></ul>
 </div>
 
@@ -98,7 +170,7 @@ const db = getDatabase(app);
 
 const list = document.getElementById("list");
 
-// 🔥 LIVE LISTE
+// LIVE LISTE
 onValue(ref(db,"orders"), snapshot=>{
   list.innerHTML="";
   if(!snapshot.exists()) return;
@@ -109,12 +181,15 @@ onValue(ref(db,"orders"), snapshot=>{
     let li = document.createElement("li");
 
     li.innerHTML = `
-      <span>${data.name} x${data.qty}</span>
+      <div class="item-top">
+        <span>${data.name}</span>
+        <span>x${data.qty}</span>
+      </div>
 
       <div class="controls">
-        <button onclick="changeQty('${child.key}', ${data.qty+1})">+</button>
-        <button onclick="changeQty('${child.key}', ${data.qty-1})">-</button>
-        <button onclick="deleteOrder('${child.key}')">🗑</button>
+        <button class="plus" onclick="changeQty('${child.key}', ${data.qty+1})">+</button>
+        <button class="minus" onclick="changeQty('${child.key}', ${data.qty-1})">-</button>
+        <button class="delete" onclick="deleteOrder('${child.key}')">🗑</button>
       </div>
     `;
 
@@ -122,7 +197,7 @@ onValue(ref(db,"orders"), snapshot=>{
   });
 });
 
-// ➕ ADD
+// ADD
 window.addOrder = function(){
   let input=document.getElementById("order");
   let value=input.value.trim();
@@ -136,7 +211,7 @@ window.addOrder = function(){
   input.value="";
 }
 
-// 🔁 MENGE ÄNDERN
+// MENGE
 window.changeQty = function(id, qty){
   if(qty <= 0){
     remove(ref(db,"orders/"+id));
@@ -145,14 +220,14 @@ window.changeQty = function(id, qty){
   }
 }
 
-// ❌ DELETE
+// DELETE
 window.deleteOrder = function(id){
-  if(confirm("Wirklich löschen?")){
+  if(confirm("Löschen?")){
     remove(ref(db,"orders/"+id));
   }
 }
 
-// 📲 WHATSAPP
+// WHATSAPP
 window.shareWhatsApp = function(){
   let restaurant=document.getElementById("restaurant").value;
   let time=document.getElementById("time").value;
@@ -160,10 +235,9 @@ window.shareWhatsApp = function(){
   let msg="🍽️ Bestellung\n\n";
   msg+="📍 Restaurant: "+restaurant+"\n";
   msg+="🕒 Wann: "+time+"\n\n";
-  msg+="🧾 Essen:\n";
 
-  document.querySelectorAll("#list li span").forEach(el=>{
-    msg+="- "+el.innerText+"\n";
+  document.querySelectorAll(".item-top").forEach(el=>{
+    msg += "- " + el.innerText + "\n";
   });
 
   window.open("https://wa.me/?text="+encodeURIComponent(msg));
