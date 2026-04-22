@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Bestell App D-Schicht</title>
+<title>Bestell App</title>
 
 <style>
 body{font-family:Arial;background:#f5f5f5;margin:0;padding:10px;}
-h1{text-align:center;font-size:22px;margin-bottom:15px;}
+h1{text-align:center;font-size:22px;}
 
 .card{
   background:white;
@@ -28,10 +28,9 @@ input{
 }
 
 button{
-  padding:12px;
+  padding:10px;
   border:none;
-  border-radius:10px;
-  font-size:16px;
+  border-radius:8px;
   cursor:pointer;
 }
 
@@ -49,67 +48,71 @@ li{
 .item-top{
   display:flex;
   justify-content:space-between;
+  align-items:center;
   font-weight:bold;
 }
 
+.edit-btn{
+  background:#3b82f6;
+  color:white;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+}
+
 .controls{
-  display:flex;
+  display:none;
   gap:5px;
   margin-top:8px;
 }
 
-.controls button{flex:1;font-size:18px;}
+.controls.active{
+  display:flex;
+}
+
+.controls button{flex:1;}
 
 .plus{background:#22c55e;color:white;}
 .minus{background:#f59e0b;color:white;}
 .delete{background:#ef4444;color:white;}
 
+.edit-input{
+  width:100%;
+  padding:8px;
+  margin-top:8px;
+}
+
 #footer{text-align:center;margin-top:15px;}
 #footer img{width:60px;height:60px;border-radius:50%;}
 
-/* 🧹 Button */
 #clearBtn{
   position:fixed;
   bottom:20px;
   right:20px;
   background:#ef4444;
   color:white;
-  border:none;
   border-radius:50%;
   width:60px;
   height:60px;
-  font-size:22px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.3);
 }
 </style>
 </head>
 
 <body>
 
-<h1>🍽️ Bestell App D-Schicht</h1>
-
-<div class="card">
-📍 Restaurant
-<input id="restaurant" placeholder="Baron">
-
-🕒 Wann
-<input id="time" placeholder="17:20 Uhr">
-</div>
+<h1>🍽️ Bestell App</h1>
 
 <div class="card">
 <input id="order" placeholder="Was willst du essen?">
-<button class="add" onclick="addOrder()">+ Bestellung hinzufügen</button>
+<button class="add" onclick="addOrder()">+ Bestellung</button>
 </div>
 
-<div class="card">
-<h3>🧾 Bestellungen</h3>
 <ul id="list"></ul>
-</div>
 
-<button class="wa" onclick="shareWhatsApp()">📲 WhatsApp teilen</button>
+<button class="wa" onclick="shareWhatsApp()">📲 WhatsApp</button>
 
 <div id="footer">
-  <img src="logo.png">
+<img src="logo.png">
 </div>
 
 <button id="clearBtn" onclick="clearAll()">🧹</button>
@@ -118,85 +121,70 @@ li{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
-// 🔑 USER ID
 let userId = localStorage.getItem("userId");
 if(!userId){
   userId = Math.random().toString(36).substring(2);
   localStorage.setItem("userId", userId);
 }
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
-  authDomain: "essen-bestelliste.firebaseapp.com",
-  databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com",
-  projectId: "essen-bestelliste"
-};
-
-const app = initializeApp(firebaseConfig);
+const app = initializeApp({
+  apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
+  databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
+});
 const db = getDatabase(app);
 const list = document.getElementById("list");
 
-// 🔥 LIVE + ZUSAMMENFASSEN
 onValue(ref(db,"orders"), snapshot=>{
   list.innerHTML="";
   if(!snapshot.exists()) return;
 
-  let combined = {};
-
   snapshot.forEach(child=>{
     let data = child.val();
-
-    if(!combined[data.name]){
-      combined[data.name] = { qty:0, items:[] };
-    }
-
-    combined[data.name].qty += data.qty;
-    combined[data.name].items.push({
-      id: child.key,
-      owner: data.owner,
-      qty: data.qty
-    });
-  });
-
-  Object.keys(combined).forEach(name=>{
-    let entry = combined[name];
 
     let li = document.createElement("li");
 
     li.innerHTML = `
       <div class="item-top">
-        <span>${name}</span>
-        <span>x${entry.qty}</span>
+        <span id="text-${child.key}">${data.name} x${data.qty}</span>
+        ${data.owner===userId ? `<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>` : ""}
+      </div>
+
+      <input id="edit-${child.key}" class="edit-input" value="${data.name}" style="display:none">
+
+      <div id="controls-${child.key}" class="controls">
+        <button class="plus" onclick="changeQty('${child.key}', ${data.qty+1})">+</button>
+        <button class="minus" onclick="changeQty('${child.key}', ${data.qty-1})">-</button>
+        <button class="delete" onclick="deleteOrder('${child.key}')">🗑</button>
+        <button onclick="saveEdit('${child.key}')">💾</button>
       </div>
     `;
-
-    entry.items.forEach(item=>{
-      if(item.owner === userId){
-        let controls = document.createElement("div");
-        controls.className="controls";
-
-        controls.innerHTML = `
-          <button class="plus" onclick="changeQty('${item.id}', ${item.qty+1})">+</button>
-          <button class="minus" onclick="changeQty('${item.id}', ${item.qty-1})">-</button>
-          <button class="delete" onclick="deleteOrder('${item.id}')">🗑</button>
-        `;
-
-        li.appendChild(controls);
-      }
-    });
 
     list.appendChild(li);
   });
 });
 
-// ➕ ADD
+window.toggleEdit = function(id){
+  let controls = document.getElementById("controls-"+id);
+  let input = document.getElementById("edit-"+id);
+
+  controls.classList.toggle("active");
+  input.style.display = input.style.display === "none" ? "block" : "none";
+}
+
+window.saveEdit = function(id){
+  let value = document.getElementById("edit-"+id).value;
+
+  update(ref(db,"orders/"+id),{
+    name:value
+  });
+}
+
 window.addOrder = function(){
   let input=document.getElementById("order");
-  let value=input.value.trim();
-  if(value==="") return;
+  if(input.value==="") return;
 
   push(ref(db,"orders"),{
-    name:value,
+    name:input.value,
     qty:1,
     owner:userId
   });
@@ -204,7 +192,6 @@ window.addOrder = function(){
   input.value="";
 }
 
-// QTY
 window.changeQty = function(id, qty){
   if(qty<=0){
     remove(ref(db,"orders/"+id));
@@ -213,49 +200,24 @@ window.changeQty = function(id, qty){
   }
 }
 
-// DELETE
 window.deleteOrder = function(id){
   if(confirm("Löschen?")){
     remove(ref(db,"orders/"+id));
   }
 }
 
-// 📲 WHATSAPP
 window.shareWhatsApp = function(){
-  let restaurant=document.getElementById("restaurant").value;
-  let time=document.getElementById("time").value;
-
-  let msg="🍽️ Bestellung\n\n";
-  msg+="📍 Restaurant: "+restaurant+"\n";
-  msg+="🕒 Wann: "+time+"\n\n";
-
-  document.querySelectorAll(".item-top").forEach(el=>{
-    msg += "- " + el.innerText + "\n";
+  let msg="Bestellung:\n";
+  document.querySelectorAll(".item-top span").forEach(el=>{
+    msg += el.innerText + "\n";
   });
-
   window.open("https://wa.me/?text="+encodeURIComponent(msg));
 }
 
-// 🧹 CLEAR ALL
 window.clearAll = function(){
-
-  let pw = prompt("Passwort eingeben:");
-
-  if(pw !== "clear"){
-    alert("Falsches Passwort!");
-    return;
-  }
-
-  if(!confirm("Wirklich alles löschen?")){
-    return;
-  }
-
+  let pw = prompt("Passwort:");
+  if(pw!=="clear") return;
   remove(ref(db,"orders"));
-
-  document.getElementById("restaurant").value="";
-  document.getElementById("time").value="";
-
-  alert("Alles gelöscht!");
 }
 </script>
 
