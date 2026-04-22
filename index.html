@@ -7,20 +7,9 @@
 <title>Bestell App D-Schicht</title>
 
 <style>
-body{
-  font-family: Arial;
-  background:#f5f5f5;
-  margin:0;
-  padding:10px;
-}
+body{font-family:Arial;background:#f5f5f5;margin:0;padding:10px;}
+h1{text-align:center;font-size:22px;margin-bottom:15px;}
 
-h1{
-  text-align:center;
-  font-size:22px;
-  margin-bottom:15px;
-}
-
-/* Cards */
 .card{
   background:white;
   padding:12px;
@@ -29,18 +18,15 @@ h1{
   box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* Inputs */
 input{
   width:100%;
   padding:12px;
-  margin-top:6px;
-  margin-bottom:10px;
+  margin:6px 0;
   border-radius:8px;
   border:1px solid #ccc;
   font-size:16px;
 }
 
-/* Buttons */
 button{
   padding:12px;
   border:none;
@@ -49,75 +35,51 @@ button{
   cursor:pointer;
 }
 
-/* Add Button */
-.add{
-  width:100%;
-  background:#22c55e;
-  color:white;
-  font-weight:bold;
-}
+.add{width:100%;background:#22c55e;color:white;}
+.wa{width:100%;background:#25D366;color:white;margin-top:10px;}
 
-/* WhatsApp */
-.wa{
-  width:100%;
-  background:#25D366;
-  color:white;
-  font-weight:bold;
-  margin-top:10px;
-}
-
-/* Liste */
 li{
   list-style:none;
   background:#fff;
   padding:12px;
   margin:8px 0;
   border-radius:10px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
 }
 
-/* Zeile oben */
 .item-top{
   display:flex;
   justify-content:space-between;
-  font-size:16px;
   font-weight:bold;
 }
 
-/* Buttons unten */
 .controls{
   display:flex;
-  justify-content:space-between;
+  gap:5px;
+  margin-top:8px;
 }
 
-.controls button{
-  flex:1;
-  margin:2px;
-  font-size:18px;
-}
+.controls button{flex:1;font-size:18px;}
 
-/* Farben */
 .plus{background:#22c55e;color:white;}
 .minus{background:#f59e0b;color:white;}
 .delete{background:#ef4444;color:white;}
 
-/* Footer */
-#footer{
-  text-align:center;
-  margin-top:15px;
-}
+#footer{text-align:center;margin-top:15px;}
+#footer img{width:60px;height:60px;border-radius:50%;}
 
-#footer img{
-  width:50px;
-  height:50px;
+/* 🧹 Button */
+#clearBtn{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#ef4444;
+  color:white;
+  border:none;
   border-radius:50%;
-}
-
-#footer span{
-  font-size:12px;
-  color:#666;
+  width:60px;
+  height:60px;
+  font-size:22px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
 }
 </style>
 </head>
@@ -148,56 +110,86 @@ li{
 
 <div id="footer">
   <img src="logo.png">
-  <span>© Kalorienkonferenz</span>
 </div>
+
+<button id="clearBtn" onclick="clearAll()">🧹</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
+// 🔑 USER ID
+let userId = localStorage.getItem("userId");
+if(!userId){
+  userId = Math.random().toString(36).substring(2);
+  localStorage.setItem("userId", userId);
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
   authDomain: "essen-bestelliste.firebaseapp.com",
   databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com",
-  projectId: "essen-bestelliste",
-  storageBucket: "essen-bestelliste.firebasestorage.app",
-  messagingSenderId: "803473193065",
-  appId: "1:803473193065:web:e8d4c0bd770191c4bf0af8"
+  projectId: "essen-bestelliste"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-
 const list = document.getElementById("list");
 
-// LIVE LISTE
+// 🔥 LIVE + ZUSAMMENFASSEN
 onValue(ref(db,"orders"), snapshot=>{
   list.innerHTML="";
   if(!snapshot.exists()) return;
 
+  let combined = {};
+
   snapshot.forEach(child=>{
     let data = child.val();
+
+    if(!combined[data.name]){
+      combined[data.name] = { qty:0, items:[] };
+    }
+
+    combined[data.name].qty += data.qty;
+    combined[data.name].items.push({
+      id: child.key,
+      owner: data.owner,
+      qty: data.qty
+    });
+  });
+
+  Object.keys(combined).forEach(name=>{
+    let entry = combined[name];
 
     let li = document.createElement("li");
 
     li.innerHTML = `
       <div class="item-top">
-        <span>${data.name}</span>
-        <span>x${data.qty}</span>
-      </div>
-
-      <div class="controls">
-        <button class="plus" onclick="changeQty('${child.key}', ${data.qty+1})">+</button>
-        <button class="minus" onclick="changeQty('${child.key}', ${data.qty-1})">-</button>
-        <button class="delete" onclick="deleteOrder('${child.key}')">🗑</button>
+        <span>${name}</span>
+        <span>x${entry.qty}</span>
       </div>
     `;
+
+    entry.items.forEach(item=>{
+      if(item.owner === userId){
+        let controls = document.createElement("div");
+        controls.className="controls";
+
+        controls.innerHTML = `
+          <button class="plus" onclick="changeQty('${item.id}', ${item.qty+1})">+</button>
+          <button class="minus" onclick="changeQty('${item.id}', ${item.qty-1})">-</button>
+          <button class="delete" onclick="deleteOrder('${item.id}')">🗑</button>
+        `;
+
+        li.appendChild(controls);
+      }
+    });
 
     list.appendChild(li);
   });
 });
 
-// ADD
+// ➕ ADD
 window.addOrder = function(){
   let input=document.getElementById("order");
   let value=input.value.trim();
@@ -205,15 +197,16 @@ window.addOrder = function(){
 
   push(ref(db,"orders"),{
     name:value,
-    qty:1
+    qty:1,
+    owner:userId
   });
 
   input.value="";
 }
 
-// MENGE
+// QTY
 window.changeQty = function(id, qty){
-  if(qty <= 0){
+  if(qty<=0){
     remove(ref(db,"orders/"+id));
   } else {
     update(ref(db,"orders/"+id), { qty: qty });
@@ -227,7 +220,7 @@ window.deleteOrder = function(id){
   }
 }
 
-// WHATSAPP
+// 📲 WHATSAPP
 window.shareWhatsApp = function(){
   let restaurant=document.getElementById("restaurant").value;
   let time=document.getElementById("time").value;
@@ -241,6 +234,28 @@ window.shareWhatsApp = function(){
   });
 
   window.open("https://wa.me/?text="+encodeURIComponent(msg));
+}
+
+// 🧹 CLEAR ALL
+window.clearAll = function(){
+
+  let pw = prompt("Passwort eingeben:");
+
+  if(pw !== "clear"){
+    alert("Falsches Passwort!");
+    return;
+  }
+
+  if(!confirm("Wirklich alles löschen?")){
+    return;
+  }
+
+  remove(ref(db,"orders"));
+
+  document.getElementById("restaurant").value="";
+  document.getElementById("time").value="";
+
+  alert("Alles gelöscht!");
 }
 </script>
 
