@@ -38,6 +38,7 @@ button{
 }
 
 .add{background:#22c55e;color:white;}
+.wa{background:#25D366;color:white;}
 
 li{
   list-style:none;
@@ -47,6 +48,7 @@ li{
   border-radius:8px;
   display:flex;
   justify-content:space-between;
+  align-items:center;
 }
 
 /* Footer */
@@ -91,7 +93,8 @@ li{
 <ul id="list"></ul>
 </div>
 
-<!-- Footer mit Bild -->
+<button class="wa" onclick="shareWhatsApp()">📲 WhatsApp teilen</button>
+
 <div id="footer">
   <img src="logo.png" alt="Logo">
   <span>© Kalorienkonferenz</span>
@@ -120,6 +123,9 @@ const list = document.getElementById("list");
 // 🔥 LIVE SYNC
 onValue(ref(db, "orders"), snapshot => {
   list.innerHTML = "";
+
+  if(!snapshot.exists()) return;
+
   snapshot.forEach(child => {
     let data = child.val();
 
@@ -133,25 +139,43 @@ onValue(ref(db, "orders"), snapshot => {
   });
 });
 
-// ➕ ADD
+// ➕ ADD (FIXED!)
 window.addOrder = function(){
   let input = document.getElementById("order");
   let value = input.value.trim();
-  if(value==="") return;
 
-  push(ref(db,"orders"),{
-    name:value,
-    qty:1
+  if(value === "") return;
+
+  push(ref(db, "orders"), {
+    name: value,
+    qty: 1
   });
 
-  input.value="";
+  input.value = "";
 }
 
 // ❌ DELETE
 window.deleteOrder = function(id){
-  if(confirm("Löschen?")){
-    remove(ref(db,"orders/"+id));
+  if(confirm("Wirklich löschen?")){
+    remove(ref(db, "orders/" + id));
   }
+}
+
+// 📲 WHATSAPP
+window.shareWhatsApp = function(){
+  let restaurant = document.getElementById("restaurant").value;
+  let time = document.getElementById("time").value;
+
+  let msg = "🍽️ Bestellung\n\n";
+  msg += "📍 Restaurant: " + restaurant + "\n";
+  msg += "🕒 Wann: " + time + "\n\n";
+  msg += "🧾 Essen:\n";
+
+  document.querySelectorAll("#list li").forEach(li=>{
+    msg += "- " + li.innerText.replace("🗑","").trim() + "\n";
+  });
+
+  window.open("https://wa.me/?text=" + encodeURIComponent(msg));
 }
 </script>
 
