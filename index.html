@@ -5,21 +5,10 @@
 <title>Bestell App D-Schicht</title>
 
 <style>
-body{
-  font-family: Arial;
-  background:#f5f5f5;
-  padding:20px;
-  margin:0;
-}
-
+body{font-family:Arial;background:#f5f5f5;padding:20px;margin:0;}
 h1{text-align:center;}
 
-.card{
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:15px;
-}
+.card{background:white;padding:15px;border-radius:10px;margin-bottom:15px;}
 
 input{
   width:100%;
@@ -30,8 +19,8 @@ input{
 }
 
 button{
-  padding:10px;
-  margin:5px;
+  padding:8px 10px;
+  margin:3px;
   border:none;
   border-radius:6px;
   cursor:pointer;
@@ -51,24 +40,14 @@ li{
   align-items:center;
 }
 
+.controls button{
+  background:#eee;
+}
+
 /* Footer */
-#footer{
-  text-align:center;
-  margin-top:20px;
-}
-
-#footer img{
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  display:block;
-  margin:0 auto 5px auto;
-}
-
-#footer span{
-  font-size:12px;
-  color:#555;
-}
+#footer{text-align:center;margin-top:20px;}
+#footer img{width:60px;height:60px;border-radius:50%;}
+#footer span{font-size:12px;color:#555;}
 </style>
 </head>
 
@@ -96,13 +75,13 @@ li{
 <button class="wa" onclick="shareWhatsApp()">📲 WhatsApp teilen</button>
 
 <div id="footer">
-  <img src="logo.png" alt="Logo">
+  <img src="logo.png">
   <span>© Kalorienkonferenz</span>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
@@ -111,8 +90,7 @@ const firebaseConfig = {
   projectId: "essen-bestelliste",
   storageBucket: "essen-bestelliste.firebasestorage.app",
   messagingSenderId: "803473193065",
-  appId: "1:803473193065:web:e8d4c0bd770191c4bf0af8",
-  measurementId: "G-3HD44TQRZG"
+  appId: "1:803473193065:web:e8d4c0bd770191c4bf0af8"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -120,62 +98,75 @@ const db = getDatabase(app);
 
 const list = document.getElementById("list");
 
-// 🔥 LIVE SYNC
-onValue(ref(db, "orders"), snapshot => {
-  list.innerHTML = "";
-
+// 🔥 LIVE LISTE
+onValue(ref(db,"orders"), snapshot=>{
+  list.innerHTML="";
   if(!snapshot.exists()) return;
 
-  snapshot.forEach(child => {
+  snapshot.forEach(child=>{
     let data = child.val();
 
     let li = document.createElement("li");
+
     li.innerHTML = `
-      ${data.name} x${data.qty}
-      <button onclick="deleteOrder('${child.key}')">🗑</button>
+      <span>${data.name} x${data.qty}</span>
+
+      <div class="controls">
+        <button onclick="changeQty('${child.key}', ${data.qty+1})">+</button>
+        <button onclick="changeQty('${child.key}', ${data.qty-1})">-</button>
+        <button onclick="deleteOrder('${child.key}')">🗑</button>
+      </div>
     `;
 
     list.appendChild(li);
   });
 });
 
-// ➕ ADD (FIXED!)
+// ➕ ADD
 window.addOrder = function(){
-  let input = document.getElementById("order");
-  let value = input.value.trim();
+  let input=document.getElementById("order");
+  let value=input.value.trim();
+  if(value==="") return;
 
-  if(value === "") return;
-
-  push(ref(db, "orders"), {
-    name: value,
-    qty: 1
+  push(ref(db,"orders"),{
+    name:value,
+    qty:1
   });
 
-  input.value = "";
+  input.value="";
+}
+
+// 🔁 MENGE ÄNDERN
+window.changeQty = function(id, qty){
+  if(qty <= 0){
+    remove(ref(db,"orders/"+id));
+  } else {
+    update(ref(db,"orders/"+id), { qty: qty });
+  }
 }
 
 // ❌ DELETE
 window.deleteOrder = function(id){
   if(confirm("Wirklich löschen?")){
-    remove(ref(db, "orders/" + id));
+    remove(ref(db,"orders/"+id));
   }
 }
 
 // 📲 WHATSAPP
 window.shareWhatsApp = function(){
-  let restaurant = document.getElementById("restaurant").value;
-  let time = document.getElementById("time").value;
+  let restaurant=document.getElementById("restaurant").value;
+  let time=document.getElementById("time").value;
 
-  let msg = "🍽️ Bestellung\n\n";
-  msg += "📍 Restaurant: " + restaurant + "\n";
-  msg += "🕒 Wann: " + time + "\n\n";
-  msg += "🧾 Essen:\n";
+  let msg="🍽️ Bestellung\n\n";
+  msg+="📍 Restaurant: "+restaurant+"\n";
+  msg+="🕒 Wann: "+time+"\n\n";
+  msg+="🧾 Essen:\n";
 
-  document.querySelectorAll("#list li").forEach(li=>{
-    msg += "- " + li.innerText.replace("🗑","").trim() + "\n";
+  document.querySelectorAll("#list li span").forEach(el=>{
+    msg+="- "+el.innerText+"\n";
   });
 
-  window.open("https://wa.me/?text=" + encodeURIComponent(msg));
+  window.open("https://wa.me/?text="+encodeURIComponent(msg));
 }
 </script>
 
