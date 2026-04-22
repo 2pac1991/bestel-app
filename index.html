@@ -7,23 +7,36 @@
 <title>Bestell App</title>
 
 <style>
-body{font-family:Arial;background:#f5f5f5;margin:0;padding:10px;}
-h1{text-align:center;font-size:22px;}
+*{
+  box-sizing: border-box;
+}
+
+body{
+  font-family: Arial;
+  background:#f5f5f5;
+  margin:0;
+  padding:10px;
+}
+
+h1{
+  text-align:center;
+  font-size:22px;
+}
 
 .card{
   background:white;
-  padding:12px;
+  padding:14px;
   border-radius:12px;
   margin-bottom:12px;
   box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-input{
+input, select{
   width:100%;
   padding:12px;
   margin:6px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
+  border-radius:10px;
+  border:1px solid #ddd;
   font-size:16px;
 }
 
@@ -34,8 +47,18 @@ button{
   cursor:pointer;
 }
 
-.add{width:100%;background:#22c55e;color:white;}
-.wa{width:100%;background:#25D366;color:white;margin-top:10px;}
+.add{
+  width:100%;
+  background:#22c55e;
+  color:white;
+}
+
+.wa{
+  width:100%;
+  background:#25D366;
+  color:white;
+  margin-top:10px;
+}
 
 li{
   list-style:none;
@@ -70,7 +93,9 @@ li{
   display:flex;
 }
 
-.controls button{flex:1;}
+.controls button{
+  flex:1;
+}
 
 .plus{background:#22c55e;color:white;}
 .minus{background:#f59e0b;color:white;}
@@ -82,9 +107,18 @@ li{
   margin-top:8px;
 }
 
-#footer{text-align:center;margin-top:15px;}
-#footer img{width:60px;height:60px;border-radius:50%;}
+#footer{
+  text-align:center;
+  margin-top:15px;
+}
 
+#footer img{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+}
+
+/* Clear Button */
 #clearBtn{
   position:fixed;
   bottom:20px;
@@ -94,6 +128,8 @@ li{
   border-radius:50%;
   width:60px;
   height:60px;
+  font-size:22px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
 }
 </style>
 </head>
@@ -102,13 +138,18 @@ li{
 
 <h1>🍽️ Bestell App</h1>
 
-<!-- 🔥 OBERER TEIL -->
 <div class="card">
 📍 Restaurant
-<input id="restaurant" placeholder="Baron">
+<input id="restaurant" placeholder="z. B. Baron">
 
 🕒 Wann
-<input id="time" placeholder="17:20 Uhr">
+<input id="time" placeholder="z. B. 17:20 Uhr">
+
+🚪 Tor
+<select id="gate">
+  <option value="Nord-Tor" selected>Nord-Tor</option>
+  <option value="Haupt-Tor">Haupt-Tor</option>
+</select>
 </div>
 
 <div class="card">
@@ -141,6 +182,7 @@ const app = initializeApp({
   apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
   databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
 });
+
 const db = getDatabase(app);
 const list = document.getElementById("list");
 
@@ -156,7 +198,7 @@ onValue(ref(db,"orders"), snapshot=>{
 
     li.innerHTML = `
       <div class="item-top">
-        <span id="text-${child.key}">${data.name} x${data.qty}</span>
+        <span>${data.name} x${data.qty}</span>
         ${data.owner===userId ? `<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>` : ""}
       </div>
 
@@ -222,10 +264,12 @@ window.deleteOrder = function(id){
 window.shareWhatsApp = function(){
   let restaurant=document.getElementById("restaurant").value;
   let time=document.getElementById("time").value;
+  let gate=document.getElementById("gate").value;
 
   let msg="🍽️ Bestellung\n\n";
   msg+="📍 "+restaurant+"\n";
-  msg+="🕒 "+time+"\n\n";
+  msg+="🕒 "+time+"\n";
+  msg+="🚪 "+gate+"\n\n";
 
   document.querySelectorAll(".item-top span").forEach(el=>{
     msg += "- " + el.innerText + "\n";
@@ -242,6 +286,7 @@ window.clearAll = function(){
   remove(ref(db,"orders"));
   document.getElementById("restaurant").value="";
   document.getElementById("time").value="";
+  document.getElementById("gate").value="Nord-Tor";
 }
 </script>
 
