@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Bestell App D-Schicht</title>
+
+<style>
+body{
+  font-family: Arial;
+  background:#f5f5f5;
+  color:#111;
+  padding:20px;
+  margin:0;
+}
+
+h1{text-align:center;}
+.card{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:15px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:16px;
+}
+button{
+  padding:8px 12px;
+  margin:4px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+.add{background:#22c55e;color:white;}
+.wa{background:#25D366;color:white;}
+.pdf{background:#3b82f6;color:white;}
+li{
+  list-style:none;
+  background:#fff;
+  padding:10px;
+  margin:8px 0;
+  border-radius:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 1px 4px rgba(0,0,0,0.1);
+}
+li div button{margin-left:4px;}
+
+@media (max-width:600px){
+  body{padding:10px;}
+  h1{font-size:20px;}
+  button{width:100%;margin-top:6px;}
+  li{flex-direction:column;align-items:flex-start;}
+  li div{margin-top:6px;display:flex;flex-wrap:wrap;}
+  li div button{margin:4px 4px 0 0;}
+}
+
+#clearBtn{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#ef4444;
+  color:white;
+  padding:12px 18px;
+  border:none;
+  border-radius:50px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+#footer{
+  text-align:center;
+  margin-top:20px;
+}
+
+#footer img{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  display:block;
+  margin:0 auto 5px auto;
+}
+
+#footer span{
+  font-size:12px;
+  color:#555;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🍽️ Bestell App D-Schicht</h1>
+
+<div class="card">
+📍 Restaurant:<br>
+<input id="restaurant" placeholder="Baron" list="restaurants">
+<datalist id="restaurants">
+  <option value="Baron">
+</datalist>
+<br>
+🕒 Wann:<br>
+<input id="time" placeholder="17:20 Uhr">
+</div>
+
+<div class="card">
+<input id="order" placeholder="Bestellung">
+<button class="add" onclick="addOrder()">+ Hinzufügen</button>
+</div>
+
+<div class="card">
+<h3>🧾 Liste</h3>
+<ul id="list"></ul>
+</div>
+
+<button class="wa" onclick="shareWhatsApp()">📲 WhatsApp</button>
+<button class="pdf" onclick="window.print()">📄 PDF</button>
+<button id="clearBtn" onclick="clearList()">🧹 Liste leeren</button>
+
+<div id="footer">
+  <!-- Bild direkt als Base64 eingebettet -->
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAYAAAAf3n4rAA..." alt="Logo">
+  <span>© Kalorienkonferenz</span>
+</div>
+
+<script>
+function addOrder(){
+  let input=document.getElementById("order");
+  let value=input.value.trim();
+  if(value==="") return;
+  let items=document.querySelectorAll("li");
+  for(let item of items){
+    if(item.dataset.name===value){
+      let qty=parseInt(item.dataset.qty)+1;
+      updateItem(item,value,qty);
+      input.value="";
+      return;
+    }
+  }
+  createItem(value,1);
+  input.value="";
+}
+
+function createItem(name,qty){
+  let li=document.createElement("li");
+  li.dataset.name=name;
+  li.dataset.qty=qty;
+  let span=document.createElement("span");
+  span.textContent=name+" x"+qty;
+  let controls=document.createElement("div");
+
+  let plus=document.createElement("button");
+  plus.textContent="+";
+  plus.onclick=()=>updateItem(li,name,parseInt(li.dataset.qty)+1);
+
+  let minus=document.createElement("button");
+  minus.textContent="-";
+  minus.onclick=()=>{
+    let q=parseInt(li.dataset.qty)-1;
+    if(q<=0){confirmDelete(li);}else{updateItem(li,name,q);}
+  };
+
+  let del=document.createElement("button");
+  del.textContent="🗑";
+  del.onclick=()=>confirmDelete(li);
+
+  controls.appendChild(plus);
+  controls.appendChild(minus);
+  controls.appendChild(del);
+
+  li.appendChild(span);
+  li.appendChild(controls);
+
+  document.getElementById("list").appendChild(li);
+  save();
+}
+
+function updateItem(li,name,qty){
+  li.dataset.qty=qty;
+  li.querySelector("span").textContent=name+" x"+qty;
+  save();
+}
+
+function confirmDelete(li){
+  if(confirm("❗ Bestellung wirklich löschen?")){li.remove();save();}
+}
+
+function save(){
+  let data=[];
+  document.querySelectorAll("li").forEach(li=>data.push({name:li.dataset.name,qty:li.dataset.qty}));
+  localStorage.setItem("orders",JSON.stringify(data));
+  localStorage.setItem("restaurant",document.getElementById("restaurant").value);
+  localStorage.setItem("time",document.getElementById("time").value);
+}
+
+window.onload=function(){
+  let data=JSON.parse(localStorage.getItem("orders")||"[]");
+  data.forEach(d=>createItem(d.name,parseInt(d.qty)));
+  document.getElementById("restaurant").value = localStorage.getItem("restaurant")||"Baron";
+  document.getElementById("time").value = localStorage.getItem("time")||"17:20 Uhr";
+}
+
+function shareWhatsApp(){
+  let restaurant=document.getElementById("restaurant").value;
+  let time=document.getElementById("time").value;
+  let msg="🍽️ Bestellung\n\n";
+  msg+="📍 Restaurant: "+restaurant+"\n";
+  msg+="🕒 Wann: "+time+"\n\n";
+  msg+="🧾 Essen:\n";
+  document.querySelectorAll("li").forEach(li=>{
+    msg+="- "+li.dataset.name+" x"+li.dataset.qty+"\n";
+  });
+  window.open("https://wa.me/?text="+encodeURIComponent(msg));
+}
+
+function clearList(){
+  let code = prompt("❗ Code eingeben zum Löschen der ganzen Liste:");
+  if(code==="clear"){
+    document.getElementById("list").innerHTML="";
+    document.getElementById("restaurant").value="Baron";
+    document.getElementById("time").value="17:20 Uhr";
+    localStorage.removeItem("orders");
+    localStorage.removeItem("restaurant");
+    localStorage.removeItem("time");
+    alert("✅ Alles wurde komplett gelöscht!");
+  }else{alert("❌ Falscher Code!");}
+}
+</script>
+
+</body>
+</html>
