@@ -102,6 +102,15 @@ li{
 
 <h1>🍽️ Bestell App</h1>
 
+<!-- 🔥 OBERER TEIL -->
+<div class="card">
+📍 Restaurant
+<input id="restaurant" placeholder="Baron">
+
+🕒 Wann
+<input id="time" placeholder="17:20 Uhr">
+</div>
+
 <div class="card">
 <input id="order" placeholder="Was willst du essen?">
 <button class="add" onclick="addOrder()">+ Bestellung</button>
@@ -121,6 +130,7 @@ li{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
+// USER ID
 let userId = localStorage.getItem("userId");
 if(!userId){
   userId = Math.random().toString(36).substring(2);
@@ -134,6 +144,7 @@ const app = initializeApp({
 const db = getDatabase(app);
 const list = document.getElementById("list");
 
+// LIVE
 onValue(ref(db,"orders"), snapshot=>{
   list.innerHTML="";
   if(!snapshot.exists()) return;
@@ -163,6 +174,7 @@ onValue(ref(db,"orders"), snapshot=>{
   });
 });
 
+// EDIT
 window.toggleEdit = function(id){
   let controls = document.getElementById("controls-"+id);
   let input = document.getElementById("edit-"+id);
@@ -173,12 +185,10 @@ window.toggleEdit = function(id){
 
 window.saveEdit = function(id){
   let value = document.getElementById("edit-"+id).value;
-
-  update(ref(db,"orders/"+id),{
-    name:value
-  });
+  update(ref(db,"orders/"+id),{ name:value });
 }
 
+// ADD
 window.addOrder = function(){
   let input=document.getElementById("order");
   if(input.value==="") return;
@@ -192,6 +202,7 @@ window.addOrder = function(){
   input.value="";
 }
 
+// QTY
 window.changeQty = function(id, qty){
   if(qty<=0){
     remove(ref(db,"orders/"+id));
@@ -200,24 +211,37 @@ window.changeQty = function(id, qty){
   }
 }
 
+// DELETE
 window.deleteOrder = function(id){
   if(confirm("Löschen?")){
     remove(ref(db,"orders/"+id));
   }
 }
 
+// WHATSAPP
 window.shareWhatsApp = function(){
-  let msg="Bestellung:\n";
+  let restaurant=document.getElementById("restaurant").value;
+  let time=document.getElementById("time").value;
+
+  let msg="🍽️ Bestellung\n\n";
+  msg+="📍 "+restaurant+"\n";
+  msg+="🕒 "+time+"\n\n";
+
   document.querySelectorAll(".item-top span").forEach(el=>{
-    msg += el.innerText + "\n";
+    msg += "- " + el.innerText + "\n";
   });
+
   window.open("https://wa.me/?text="+encodeURIComponent(msg));
 }
 
+// CLEAR
 window.clearAll = function(){
   let pw = prompt("Passwort:");
   if(pw!=="clear") return;
+
   remove(ref(db,"orders"));
+  document.getElementById("restaurant").value="";
+  document.getElementById("time").value="";
 }
 </script>
 
