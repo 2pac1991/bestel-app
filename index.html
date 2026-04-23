@@ -165,7 +165,7 @@ li{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update, set, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
 // USER
 let userId = localStorage.getItem("userId") || Math.random();
@@ -231,25 +231,22 @@ onValue(ref(db,"status"), snap=>{
  }
 });
 
-// START / STOP (FIX)
-window.startOrder = function(){
+// ✅ FIXED START/STOP
+window.startOrder = async function(){
  const statusRef = ref(db,"status");
+ const snap = await get(statusRef);
+ const running = snap.val();
 
- onValue(statusRef, snap=>{
-  let running = snap.val();
-
-  if(!running){
-    set(statusRef, true);
-  }else{
-    let pw = prompt("Passwort zum Stoppen:");
-    if(pw === "stop"){
-      set(statusRef, false);
-    }else{
-      alert("Falsches Passwort!");
-    }
-  }
-
- }, {onlyOnce:true});
+ if(!running){
+   set(statusRef, true); // KEIN PASSWORT
+ }else{
+   let pw = prompt("Passwort zum Stoppen:");
+   if(pw === "stop"){
+     set(statusRef, false);
+   }else{
+     alert("Falsches Passwort!");
+   }
+ }
 }
 
 // BESTELLUNGEN
