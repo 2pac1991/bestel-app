@@ -16,7 +16,22 @@ body{
   padding:10px;
 }
 
-h1{text-align:center;font-size:22px;}
+h1{
+  text-align:center;
+  font-size:22px;
+  margin-bottom:10px;
+}
+
+/* 👤 Button oben */
+#nameBtn{
+  display:block;
+  margin:0 auto 10px auto;
+  background:#3b82f6;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+}
 
 .card{
   background:white;
@@ -108,6 +123,8 @@ li{
 
 <h1>🍽️ Bestell App</h1>
 
+<button id="nameBtn" onclick="changeName()">👤 Name ändern</button>
+
 <div class="card">
 📍 Restaurant
 <input id="restaurant" placeholder="z. B. Baron">
@@ -141,24 +158,44 @@ li{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
-// 🔑 USER ID
+// USER ID
 let userId = localStorage.getItem("userId");
 if(!userId){
   userId = Math.random().toString(36).substring(2);
   localStorage.setItem("userId", userId);
 }
 
-// 🔥 INPUTS REFERENZEN
+// NAME
+let userName = localStorage.getItem("userName");
+
+if(!userName){
+  userName = prompt("Wie heißt du?");
+  if(!userName) userName = "Unbekannt";
+  localStorage.setItem("userName", userName);
+}
+
+// 🔥 NAME ÄNDERN
+window.changeName = function(){
+  let newName = prompt("Neuer Name:");
+  if(!newName) return;
+
+  userName = newName;
+  localStorage.setItem("userName", userName);
+
+  alert("Name geändert!");
+}
+
+// INPUTS
 const restaurantInput = document.getElementById("restaurant");
 const timeInput = document.getElementById("time");
 const gateInput = document.getElementById("gate");
 
-// 🔥 LADEN (beim Start)
+// LOAD
 restaurantInput.value = localStorage.getItem("restaurant") || "";
 timeInput.value = localStorage.getItem("time") || "";
 gateInput.value = localStorage.getItem("gate") || "Nord-Tor";
 
-// 🔥 SPEICHERN BEI ÄNDERUNG
+// SAVE
 restaurantInput.oninput = () => localStorage.setItem("restaurant", restaurantInput.value);
 timeInput.oninput = () => localStorage.setItem("time", timeInput.value);
 gateInput.onchange = () => localStorage.setItem("gate", gateInput.value);
@@ -184,7 +221,7 @@ onValue(ref(db,"orders"), snapshot=>{
 
     li.innerHTML = `
       <div class="item-top">
-        <span>${data.name} x${data.qty}</span>
+        <span>${data.user}: ${data.name} x${data.qty}</span>
         ${data.owner===userId ? `<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>` : ""}
       </div>
 
@@ -210,7 +247,8 @@ window.addOrder = function(){
   push(ref(db,"orders"),{
     name:input.value,
     qty:1,
-    owner:userId
+    owner:userId,
+    user:userName
   });
 
   input.value="";
