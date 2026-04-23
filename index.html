@@ -33,7 +33,6 @@
 
         .container { width: 100%; max-width: 500px; }
 
-        /* Modernisierte Überschrift */
         h1 {
             font-size: 38px;
             font-weight: 900;
@@ -57,7 +56,6 @@
             opacity: 0.8;
         }
 
-        /* User Button */
         #nameBtn {
             width: 100%;
             background: rgba(59, 130, 246, 0.05);
@@ -71,7 +69,6 @@
             cursor: pointer;
         }
 
-        /* Modern Cards */
         .card {
             background: var(--card-bg);
             padding: 24px;
@@ -109,7 +106,6 @@
             outline: none;
         }
 
-        /* Buttons */
         .btn {
             width: 100%;
             padding: 16px;
@@ -134,7 +130,6 @@
             text-decoration: none;
         }
 
-        /* List Styles */
         ul { padding: 0; margin: 0; }
         li {
             background: white;
@@ -192,8 +187,6 @@
         <select id="gate">
             <option>Nord-Tor</option>
             <option>Haupt-Tor</option>
-            <option>Haupteingang</option>
-            <option>Parkplatz</option>
         </select>
 
         <button id="startBtn" class="btn" onclick="toggleOrder()">Laden...</button>
@@ -225,7 +218,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // User Logik
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
     let userName = localStorage.getItem("userName") || prompt("Wie heißt du?");
@@ -241,7 +233,6 @@
         if(n) { userName = n; localStorage.setItem("userName", n); updateNameButton(); }
     };
 
-    // Persistence
     const fields = ['restaurant', 'time', 'gate'];
     fields.forEach(id => {
         const el = document.getElementById(id);
@@ -249,7 +240,6 @@
         el.oninput = () => localStorage.setItem(id, el.value);
     });
 
-    // Toggle Order
     let orderActive = localStorage.getItem("orderActive") === "true";
     function updateUI() {
         const startBtn = document.getElementById("startBtn");
@@ -279,7 +269,6 @@
         updateUI();
     };
 
-    // List Logic
     onValue(ref(db, "orders"), snap => {
         const list = document.getElementById("list");
         list.innerHTML = "";
