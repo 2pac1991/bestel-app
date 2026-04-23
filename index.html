@@ -3,60 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Bestell App</title>
 
 <style>
-body{font-family:Arial;background:#f5f5f5;padding:10px;margin:0;}
-h1{text-align:center;}
+*{box-sizing:border-box;}
 
-.card{background:white;padding:15px;border-radius:12px;margin-bottom:12px;}
+body{font-family:Arial;background:#f5f5f5;margin:0;padding:10px;}
+h1{text-align:center;font-size:22px;}
 
-input,select{
+#nameBtn{
+  width:100%;
+  background:#3b82f6;
+  color:white;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+.card{
+  background:white;
+  padding:14px;
+  border-radius:12px;
+  margin-bottom:12px;
+}
+
+input, select{
   width:100%;
   padding:12px;
   margin:6px 0;
   border-radius:10px;
-  border:1px solid #ccc;
+  border:1px solid #ddd;
 }
 
-button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  margin-top:8px;
-  color:white;
-  font-size:16px;
-}
-
-.start{background:#22c55e;}
-.stop{background:#ef4444;}
-
-#status{text-align:center;font-weight:bold;margin:10px;}
-
-input:disabled,select:disabled{
-  background:#ddd;
-}
-
-.add{background:#22c55e;}
-.wa{background:#25D366;margin-top:10px;}
+.add{background:#22c55e;color:white;width:100%;padding:12px;border-radius:10px;}
+.wa{background:#25D366;color:white;width:100%;padding:12px;border-radius:10px;margin-top:10px;}
 
 li{
   background:white;
-  padding:10px;
+  padding:12px;
   border-radius:10px;
-  margin:6px 0;
+  margin:8px 0;
   list-style:none;
 }
+
+.item-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:bold;
+}
+
+.edit-btn{
+  background:#3b82f6;
+  color:white;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  border:none;
+}
+
+.controls{
+  display:none;
+  margin-top:8px;
+  gap:5px;
+}
+
+.controls.active{display:flex;}
+
+.controls button{
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
+
+.plus{background:#22c55e;color:white;}
+.minus{background:#f59e0b;color:white;}
+.delete{background:#ef4444;color:white;}
+
+.edit-input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+}
+
+#footer{text-align:center;margin-top:20px;}
+#footer img{width:60px;height:60px;border-radius:50%;}
 
 #clearBtn{
   position:fixed;
   bottom:20px;
   right:20px;
+  background:#ef4444;
+  color:white;
+  border-radius:50%;
   width:60px;
   height:60px;
-  border-radius:50%;
-  background:red;
+  font-size:22px;
+  border:none;
 }
 </style>
 </head>
@@ -65,20 +110,24 @@ li{
 
 <h1>🍽️ Bestell App</h1>
 
+<button id="nameBtn" onclick="changeName()"></button>
+
 <div class="card">
-<input id="restaurant" placeholder="Restaurant">
-<input id="time" placeholder="Wann">
+📍 Restaurant
+<input id="restaurant" placeholder="z. B. Baron">
+
+🕒 Wann
+<input id="time" placeholder="z. B. 17:20 Uhr">
+
+🚪 Tor
 <select id="gate">
-<option>Nord-Tor</option>
+<option selected>Nord-Tor</option>
 <option>Haupt-Tor</option>
 </select>
-
-<div id="status">🔴 gestoppt</div>
-<button id="toggleBtn" class="start">Bestellung starten</button>
 </div>
 
 <div class="card">
-<input id="order" placeholder="Deine Bestellung">
+<input id="order" placeholder="Was willst du essen?">
 <button class="add" onclick="addOrder()">+ Bestellung</button>
 </div>
 
@@ -86,103 +135,147 @@ li{
 
 <button class="wa" onclick="shareWhatsApp()">📲 WhatsApp</button>
 
+<div id="footer">
+<img src="logo.png">
+</div>
+
 <button id="clearBtn" onclick="clearAll()">🧹</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
+// USER
+let userId = localStorage.getItem("userId") || Math.random();
+localStorage.setItem("userId", userId);
+
+let userName = localStorage.getItem("userName") || prompt("Wie heißt du?");
+localStorage.setItem("userName", userName);
+
+function updateNameButton(){
+  nameBtn.innerText = "Eingeloggt als: "+userName+" (ändern)";
+}
+updateNameButton();
+
+window.changeName = function(){
+  let n = prompt("Neuer Name:");
+  if(!n) return;
+  userName=n;
+  localStorage.setItem("userName",n);
+  updateNameButton();
+}
+
+// INPUTS speichern
+const restaurant=document.getElementById("restaurant");
+const time=document.getElementById("time");
+const gate=document.getElementById("gate");
+
+restaurant.value=localStorage.getItem("restaurant")||"";
+time.value=localStorage.getItem("time")||"";
+gate.value=localStorage.getItem("gate")||"Nord-Tor";
+
+restaurant.oninput=()=>localStorage.setItem("restaurant",restaurant.value);
+time.oninput=()=>localStorage.setItem("time",time.value);
+gate.onchange=()=>localStorage.setItem("gate",gate.value);
+
+// FIREBASE
 const app = initializeApp({
  apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
  databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
 });
-const db = getDatabase(app);
-
-// STATUS LOCAL (kein Firebase → stabil!)
-let running = false;
-
-const btn = document.getElementById("toggleBtn");
-const status = document.getElementById("status");
-
-const restaurant = document.getElementById("restaurant");
-const time = document.getElementById("time");
-const gate = document.getElementById("gate");
-
-// 🔥 BUTTON LOGIK
-btn.onclick = () => {
-
-  running = !running;
-
-  if(running){
-    status.innerText = "🟢 Bestellung läuft...";
-    btn.innerText = "Bestellung stoppen";
-    btn.className = "stop";
-
-    restaurant.disabled = true;
-    time.disabled = true;
-    gate.disabled = true;
-
-  }else{
-    status.innerText = "🔴 Bestellung gestoppt";
-    btn.innerText = "Bestellung starten";
-    btn.className = "start";
-
-    restaurant.disabled = false;
-    time.disabled = false;
-    gate.disabled = false;
-  }
-};
+const db=getDatabase(app);
 
 // BESTELLUNGEN
 onValue(ref(db,"orders"), snap=>{
  list.innerHTML="";
- if(!snap.exists()) return;
+ if(!snap.exists())return;
 
- snap.forEach(c=>{
-  let d = c.val();
+ snap.forEach(child=>{
+  let d=child.val();
 
-  let li = document.createElement("li");
-  li.innerText = d.user + ": " + d.name + " x" + (d.qty||1);
+  let li=document.createElement("li");
+
+  li.innerHTML=`
+   <div class="item-top">
+    <span>${d.user}: ${d.name} x${d.qty || 1}</span>
+    ${d.owner===userId?`<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>`:""}
+   </div>
+
+   <input id="edit-${child.key}" class="edit-input" value="${d.name}" style="display:none">
+
+   <div id="c-${child.key}" class="controls">
+    <button class="plus" onclick="changeQty('${child.key}',1)">+</button>
+    <button class="minus" onclick="changeQty('${child.key}',-1)">-</button>
+    <button class="delete" onclick="deleteOrder('${child.key}')">🗑</button>
+    <button onclick="saveEdit('${child.key}')">💾</button>
+   </div>
+  `;
 
   list.appendChild(li);
  });
 });
 
-// USER
-let user = localStorage.getItem("name") || prompt("Name?");
-localStorage.setItem("name", user);
+window.toggleEdit=id=>{
+ let c=document.getElementById("c-"+id);
+ let i=document.getElementById("edit-"+id);
 
-// ADD
-window.addOrder = ()=>{
- let val = order.value;
- if(!val) return;
+ c.classList.toggle("active");
+ i.style.display=i.style.display==="none"?"block":"none";
+}
+
+window.saveEdit=id=>{
+ let val=document.getElementById("edit-"+id).value;
+ update(ref(db,"orders/"+id),{name:val});
+}
+
+window.changeQty=(id,delta)=>{
+ let itemRef = ref(db,"orders/"+id);
+
+ onValue(itemRef, snap=>{
+  let data = snap.val();
+  let newQty = (data.qty || 1) + delta;
+
+  if(newQty <= 0){
+    remove(itemRef);
+  }else{
+    update(itemRef,{qty:newQty});
+  }
+ }, {onlyOnce:true});
+}
+
+window.deleteOrder=id=>{
+ if(confirm("Löschen?")) remove(ref(db,"orders/"+id));
+}
+
+window.addOrder=()=>{
+ let val=order.value;
+ if(!val)return;
 
  push(ref(db,"orders"),{
   name:val,
-  user:user,
+  user:userName,
+  owner:userId,
   qty:1
  });
 
  order.value="";
 }
 
-// WHATSAPP
-window.shareWhatsApp = ()=>{
- let msg="Bestellung:\n\n";
+window.shareWhatsApp=()=>{
+ let msg="🍽️ Bestellung\n\n";
+ msg+=restaurant.value+"\n"+time.value+"\n"+gate.value+"\n\n";
 
- document.querySelectorAll("li").forEach(li=>{
-  msg += li.innerText + "\n";
+ document.querySelectorAll("#list li").forEach(li=>{
+  msg+="- "+li.innerText+"\n";
  });
 
  window.open("https://wa.me/?text="+encodeURIComponent(msg));
 }
 
-// CLEAR
-window.clearAll = ()=>{
- let pw = prompt("Passwort:");
- if(pw==="clear"){
-  remove(ref(db,"orders"));
- }
+window.clearAll=()=>{
+ let pw=prompt("Passwort:");
+ if(pw!=="clear")return;
+ remove(ref(db,"orders"));
 }
 </script>
 
