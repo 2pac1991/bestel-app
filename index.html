@@ -39,7 +39,7 @@ input, select{
 }
 
 .add{background:#22c55e;color:white;width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;}
-.wa{background:#25D366;color:white;width:100%;padding:12px;border-radius:10px;margin-top:10px;border:none;font-weight:bold;display:block;text-align:center;text-decoration:none;}
+.wa{background:#25D366;color:white;width:100%;padding:12px;border-radius:10px;margin-top:10px;border:none;font-weight:bold;display:block;text-align:center;text-decoration:none;cursor:pointer;}
 
 li{
   background:white;
@@ -237,9 +237,9 @@ onValue(ref(db,"orders"), snap=>{
   let d=child.val();
   let li=document.createElement("li");
 
-  li.innerHTML=`
+  li.innerHTML = `
    <div class="item-top">
-    <span class="item-text">${d.user}: ${d.name} (x${d.qty || 1})</span>
+    <span class="item-text" data-name="${d.name}" data-qty="${d.qty || 1}">${d.user}: ${d.name} (x${d.qty || 1})</span>
     ${d.owner===userId?`<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>`:""}
    </div>
    <input id="edit-${child.key}" class="edit-input" value="${d.name}" style="display:none">
@@ -256,7 +256,7 @@ onValue(ref(db,"orders"), snap=>{
 
 window.addOrder = async () => {
   if(!orderActive) { alert("Bestellung ist gestoppt!"); return; }
-  let val = order.value.trim();
+  let val = document.getElementById("order").value.trim();
   if(!val) return;
 
   const ordersRef = ref(db, "orders");
@@ -267,7 +267,6 @@ window.addOrder = async () => {
   if(snap.exists()){
     snap.forEach(child => {
       let d = child.val();
-      // Wenn der gleiche User das gleiche Essen nochmal bestellt -> ID merken
       if(d.owner === userId && d.name.toLowerCase() === val.toLowerCase()){
         existingId = child.key;
         currentQty = d.qty || 1;
@@ -280,7 +279,7 @@ window.addOrder = async () => {
   } else {
     push(ordersRef, { name: val, user: userName, owner: userId, qty: 1 });
   }
-  order.value = "";
+  document.getElementById("order").value = "";
 }
 
 window.toggleEdit=id=>{
@@ -299,6 +298,7 @@ window.changeQty=(id,delta)=>{
  let itemRef = ref(db,"orders/"+id);
  get(itemRef).then(snap => {
   let data = snap.val();
+  if(!data) return;
   let newQty = (data.qty || 1) + delta;
   if(newQty <= 0) remove(itemRef);
   else update(itemRef,{qty:newQty});
@@ -317,9 +317,11 @@ window.shareWhatsApp=()=>{
  msg += `__________________________\n\n`;
 
  let hasItems = false;
- document.querySelectorAll("#list li").forEach(li => {
-  const text = li.querySelector(".item-text").innerText;
-  msg += `✅ ${text}\n`;
+ document.querySelectorAll(".item-text").forEach(span => {
+  // Holt nur Name und Menge aus den Data-Attributen (ohne User-Namen und Haken)
+  const itemName = span.getAttribute("data-name");
+  const itemQty = span.getAttribute("data-qty");
+  msg += `${itemName} (x${itemQty})\n`;
   hasItems = true;
  });
 
