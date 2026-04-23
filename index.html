@@ -21,6 +21,24 @@ h1{text-align:center;font-size:22px;}
   margin-bottom:10px;
 }
 
+#status{
+  text-align:center;
+  font-weight:bold;
+  margin:10px 0;
+}
+
+.main-btn{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  margin-top:8px;
+  color:white;
+  border:none;
+}
+
+.start{background:#22c55e;}
+.stop{background:#ef4444;}
+
 .card{
   background:white;
   padding:14px;
@@ -34,6 +52,11 @@ input, select{
   margin:6px 0;
   border-radius:10px;
   border:1px solid #ddd;
+}
+
+input:disabled, select:disabled{
+  background:#e5e7eb;
+  color:#888;
 }
 
 .add{background:#22c55e;color:white;width:100%;padding:12px;border-radius:10px;}
@@ -114,16 +137,19 @@ li{
 
 <div class="card">
 📍 Restaurant
-<input id="restaurant" placeholder="z. B. Baron">
+<input id="restaurant">
 
 🕒 Wann
-<input id="time" placeholder="z. B. 17:20 Uhr">
+<input id="time">
 
 🚪 Tor
 <select id="gate">
 <option selected>Nord-Tor</option>
 <option>Haupt-Tor</option>
 </select>
+
+<div id="status">🔴 Bestellung gestoppt</div>
+<button id="startBtn" class="main-btn start" onclick="toggleOrder()">Bestellung starten</button>
 </div>
 
 <div class="card">
@@ -143,7 +169,7 @@ li{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
 // USER
 let userId = localStorage.getItem("userId") || Math.random();
@@ -165,7 +191,7 @@ window.changeName = function(){
   updateNameButton();
 }
 
-// INPUTS speichern
+// INPUTS
 const restaurant=document.getElementById("restaurant");
 const time=document.getElementById("time");
 const gate=document.getElementById("gate");
@@ -184,6 +210,48 @@ const app = initializeApp({
  databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
 });
 const db=getDatabase(app);
+
+// STATUS STATE
+let runningState = false;
+
+// LIVE STATUS
+onValue(ref(db,"status"), snap=>{
+ runningState = snap.val();
+
+ if(runningState){
+  status.innerText="🟢 Bestellung läuft...";
+  startBtn.innerText="Bestellung stoppen";
+  startBtn.className="main-btn stop";
+
+  restaurant.disabled=true;
+  time.disabled=true;
+  gate.disabled=true;
+
+ }else{
+  status.innerText="🔴 Bestellung gestoppt";
+  startBtn.innerText="Bestellung starten";
+  startBtn.className="main-btn start";
+
+  restaurant.disabled=false;
+  time.disabled=false;
+  gate.disabled=false;
+ }
+});
+
+// 🔥 START / STOP
+window.toggleOrder = function(){
+
+ if(!runningState){
+   set(ref(db,"status"), true);
+ }else{
+   let pw = prompt("Passwort zum Stoppen:");
+   if(pw === "stop"){
+     set(ref(db,"status"), false);
+   }else{
+     alert("Falsches Passwort!");
+   }
+ }
+}
 
 // BESTELLUNGEN
 onValue(ref(db,"orders"), snap=>{
@@ -218,7 +286,6 @@ onValue(ref(db,"orders"), snap=>{
 window.toggleEdit=id=>{
  let c=document.getElementById("c-"+id);
  let i=document.getElementById("edit-"+id);
-
  c.classList.toggle("active");
  i.style.display=i.style.display==="none"?"block":"none";
 }
