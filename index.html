@@ -8,7 +8,6 @@
 
 <style>
 *{box-sizing:border-box;}
-
 body{font-family:Arial;background:#f5f5f5;margin:0;padding:10px;}
 h1{text-align:center;font-size:22px;}
 
@@ -133,10 +132,10 @@ li{
 
 <div class="card">
 📍 Restaurant
-<input id="restaurant" placeholder="z. B. Baron">
+<input id="restaurant">
 
 🕒 Wann
-<input id="time" placeholder="z. B. 17:20 Uhr">
+<input id="time">
 
 🚪 Tor
 <select id="gate">
@@ -165,7 +164,7 @@ li{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update, set, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
 // USER
 let userId = localStorage.getItem("userId") || Math.random();
@@ -207,11 +206,13 @@ const app = initializeApp({
 });
 const db=getDatabase(app);
 
-// STATUS
-onValue(ref(db,"status"), snap=>{
- let running=snap.val();
+// 🔥 STATUS LIVE
+let runningState = false;
 
- if(running){
+onValue(ref(db,"status"), snap=>{
+ runningState = snap.val();
+
+ if(runningState){
   status.innerText="🟢 Bestellung läuft...";
   startBtn.innerText="Bestellung stoppen";
   startBtn.className="main-btn stop";
@@ -231,18 +232,14 @@ onValue(ref(db,"status"), snap=>{
  }
 });
 
-// ✅ FIXED START/STOP
-window.startOrder = async function(){
- const statusRef = ref(db,"status");
- const snap = await get(statusRef);
- const running = snap.val();
-
- if(!running){
-   set(statusRef, true); // KEIN PASSWORT
+// 🔥 FIXED START/STOP (KEIN BUG MEHR)
+window.startOrder = function(){
+ if(!runningState){
+   set(ref(db,"status"), true); // START OHNE PASSWORT
  }else{
    let pw = prompt("Passwort zum Stoppen:");
    if(pw === "stop"){
-     set(statusRef, false);
+     set(ref(db,"status"), false);
    }else{
      alert("Falsches Passwort!");
    }
@@ -282,7 +279,6 @@ onValue(ref(db,"orders"), snap=>{
 window.toggleEdit=id=>{
  let c=document.getElementById("c-"+id);
  let i=document.getElementById("edit-"+id);
-
  c.classList.toggle("active");
  i.style.display=i.style.display==="none"?"block":"none";
 }
