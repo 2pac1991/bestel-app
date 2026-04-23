@@ -9,42 +9,30 @@
 <style>
 *{box-sizing:border-box;}
 
-body{
-  font-family:Arial;
-  background:#f5f5f5;
-  margin:0;
-  padding:10px;
-}
-
+body{font-family:Arial;background:#f5f5f5;margin:0;padding:10px;}
 h1{text-align:center;font-size:22px;}
 
 #nameBtn{
-  display:block;
-  margin:0 auto 10px auto;
+  width:100%;
   background:#3b82f6;
   color:white;
   padding:10px;
   border-radius:10px;
-  width:100%;
+  margin-bottom:10px;
 }
 
-#status{
-  text-align:center;
-  font-weight:bold;
-  margin:10px 0;
-}
+#status{text-align:center;font-weight:bold;margin:10px 0;}
 
 .main-btn{
   width:100%;
   padding:12px;
-  border:none;
   border-radius:10px;
-  font-size:16px;
   margin-top:8px;
+  color:white;
 }
 
-.start{background:#22c55e;color:white;}
-.stop{background:#ef4444;color:white;}
+.start{background:#22c55e;}
+.stop{background:#ef4444;}
 
 .card{
   background:white;
@@ -66,35 +54,44 @@ input:disabled, select:disabled{
   color:#888;
 }
 
-.add{
-  width:100%;
-  background:#22c55e;
-  color:white;
-  padding:12px;
-  border-radius:10px;
-}
-
-.wa{
-  width:100%;
-  background:#25D366;
-  color:white;
-  margin-top:10px;
-  padding:12px;
-  border-radius:10px;
-}
+.add{background:#22c55e;color:white;width:100%;padding:12px;border-radius:10px;}
+.wa{background:#25D366;color:white;width:100%;padding:12px;border-radius:10px;margin-top:10px;}
 
 li{
-  list-style:none;
-  background:#fff;
+  background:white;
   padding:12px;
-  margin:8px 0;
   border-radius:10px;
+  margin:8px 0;
+  list-style:none;
 }
 
 .item-top{
   display:flex;
   justify-content:space-between;
+  align-items:center;
 }
+
+.controls{
+  display:none;
+  margin-top:8px;
+  gap:5px;
+}
+
+.controls.active{display:flex;}
+
+.controls button{flex:1;}
+
+.edit-btn{
+  background:#3b82f6;
+  color:white;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+}
+
+.plus{background:#22c55e;color:white;}
+.minus{background:#f59e0b;color:white;}
+.delete{background:#ef4444;color:white;}
 
 #clearBtn{
   position:fixed;
@@ -124,20 +121,16 @@ li{
 
 🚪 Tor
 <select id="gate">
-  <option value="Nord-Tor" selected>Nord-Tor</option>
-  <option value="Haupt-Tor">Haupt-Tor</option>
+<option selected>Nord-Tor</option>
+<option>Haupt-Tor</option>
 </select>
 
 <div id="status">🔴 Bestellung gestoppt</div>
-
-<button id="startBtn" class="main-btn start" onclick="startOrder()">
-Bestellung starten
-</button>
-
+<button id="startBtn" class="main-btn start" onclick="startOrder()">Bestellung starten</button>
 </div>
 
 <div class="card">
-<input id="order" placeholder="Was willst du essen?">
+<input id="order">
 <button class="add" onclick="addOrder()">+ Bestellung</button>
 </div>
 
@@ -149,7 +142,7 @@ Bestellung starten
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
 let userId = localStorage.getItem("userId") || Math.random();
 localStorage.setItem("userId", userId);
@@ -158,135 +151,142 @@ let userName = localStorage.getItem("userName") || prompt("Wie heißt du?");
 localStorage.setItem("userName", userName);
 
 function updateNameButton(){
-  document.getElementById("nameBtn").innerText =
-    "Eingeloggt als: " + userName + " (ändern)";
+  nameBtn.innerText = "Eingeloggt als: "+userName+" (ändern)";
 }
 updateNameButton();
 
 window.changeName = function(){
   let n = prompt("Neuer Name:");
   if(!n) return;
-  userName = n;
-  localStorage.setItem("userName", n);
+  userName=n;
+  localStorage.setItem("userName",n);
   updateNameButton();
 }
 
-// INPUTS
-const restaurant = document.getElementById("restaurant");
-const time = document.getElementById("time");
-const gate = document.getElementById("gate");
+const restaurant=document.getElementById("restaurant");
+const time=document.getElementById("time");
+const gate=document.getElementById("gate");
 
-restaurant.value = localStorage.getItem("restaurant")||"";
-time.value = localStorage.getItem("time")||"";
-gate.value = localStorage.getItem("gate")||"Nord-Tor";
+restaurant.value=localStorage.getItem("restaurant")||"";
+time.value=localStorage.getItem("time")||"";
+gate.value=localStorage.getItem("gate")||"Nord-Tor";
 
 restaurant.oninput=()=>localStorage.setItem("restaurant",restaurant.value);
 time.oninput=()=>localStorage.setItem("time",time.value);
 gate.onchange=()=>localStorage.setItem("gate",gate.value);
 
-// FIREBASE
 const app = initializeApp({
-  apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
-  databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
+ apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
+ databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
 });
-const db = getDatabase(app);
+const db=getDatabase(app);
 
 // STATUS
 onValue(ref(db,"status"), snap=>{
-  let running = snap.val();
+ let running=snap.val();
+ let btn=startBtn;
 
-  let status = document.getElementById("status");
-  let btn = document.getElementById("startBtn");
+ if(running){
+  status.innerText="🟢 Bestellung läuft...";
+  btn.innerText="Bestellung stoppen";
+  btn.className="main-btn stop";
 
-  if(running){
-    status.innerText="🟢 Bestellung läuft...";
-    btn.innerText="Bestellung stoppen";
-    btn.className="main-btn stop";
+  restaurant.disabled=true;
+  time.disabled=true;
+  gate.disabled=true;
 
-    restaurant.disabled = true;
-    time.disabled = true;
-    gate.disabled = true;
+ }else{
+  status.innerText="🔴 Bestellung gestoppt";
+  btn.innerText="Bestellung starten";
+  btn.className="main-btn start";
 
+  restaurant.disabled=false;
+  time.disabled=false;
+  gate.disabled=false;
+ }
+});
+
+// BESTELLUNGEN + EDIT
+onValue(ref(db,"orders"), snap=>{
+ list.innerHTML="";
+ if(!snap.exists())return;
+
+ snap.forEach(child=>{
+  let d=child.val();
+
+  let li=document.createElement("li");
+
+  li.innerHTML=`
+   <div class="item-top">
+    <span>${d.user}: ${d.name}</span>
+    ${d.owner===userId?`<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>`:""}
+   </div>
+
+   <div id="c-${child.key}" class="controls">
+    <button class="plus" onclick="changeQty('${child.key}',1)">+</button>
+    <button class="minus" onclick="changeQty('${child.key}',-1)">-</button>
+    <button class="delete" onclick="deleteOrder('${child.key}')">🗑</button>
+   </div>
+  `;
+
+  list.appendChild(li);
+ });
+});
+
+window.toggleEdit=id=>{
+ document.getElementById("c-"+id).classList.toggle("active");
+}
+
+window.changeQty=(id,delta)=>{
+ update(ref(db,"orders/"+id),{
+  name: prompt("Neuer Text?") || "?"
+ });
+}
+
+window.deleteOrder=id=>{
+ if(confirm("Löschen?")) remove(ref(db,"orders/"+id));
+}
+
+window.startOrder=()=>{
+ onValue(ref(db,"status"),snap=>{
+  let running=snap.val();
+  if(!running){
+   set(ref(db,"status"),true);
   }else{
-    status.innerText="🔴 Bestellung gestoppt";
-    btn.innerText="Bestellung starten";
-    btn.className="main-btn start";
-
-    restaurant.disabled = false;
-    time.disabled = false;
-    gate.disabled = false;
+   let pw=prompt("Passwort:");
+   if(pw==="stop") set(ref(db,"status"),false);
   }
-});
-
-// 🔥 BESTELLUNGEN ANZEIGEN
-onValue(ref(db,"orders"), snapshot=>{
-  let list = document.getElementById("list");
-  list.innerHTML="";
-
-  if(!snapshot.exists()) return;
-
-  snapshot.forEach(child=>{
-    let data = child.val();
-
-    let li = document.createElement("li");
-    li.innerHTML = `
-      <div class="item-top">
-        <span>${data.user}: ${data.name}</span>
-      </div>
-    `;
-    list.appendChild(li);
-  });
-});
-
-// START/STOP
-window.startOrder = function(){
-  onValue(ref(db,"status"), snap=>{
-    let running = snap.val();
-
-    if(!running){
-      set(ref(db,"status"), true);
-    }else{
-      let pw = prompt("Passwort:");
-      if(pw==="stop"){
-        set(ref(db,"status"), false);
-      }
-    }
-  }, {onlyOnce:true});
+ },{onlyOnce:true});
 }
 
-// ADD
-window.addOrder = function(){
-  let val = document.getElementById("order").value;
-  if(!val) return;
+window.addOrder=()=>{
+ let val=order.value;
+ if(!val)return;
 
-  push(ref(db,"orders"),{
-    name:val,
-    user:userName,
-    owner:userId
-  });
+ push(ref(db,"orders"),{
+  name:val,
+  user:userName,
+  owner:userId
+ });
 
-  document.getElementById("order").value="";
+ order.value="";
 }
 
-// WHATSAPP
-window.shareWhatsApp = function(){
-  let msg="🍽️ Bestellung\n\n";
-  msg+="📍 "+restaurant.value+"\n";
-  msg+="🕒 "+time.value+"\n";
-  msg+="🚪 "+gate.value+"\n\n";
+window.shareWhatsApp=()=>{
+ let msg="🍽️ Bestellung\n\n";
+ msg+=restaurant.value+"\n"+time.value+"\n"+gate.value+"\n\n";
 
-  document.querySelectorAll("#list li").forEach(li=>{
-    msg += "- " + li.innerText + "\n";
-  });
+ document.querySelectorAll("#list li").forEach(li=>{
+  msg+="- "+li.innerText+"\n";
+ });
 
-  window.open("https://wa.me/?text="+encodeURIComponent(msg));
+ window.open("https://wa.me/?text="+encodeURIComponent(msg));
 }
 
-// CLEAR
-window.clearAll = function(){
-  let pw = prompt("Passwort:");
-  if(pw!=="clear") return;
-  remove(ref(db,"orders"));
+window.clearAll=()=>{
+ let pw=prompt("Passwort:");
+ if(pw!=="clear")return;
+ remove(ref(db,"orders"));
 }
 </script>
 
