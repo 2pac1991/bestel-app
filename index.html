@@ -24,21 +24,20 @@
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 0; /* Geändert für Header */
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Container für den Inhalt unter dem Header */
-        .content-container {
-            width: 100%;
-            max-width: 500px;
+        .container { 
+            width: 100%; 
+            max-width: 500px; 
             padding: 20px;
         }
 
-        /* --- Neuer, geiler Header Bereich --- */
+        /* --- Moderner Header Bereich mit kleinem Logo --- */
         .app-header {
             width: 100%;
             background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(248, 250, 252, 0) 100%);
@@ -56,18 +55,17 @@
             gap: 15px; /* Abstand Logo <-> Text */
         }
 
-        /* Logo Styling */
+        /* Kleines Logo Icon */
         .header-logo {
-            width: 55px;
-            height: 55px;
+            width: 50px; /* Klein und fein */
+            height: 50px;
             border-radius: 50%; /* Kreisrund */
             background: #fff;
             object-fit: cover; /* Bild füllt Kreis */
-            border: 3px solid #fff;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* Modernisierte Überschrift im Header */
         h1 {
             font-size: 36px;
             font-weight: 900;
@@ -79,7 +77,6 @@
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.05));
         }
         /* --- Ende Header Bereich --- */
-
 
         /* User Button */
         #nameBtn {
@@ -202,12 +199,12 @@
 
     <header class="app-header">
         <div class="header-content">
-            <img src="logo.png" alt="Logo" class="header-logo">
+            <img src="PFAD_ZU_DEINEM_LOGO.png" alt="Logo" class="header-logo">
             <h1>Bestell-Liste</h1>
         </div>
     </header>
 
-    <div class="content-container">
+    <div class="container">
         <button id="nameBtn" onclick="changeName()">👤 Profil lädt...</button>
 
         <div class="card">
@@ -357,9 +354,7 @@
     window.changeQty = (id, delta) => {
         const r = ref(db, `orders/${id}`);
         get(r).then(s => {
-            const data = s.val();
-            if(!data) return;
-            const n = (data.qty || 1) + delta;
+            const n = (s.val().qty || 1) + delta;
             n <= 0 ? remove(r) : update(r, { qty: n });
         });
     };
