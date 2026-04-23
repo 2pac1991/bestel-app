@@ -9,7 +9,7 @@
 <style>
 *{box-sizing:border-box;}
 
-body{font-family:Arial;background:#f5f5f5;margin:0;padding:10px;}
+body{font-family:Arial, sans-serif;background:#f5f5f5;margin:0;padding:10px;}
 h1{text-align:center;font-size:22px;}
 
 #nameBtn{
@@ -19,6 +19,7 @@ h1{text-align:center;font-size:22px;}
   padding:10px;
   border-radius:10px;
   margin-bottom:10px;
+  border:none;
 }
 
 .card{
@@ -26,6 +27,7 @@ h1{text-align:center;font-size:22px;}
   padding:14px;
   border-radius:12px;
   margin-bottom:12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 input, select{
@@ -36,8 +38,8 @@ input, select{
   border:1px solid #ddd;
 }
 
-.add{background:#22c55e;color:white;width:100%;padding:12px;border-radius:10px;}
-.wa{background:#25D366;color:white;width:100%;padding:12px;border-radius:10px;margin-top:10px;}
+.add{background:#22c55e;color:white;width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;}
+.wa{background:#25D366;color:white;width:100%;padding:12px;border-radius:10px;margin-top:10px;border:none;font-weight:bold;display:block;text-align:center;text-decoration:none;}
 
 li{
   background:white;
@@ -45,6 +47,7 @@ li{
   border-radius:10px;
   margin:8px 0;
   list-style:none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .item-top{
@@ -102,16 +105,14 @@ li{
   height:60px;
   font-size:22px;
   border:none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 #orderCard{display:none;}
 
-/* NEU: Styling für deaktivierte Felder */
 input:disabled, select:disabled {
-  background-color: #e9e9e9;
-  color: #888;
-  cursor: not-allowed;
-  border-color: #ccc;
+  background-color: #eee;
+  color: #777;
 }
 </style>
 </head>
@@ -135,7 +136,7 @@ input:disabled, select:disabled {
 <option>Haupt-Tor</option>
 </select>
 
-<button id="startBtn" onclick="toggleOrder()" style="width:100%;padding:12px;border-radius:10px;background:#3b82f6;color:white;margin-top:8px;">
+<button id="startBtn" onclick="toggleOrder()" style="width:100%;padding:12px;border-radius:10px;background:#3b82f6;color:white;margin-top:8px;border:none;font-weight:bold;">
 Bestellung Starten
 </button>
 
@@ -148,7 +149,7 @@ Bestellung Starten
 
 <ul id="list"></ul>
 
-<button class="wa" onclick="shareWhatsApp()">📲 WhatsApp</button>
+<button class="wa" onclick="shareWhatsApp()">📲 WhatsApp Liste senden</button>
 
 <div id="footer">
 <img src="logo.png">
@@ -158,16 +159,16 @@ Bestellung Starten
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
-let userId = localStorage.getItem("userId") || Math.random();
+let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
 localStorage.setItem("userId", userId);
 
 let userName = localStorage.getItem("userName") || prompt("Wie heißt du?");
 localStorage.setItem("userName", userName);
 
 function updateNameButton(){
-  nameBtn.innerText = "Eingeloggt als: "+userName+" (ändern)";
+  document.getElementById("nameBtn").innerText = "👤 Login: "+userName+" (ändern)";
 }
 updateNameButton();
 
@@ -192,40 +193,32 @@ time.oninput=()=>localStorage.setItem("time",time.value);
 gate.onchange=()=>localStorage.setItem("gate",gate.value);
 
 const orderCard = document.getElementById("orderCard");
+const startBtn = document.getElementById("startBtn");
 
 let orderActive = localStorage.getItem("orderActive") === "true";
-const startBtn = document.getElementById("startBtn");
 
 function updateStartButton(){
   if(orderActive){
     startBtn.innerText = "🟢 Bestellung läuft (Stoppen)";
     startBtn.style.background = "#ef4444";
     orderCard.style.display = "block";
-    // Felder sperren
-    restaurant.disabled = true;
-    time.disabled = true;
-    gate.disabled = true;
+    restaurant.disabled = time.disabled = gate.disabled = true;
   } else {
     startBtn.innerText = "🔴 Bestellung Starten";
     startBtn.style.background = "#3b82f6";
     orderCard.style.display = "none";
-    // Felder freigeben
-    restaurant.disabled = false;
-    time.disabled = false;
-    gate.disabled = false;
+    restaurant.disabled = time.disabled = gate.disabled = false;
   }
 }
 updateStartButton();
 
 window.toggleOrder = function(){
   if(orderActive){
-    let pw = prompt("Passwort zum Stoppen:");
-    if(pw !== "stop") return;
+    if(prompt("Passwort zum Stoppen:") !== "stop") return;
     orderActive = false;
   } else {
     orderActive = true;
   }
-
   localStorage.setItem("orderActive", orderActive);
   updateStartButton();
 }
@@ -242,97 +235,101 @@ onValue(ref(db,"orders"), snap=>{
 
  snap.forEach(child=>{
   let d=child.val();
-
   let li=document.createElement("li");
 
   li.innerHTML=`
    <div class="item-top">
-    <span>${d.user}: ${d.name} x${d.qty || 1}</span>
+    <span class="item-text">${d.user}: ${d.name} (x${d.qty || 1})</span>
     ${d.owner===userId?`<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>`:""}
    </div>
-
    <input id="edit-${child.key}" class="edit-input" value="${d.name}" style="display:none">
-
    <div id="c-${child.key}" class="controls">
     <button class="plus" onclick="changeQty('${child.key}',1)">+</button>
     <button class="minus" onclick="changeQty('${child.key}',-1)">-</button>
     <button class="delete" onclick="deleteOrder('${child.key}')">🗑</button>
-    <button onclick="saveEdit('${child.key}')">💾</button>
+    <button onclick="saveEdit('${child.key}')" style="background:#3b82f6;color:white;">💾</button>
    </div>
   `;
-
   list.appendChild(li);
  });
 });
 
-window.toggleEdit=id=>{
- let c=document.getElementById("c-"+id);
- let i=document.getElementById("edit-"+id);
+window.addOrder = async () => {
+  if(!orderActive) { alert("Bestellung ist gestoppt!"); return; }
+  let val = order.value.trim();
+  if(!val) return;
 
- c.classList.toggle("active");
+  const ordersRef = ref(db, "orders");
+  const snap = await get(ordersRef);
+  let existingId = null;
+  let currentQty = 1;
+
+  if(snap.exists()){
+    snap.forEach(child => {
+      let d = child.val();
+      // Wenn der gleiche User das gleiche Essen nochmal bestellt -> ID merken
+      if(d.owner === userId && d.name.toLowerCase() === val.toLowerCase()){
+        existingId = child.key;
+        currentQty = d.qty || 1;
+      }
+    });
+  }
+
+  if(existingId){
+    update(ref(db, "orders/" + existingId), { qty: currentQty + 1 });
+  } else {
+    push(ordersRef, { name: val, user: userName, owner: userId, qty: 1 });
+  }
+  order.value = "";
+}
+
+window.toggleEdit=id=>{
+ document.getElementById("c-"+id).classList.toggle("active");
+ let i=document.getElementById("edit-"+id);
  i.style.display=i.style.display==="none"?"block":"none";
 }
 
 window.saveEdit=id=>{
  let val=document.getElementById("edit-"+id).value;
  update(ref(db,"orders/"+id),{name:val});
+ window.toggleEdit(id);
 }
 
 window.changeQty=(id,delta)=>{
  let itemRef = ref(db,"orders/"+id);
-
- onValue(itemRef, snap=>{
+ get(itemRef).then(snap => {
   let data = snap.val();
   let newQty = (data.qty || 1) + delta;
-
-  if(newQty <= 0){
-    remove(itemRef);
-  }else{
-    update(itemRef,{qty:newQty});
-  }
- }, {onlyOnce:true});
+  if(newQty <= 0) remove(itemRef);
+  else update(itemRef,{qty:newQty});
+ });
 }
 
 window.deleteOrder=id=>{
  if(confirm("Löschen?")) remove(ref(db,"orders/"+id));
 }
 
-window.addOrder=()=>{
-  if(!orderActive){
-    alert("Bestellung ist gestoppt!");
-    return;
-  }
-
- let val=order.value;
- if(!val)return;
-
- push(ref(db,"orders"),{
-  name:val,
-  user:userName,
-  owner:userId,
-  qty:1
- });
-
- order.value="";
-}
-
 window.shareWhatsApp=()=>{
- let msg="🍽️ Bestellung\n\n";
- msg+=restaurant.value+"\n"+time.value+"\n"+gate.value+"\n\n";
+ let msg = `*🍽️ NEUE BESTELLUNG*\n\n`;
+ msg += `📍 *Restaurant:* ${restaurant.value || "Nicht angegeben"}\n`;
+ msg += `🕒 *Wann:* ${time.value || "Sofort"}\n`;
+ msg += `🚪 *Tor:* ${gate.value}\n`;
+ msg += `__________________________\n\n`;
 
- document.querySelectorAll("#list li").forEach(li=>{
-  // Um nur den Text der Bestellung ohne Button-Emojis zu senden:
-  const orderText = li.querySelector(".item-top span").innerText;
-  msg+="- "+orderText+"\n";
+ let hasItems = false;
+ document.querySelectorAll("#list li").forEach(li => {
+  const text = li.querySelector(".item-text").innerText;
+  msg += `✅ ${text}\n`;
+  hasItems = true;
  });
 
- window.open("https://wa.me/?text="+encodeURIComponent(msg));
+ if(!hasItems) msg += "_Noch keine Bestellungen vorhanden._";
+
+ window.open("https://wa.me/?text=" + encodeURIComponent(msg));
 }
 
 window.clearAll=()=>{
- let pw=prompt("Passwort:");
- if(pw!=="clear")return;
- remove(ref(db,"orders"));
+ if(prompt("Passwort zum Leeren:") === "clear") remove(ref(db,"orders"));
 }
 </script>
 
