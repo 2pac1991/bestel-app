@@ -104,8 +104,14 @@ li{
   border:none;
 }
 
-/* 🔥 NEU */
+/* NEU */
 #orderCard{display:none;}
+
+.locked{
+  background:#e5e7eb !important;
+  font-weight:bold;
+  color:#111;
+}
 </style>
 </head>
 
@@ -128,14 +134,12 @@ li{
 <option>Haupt-Tor</option>
 </select>
 
-<!-- ✅ JETZT UNTER TOR -->
 <button id="startBtn" onclick="toggleOrder()" style="width:100%;padding:12px;border-radius:10px;background:#3b82f6;color:white;margin-top:8px;">
 Bestellung Starten
 </button>
 
 </div>
 
-<!-- ✅ BESTELLFELD -->
 <div class="card" id="orderCard">
 <input id="order" placeholder="Was willst du essen?">
 <button class="add" onclick="addOrder()">+ Bestellung</button>
@@ -188,7 +192,7 @@ restaurant.oninput=()=>localStorage.setItem("restaurant",restaurant.value);
 time.oninput=()=>localStorage.setItem("time",time.value);
 gate.onchange=()=>localStorage.setItem("gate",gate.value);
 
-// 🔥 NEU
+// NEU
 const orderCard = document.getElementById("orderCard");
 
 let orderActive = localStorage.getItem("orderActive") === "true";
@@ -198,11 +202,28 @@ function updateStartButton(){
   if(orderActive){
     startBtn.innerText = "🟢 Bestellung läuft";
     startBtn.style.background = "#ef4444";
-    orderCard.style.display = "block"; // anzeigen
+    orderCard.style.display = "block";
+
+    restaurant.disabled = true;
+    time.disabled = true;
+    gate.disabled = true;
+
+    restaurant.classList.add("locked");
+    time.classList.add("locked");
+    gate.classList.add("locked");
+
   } else {
     startBtn.innerText = "🔴 Bestellung Starten";
     startBtn.style.background = "#3b82f6";
-    orderCard.style.display = "none"; // verstecken
+    orderCard.style.display = "none";
+
+    restaurant.disabled = false;
+    time.disabled = false;
+    gate.disabled = false;
+
+    restaurant.classList.remove("locked");
+    time.classList.remove("locked");
+    gate.classList.remove("locked");
   }
 }
 updateStartButton();
@@ -227,7 +248,7 @@ const app = initializeApp({
 });
 const db=getDatabase(app);
 
-// REST bleibt komplett gleich
+// REST unverändert
 onValue(ref(db,"orders"), snap=>{
  list.innerHTML="";
  if(!snap.exists())return;
