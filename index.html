@@ -9,13 +9,7 @@
 <style>
 *{box-sizing:border-box;}
 
-body{
-  font-family:Arial;
-  background:#f5f5f5;
-  margin:0;
-  padding:10px;
-}
-
+body{font-family:Arial;background:#f5f5f5;margin:0;padding:10px;}
 h1{text-align:center;font-size:22px;}
 
 #nameBtn{
@@ -61,22 +55,8 @@ input:disabled, select:disabled{
   color:#888;
 }
 
-.add{
-  background:#22c55e;
-  color:white;
-  width:100%;
-  padding:12px;
-  border-radius:10px;
-}
-
-.wa{
-  background:#25D366;
-  color:white;
-  width:100%;
-  padding:12px;
-  border-radius:10px;
-  margin-top:10px;
-}
+.add{background:#22c55e;color:white;width:100%;padding:12px;border-radius:10px;}
+.wa{background:#25D366;color:white;width:100%;padding:12px;border-radius:10px;margin-top:10px;}
 
 li{
   background:white;
@@ -127,16 +107,8 @@ li{
   margin-top:8px;
 }
 
-#footer{
-  text-align:center;
-  margin-top:20px;
-}
-
-#footer img{
-  width:60px;
-  height:60px;
-  border-radius:50%;
-}
+#footer{text-align:center;margin-top:20px;}
+#footer img{width:60px;height:60px;border-radius:50%;}
 
 #clearBtn{
   position:fixed;
@@ -268,7 +240,7 @@ onValue(ref(db,"orders"), snap=>{
 
   li.innerHTML=`
    <div class="item-top">
-    <span>${d.user}: ${d.name}</span>
+    <span>${d.user}: ${d.name} x${d.qty || 1}</span>
     ${d.owner===userId?`<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>`:""}
    </div>
 
@@ -299,10 +271,20 @@ window.saveEdit=id=>{
  update(ref(db,"orders/"+id),{name:val});
 }
 
-window.changeQty=(id)=>{
- let val=prompt("Neue Menge?");
- if(!val)return;
- update(ref(db,"orders/"+id),{name:val});
+// 🔥 HIER IST DER FIX
+window.changeQty=(id,delta)=>{
+ let itemRef = ref(db,"orders/"+id);
+
+ onValue(itemRef, snap=>{
+  let data = snap.val();
+  let newQty = (data.qty || 1) + delta;
+
+  if(newQty <= 0){
+    remove(itemRef);
+  }else{
+    update(itemRef,{qty:newQty});
+  }
+ }, {onlyOnce:true});
 }
 
 window.deleteOrder=id=>{
@@ -329,7 +311,8 @@ window.addOrder=()=>{
  push(ref(db,"orders"),{
   name:val,
   user:userName,
-  owner:userId
+  owner:userId,
+  qty:1
  });
 
  order.value="";
