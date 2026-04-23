@@ -57,14 +57,14 @@
             opacity: 0.8;
         }
 
-        /* User Button - jetzt dezenter */
+        /* User Button */
         #nameBtn {
             width: 100%;
             background: rgba(59, 130, 246, 0.05);
             color: var(--primary);
             border: 1px solid rgba(59, 130, 246, 0.2);
-            padding: 10px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 14px;
             font-weight: 600;
             font-size: 14px;
             margin-bottom: 25px;
@@ -78,6 +78,7 @@
             border-radius: 24px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 0 1px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
         .label {
@@ -101,14 +102,14 @@
             color: var(--text-main);
         }
 
-        input:focus {
+        input:focus, select:focus {
             background: #fff;
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
             outline: none;
         }
 
-        /* Buttons mit mehr Tiefe */
+        /* Buttons */
         .btn {
             width: 100%;
             padding: 16px;
@@ -117,7 +118,10 @@
             font-weight: 700;
             font-size: 16px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
 
         #startBtn { color: white; background: var(--primary); }
@@ -127,8 +131,11 @@
             color: white; 
             margin-top: 15px; 
             box-shadow: 0 8px 16px rgba(37, 211, 102, 0.2);
+            text-decoration: none;
         }
 
+        /* List Styles */
+        ul { padding: 0; margin: 0; }
         li {
             background: white;
             padding: 18px;
@@ -139,23 +146,31 @@
             list-style: none;
         }
 
+        .item-top { display: flex; justify-content: space-between; align-items: center; }
         .user-label { font-size: 11px; font-weight: 700; color: var(--primary); opacity: 0.8; }
         .food-name { font-weight: 700; font-size: 18px; display: block; margin-top: 2px; }
 
-        #orderCard { border: 2px solid rgba(34, 197, 94, 0.3); background: #f0fdf4; }
+        .edit-btn {
+            background: #f1f5f9;
+            color: var(--text-muted);
+            border-radius: 10px;
+            padding: 8px 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .controls { display: none; margin-top: 15px; gap: 8px; flex-wrap: wrap; }
+        .controls.active { display: flex; }
+        .control-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; color: white; font-weight: bold; cursor: pointer; }
+        
+        #orderCard { border: 2.5px solid rgba(34, 197, 94, 0.3); background: #f0fdf4; display: none; }
+        input:disabled, select:disabled { opacity: 0.6; cursor: not-allowed; }
 
         #clearBtn {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            background: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            font-size: 18px;
-            cursor: pointer;
+            position: fixed; bottom: 25px; right: 25px; background: white; border: none;
+            border-radius: 50%; width: 50px; height: 50px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
     </style>
 </head>
@@ -167,16 +182,17 @@
     <button id="nameBtn" onclick="changeName()">👤 Profil lädt...</button>
 
     <div class="card">
-        <span class="label">📍 Wo wird bestellt?</span>
+        <span class="label">📍 Restaurant / Laden</span>
         <input id="restaurant" placeholder="z. B. Burger House">
 
-        <span class="label">🕒 Wann wird bestellt?</span>
+        <span class="label">🕒 Uhrzeit</span>
         <input id="time" placeholder="z. B. 12:00 Uhr">
 
         <span class="label">🚪 Treffpunkt</span>
         <select id="gate">
             <option>Nord-Tor</option>
             <option>Haupt-Tor</option>
+            <option>Haupteingang</option>
             <option>Parkplatz</option>
         </select>
 
@@ -186,7 +202,7 @@
     <div class="card" id="orderCard">
         <span class="label">Deine Auswahl</span>
         <input id="order" placeholder="Was darf's sein?">
-        <button class="btn add-btn" onclick="addOrder()">Speichern</button>
+        <button class="btn add-btn" onclick="addOrder()">+ Speichern</button>
     </div>
 
     <ul id="list"></ul>
@@ -196,8 +212,139 @@
     </button>
 </div>
 
+<button id="clearBtn" onclick="clearAll()">🧹</button>
+
 <script type="module">
-    // ... (Hier fügst du die Firebase-Logik von oben wieder ein)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
+        databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // User Logik
+    let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("userId", userId);
+    let userName = localStorage.getItem("userName") || prompt("Wie heißt du?");
+    localStorage.setItem("userName", userName || "Gast");
+
+    function updateNameButton() {
+        document.getElementById("nameBtn").innerText = `👤 ${userName} (Name ändern)`;
+    }
+    updateNameButton();
+
+    window.changeName = () => {
+        let n = prompt("Neuer Name:", userName);
+        if(n) { userName = n; localStorage.setItem("userName", n); updateNameButton(); }
+    };
+
+    // Persistence
+    const fields = ['restaurant', 'time', 'gate'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        el.value = localStorage.getItem(id) || (id === 'gate' ? 'Nord-Tor' : '');
+        el.oninput = () => localStorage.setItem(id, el.value);
+    });
+
+    // Toggle Order
+    let orderActive = localStorage.getItem("orderActive") === "true";
+    function updateUI() {
+        const startBtn = document.getElementById("startBtn");
+        const orderCard = document.getElementById("orderCard");
+        if(orderActive) {
+            startBtn.innerText = "🛑 Bestellung stoppen";
+            startBtn.style.background = "var(--danger)";
+            orderCard.style.display = "block";
+            fields.forEach(id => document.getElementById(id).disabled = true);
+        } else {
+            startBtn.innerText = "🟢 Bestellung starten";
+            startBtn.style.background = "var(--primary)";
+            orderCard.style.display = "none";
+            fields.forEach(id => document.getElementById(id).disabled = false);
+        }
+    }
+    updateUI();
+
+    window.toggleOrder = () => {
+        if(orderActive) {
+            if(prompt("Passwort zum Stoppen:") !== "stop") return;
+            orderActive = false;
+        } else {
+            orderActive = true;
+        }
+        localStorage.setItem("orderActive", orderActive);
+        updateUI();
+    };
+
+    // List Logic
+    onValue(ref(db, "orders"), snap => {
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+        if(!snap.exists()) return;
+        snap.forEach(child => {
+            const d = child.val();
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <div class="item-top">
+                    <div>
+                        <span class="user-label">${d.user}</span>
+                        <span class="food-name" data-food="${d.name}" data-qty="${d.qty}">${d.name} <span style="color:var(--primary)">x${d.qty}</span></span>
+                    </div>
+                    ${d.owner === userId ? `<button class="edit-btn" onclick="toggleEdit('${child.key}')">Optionen</button>` : ""}
+                </div>
+                <div id="c-${child.key}" class="controls">
+                    <input id="edit-${child.key}" value="${d.name}" style="margin-bottom:10px">
+                    <div style="display:flex; gap:8px;">
+                        <button class="control-btn" style="background:var(--success)" onclick="changeQty('${child.key}',1)">+</button>
+                        <button class="control-btn" style="background:var(--warning)" onclick="changeQty('${child.key}',-1)">-</button>
+                        <button class="control-btn" style="background:var(--danger)" onclick="deleteOrder('${child.key}')">Löschen</button>
+                    </div>
+                    <button class="control-btn" style="background:var(--primary); width:100%; margin-top:5px" onclick="saveEdit('${child.key}')">💾 Speichern</button>
+                </div>`;
+            list.appendChild(li);
+        });
+    });
+
+    window.addOrder = async () => {
+        const input = document.getElementById("order");
+        const val = input.value.trim();
+        if(!val) return;
+        const snap = await get(ref(db, "orders"));
+        let foundKey = null, foundQty = 0;
+        if(snap.exists()) {
+            snap.forEach(c => {
+                if(c.val().owner === userId && c.val().name.toLowerCase() === val.toLowerCase()) {
+                    foundKey = c.key; foundQty = c.val().qty || 1;
+                }
+            });
+        }
+        if(foundKey) update(ref(db, `orders/${foundKey}`), { qty: foundQty + 1 });
+        else push(ref(db, "orders"), { name: val, user: userName, owner: userId, qty: 1 });
+        input.value = "";
+    };
+
+    window.toggleEdit = id => document.getElementById(`c-${id}`).classList.toggle("active");
+    window.saveEdit = id => {
+        update(ref(db, `orders/${id}`), { name: document.getElementById(`edit-${id}`).value });
+        window.toggleEdit(id);
+    };
+    window.changeQty = (id, delta) => {
+        const r = ref(db, `orders/${id}`);
+        get(r).then(s => {
+            const n = (s.val().qty || 1) + delta;
+            n <= 0 ? remove(r) : update(r, { qty: n });
+        });
+    };
+    window.deleteOrder = id => confirm("Löschen?") && remove(ref(db, `orders/${id}`));
+    window.shareWhatsApp = () => {
+        let m = `*🍽️ BESTELL-LISTE: ${document.getElementById("restaurant").value}*\n🕒 Zeit: ${document.getElementById("time").value}\n🚪 Ort: ${document.getElementById("gate").value}\n––––––––––––––––––\n`;
+        document.querySelectorAll(".food-name").forEach(i => m += `• ${i.getAttribute("data-food")} (x${i.getAttribute("data-qty")})\n`);
+        window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
+    };
+    window.clearAll = () => prompt("Passwort:") === "clear" && remove(ref(db, "orders"));
 </script>
 
 </body>
