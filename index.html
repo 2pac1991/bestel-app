@@ -22,6 +22,7 @@ h1{
   margin-bottom:10px;
 }
 
+/* 👤 Anzeige */
 #nameBtn{
   display:block;
   margin:0 auto 10px auto;
@@ -123,7 +124,7 @@ li{
 
 <h1>🍽️ Bestell App</h1>
 
-<button id="nameBtn" onclick="changeName()">👤 Name ändern</button>
+<button id="nameBtn" onclick="changeName()"></button>
 
 <div class="card">
 📍 Restaurant
@@ -158,12 +159,14 @@ li{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
+// USER ID
 let userId = localStorage.getItem("userId");
 if(!userId){
   userId = Math.random().toString(36).substring(2);
   localStorage.setItem("userId", userId);
 }
 
+// NAME
 let userName = localStorage.getItem("userName");
 
 if(!userName){
@@ -172,11 +175,14 @@ if(!userName){
   localStorage.setItem("userName", userName);
 }
 
+// 👉 TEXT SETZEN
 function updateNameButton(){
-  document.getElementById("nameBtn").innerText = "👤 " + userName + " ändern";
+  document.getElementById("nameBtn").innerText =
+    "Eingeloggt als: " + userName + " (ändern)";
 }
 updateNameButton();
 
+// NAME ÄNDERN
 window.changeName = async function(){
   let newName = prompt("Neuer Name:");
   if(!newName) return;
@@ -185,13 +191,11 @@ window.changeName = async function(){
   localStorage.setItem("userName", userName);
   updateNameButton();
 
-  // 🔥 ALLE EIGENEN BESTELLUNGEN UPDATEN
+  // 🔥 ALTE BESTELLUNGEN UPDATEN
   const snapshot = await get(ref(db,"orders"));
-
   if(snapshot.exists()){
     snapshot.forEach(child=>{
       let data = child.val();
-
       if(data.owner === userId){
         update(ref(db,"orders/"+child.key),{
           user:userName
@@ -203,6 +207,7 @@ window.changeName = async function(){
   alert("Name aktualisiert!");
 }
 
+// INPUTS
 const restaurantInput = document.getElementById("restaurant");
 const timeInput = document.getElementById("time");
 const gateInput = document.getElementById("gate");
@@ -215,6 +220,7 @@ restaurantInput.oninput = () => localStorage.setItem("restaurant", restaurantInp
 timeInput.oninput = () => localStorage.setItem("time", timeInput.value);
 gateInput.onchange = () => localStorage.setItem("gate", gateInput.value);
 
+// FIREBASE
 const app = initializeApp({
   apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
   databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
@@ -223,6 +229,7 @@ const app = initializeApp({
 const db = getDatabase(app);
 const list = document.getElementById("list");
 
+// LIVE
 onValue(ref(db,"orders"), snapshot=>{
   list.innerHTML="";
   if(!snapshot.exists()) return;
@@ -252,6 +259,7 @@ onValue(ref(db,"orders"), snapshot=>{
   });
 });
 
+// ADD
 window.addOrder = function(){
   let input=document.getElementById("order");
   if(input.value==="") return;
@@ -266,6 +274,7 @@ window.addOrder = function(){
   input.value="";
 }
 
+// QTY
 window.changeQty = function(id, qty){
   if(qty<=0){
     remove(ref(db,"orders/"+id));
@@ -274,12 +283,14 @@ window.changeQty = function(id, qty){
   }
 }
 
+// DELETE
 window.deleteOrder = function(id){
   if(confirm("Löschen?")){
     remove(ref(db,"orders/"+id));
   }
 }
 
+// EDIT
 window.toggleEdit = function(id){
   let controls = document.getElementById("controls-"+id);
   let input = document.getElementById("edit-"+id);
@@ -293,6 +304,7 @@ window.saveEdit = function(id){
   update(ref(db,"orders/"+id),{ name:value });
 }
 
+// WHATSAPP
 window.shareWhatsApp = function(){
   let msg="🍽️ Bestellung\n\n";
   msg+="📍 "+restaurantInput.value+"\n";
@@ -306,6 +318,7 @@ window.shareWhatsApp = function(){
   window.open("https://wa.me/?text="+encodeURIComponent(msg));
 }
 
+// CLEAR
 window.clearAll = function(){
   let pw = prompt("Passwort:");
   if(pw!=="clear") return;
