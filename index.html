@@ -23,25 +23,34 @@ h1{text-align:center;font-size:22px;}
   margin:0 auto 10px auto;
   background:#3b82f6;
   color:white;
-  padding:8px;
-  border-radius:8px;
+  padding:10px;
+  border-radius:10px;
+  width:100%;
 }
 
 /* STATUS */
 #status{
   text-align:center;
   font-weight:bold;
-  margin-bottom:10px;
+  margin:10px 0;
+}
+
+/* 🔥 SCHÖNE BUTTONS */
+.main-btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  margin-top:8px;
 }
 
 .start{
-  width:100%;
   background:#22c55e;
   color:white;
 }
 
 .stop{
-  width:100%;
   background:#ef4444;
   color:white;
 }
@@ -51,6 +60,7 @@ h1{text-align:center;font-size:22px;}
   padding:14px;
   border-radius:12px;
   margin-bottom:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 input, select{
@@ -61,8 +71,22 @@ input, select{
   border:1px solid #ddd;
 }
 
-.add{width:100%;background:#22c55e;color:white;}
-.wa{width:100%;background:#25D366;color:white;margin-top:10px;}
+.add{
+  width:100%;
+  background:#22c55e;
+  color:white;
+  padding:12px;
+  border-radius:10px;
+}
+
+.wa{
+  width:100%;
+  background:#25D366;
+  color:white;
+  margin-top:10px;
+  padding:12px;
+  border-radius:10px;
+}
 
 li{
   list-style:none;
@@ -86,6 +110,7 @@ li{
   border-radius:50%;
   width:60px;
   height:60px;
+  font-size:22px;
 }
 </style>
 </head>
@@ -110,7 +135,11 @@ li{
 </select>
 
 <div id="status">🔴 Bestellung gestoppt</div>
-<button id="startBtn" class="start" onclick="startOrder()">Bestellung starten</button>
+
+<button id="startBtn" class="main-btn start" onclick="startOrder()">
+Bestellung starten
+</button>
+
 </div>
 
 <div class="card">
@@ -126,20 +155,13 @@ li{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
-// USER
-let userId = localStorage.getItem("userId");
-if(!userId){
-  userId = Math.random();
-  localStorage.setItem("userId", userId);
-}
+let userId = localStorage.getItem("userId") || Math.random();
+localStorage.setItem("userId", userId);
 
-let userName = localStorage.getItem("userName");
-if(!userName){
-  userName = prompt("Wie heißt du?");
-  localStorage.setItem("userName", userName);
-}
+let userName = localStorage.getItem("userName") || prompt("Wie heißt du?");
+localStorage.setItem("userName", userName);
 
 function updateNameButton(){
   document.getElementById("nameBtn").innerText =
@@ -155,7 +177,7 @@ window.changeName = function(){
   updateNameButton();
 }
 
-// INPUTS speichern
+// INPUTS
 const restaurant = document.getElementById("restaurant");
 const time = document.getElementById("time");
 const gate = document.getElementById("gate");
@@ -175,21 +197,20 @@ const app = initializeApp({
 });
 const db = getDatabase(app);
 
-// STATUS SYNC
+// STATUS
 onValue(ref(db,"status"), snap=>{
   let running = snap.val();
-
   let status = document.getElementById("status");
   let btn = document.getElementById("startBtn");
 
   if(running){
     status.innerText="🟢 Bestellung läuft...";
     btn.innerText="Bestellung stoppen";
-    btn.className="stop";
+    btn.className="main-btn stop";
   }else{
     status.innerText="🔴 Bestellung gestoppt";
     btn.innerText="Bestellung starten";
-    btn.className="start";
+    btn.className="main-btn start";
   }
 });
 
@@ -204,8 +225,6 @@ window.startOrder = function(){
       let pw = prompt("Passwort:");
       if(pw==="stop"){
         set(ref(db,"status"), false);
-      }else{
-        alert("Falsch!");
       }
     }
   }, {onlyOnce:true});
@@ -218,19 +237,17 @@ window.addOrder = function(){
 
   push(ref(db,"orders"),{
     name:val,
-    qty:1,
     user:userName,
-    owner:userId
+    owner:userId,
+    qty:1
   });
 
   document.getElementById("order").value="";
 }
 
-// CLEAR
 window.clearAll = function(){
   let pw = prompt("Passwort:");
   if(pw!=="clear") return;
-
   remove(ref(db,"orders"));
 }
 </script>
