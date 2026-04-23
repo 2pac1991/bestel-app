@@ -22,7 +22,7 @@ h1{
   margin-bottom:10px;
 }
 
-/* 👤 Button oben */
+/* 👤 Button */
 #nameBtn{
   display:block;
   margin:0 auto 10px auto;
@@ -31,6 +31,7 @@ h1{
   border:none;
   padding:8px 12px;
   border-radius:8px;
+  font-weight:bold;
 }
 
 .card{
@@ -174,7 +175,15 @@ if(!userName){
   localStorage.setItem("userName", userName);
 }
 
-// 🔥 NAME ÄNDERN
+// 👉 BUTTON TEXT SETZEN
+function updateNameButton(){
+  document.getElementById("nameBtn").innerText = "👤 " + userName + " ändern";
+}
+
+// beim Start setzen
+updateNameButton();
+
+// NAME ÄNDERN
 window.changeName = function(){
   let newName = prompt("Neuer Name:");
   if(!newName) return;
@@ -182,7 +191,7 @@ window.changeName = function(){
   userName = newName;
   localStorage.setItem("userName", userName);
 
-  alert("Name geändert!");
+  updateNameButton(); // 🔥 Button aktualisieren
 }
 
 // INPUTS
