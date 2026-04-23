@@ -104,15 +104,11 @@ li{
   border:none;
 }
 
-/* NEU */
 #orderCard{display:none;}
 
-.locked{
-  background:#e5e7eb !important;
-  font-weight:bold;
-  color:#111;
-  pointer-events:none;
-  opacity:0.7;
+/* 🔥 NEU: ausgegraut */
+.disabled{
+  opacity:0.5;
 }
 </style>
 </head>
@@ -161,7 +157,6 @@ Bestellung Starten
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
-// USER
 let userId = localStorage.getItem("userId") || Math.random();
 localStorage.setItem("userId", userId);
 
@@ -181,7 +176,6 @@ window.changeName = function(){
   updateNameButton();
 }
 
-// INPUTS speichern
 const restaurant=document.getElementById("restaurant");
 const time=document.getElementById("time");
 const gate=document.getElementById("gate");
@@ -194,46 +188,33 @@ restaurant.oninput=()=>localStorage.setItem("restaurant",restaurant.value);
 time.oninput=()=>localStorage.setItem("time",time.value);
 gate.onchange=()=>localStorage.setItem("gate",gate.value);
 
-// NEU
 const orderCard = document.getElementById("orderCard");
 
 let orderActive = localStorage.getItem("orderActive") === "true";
 const startBtn = document.getElementById("startBtn");
+
+// 🔥 NEU: disable function
+function setInputsDisabled(state){
+  restaurant.disabled = state;
+  time.disabled = state;
+  gate.disabled = state;
+
+  restaurant.classList.toggle("disabled", state);
+  time.classList.toggle("disabled", state);
+  gate.classList.toggle("disabled", state);
+}
 
 function updateStartButton(){
   if(orderActive){
     startBtn.innerText = "🟢 Bestellung läuft";
     startBtn.style.background = "#ef4444";
     orderCard.style.display = "block";
-
-    // 🔒 wirklich sperren
-    restaurant.disabled = true;
-    time.disabled = true;
-    gate.disabled = true;
-
-    restaurant.setAttribute("readonly", true);
-    time.setAttribute("readonly", true);
-
-    restaurant.classList.add("locked");
-    time.classList.add("locked");
-    gate.classList.add("locked");
-
+    setInputsDisabled(true); // 🔥
   } else {
     startBtn.innerText = "🔴 Bestellung Starten";
     startBtn.style.background = "#3b82f6";
     orderCard.style.display = "none";
-
-    // 🔓 entsperren
-    restaurant.disabled = false;
-    time.disabled = false;
-    gate.disabled = false;
-
-    restaurant.removeAttribute("readonly");
-    time.removeAttribute("readonly");
-
-    restaurant.classList.remove("locked");
-    time.classList.remove("locked");
-    gate.classList.remove("locked");
+    setInputsDisabled(false); // 🔥
   }
 }
 updateStartButton();
@@ -251,14 +232,12 @@ window.toggleOrder = function(){
   updateStartButton();
 }
 
-// FIREBASE
 const app = initializeApp({
  apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
  databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
 });
 const db=getDatabase(app);
 
-// REST unverändert
 onValue(ref(db,"orders"), snap=>{
  list.innerHTML="";
  if(!snap.exists())return;
