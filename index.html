@@ -238,19 +238,9 @@ onValue(ref(db,"status"), snap=>{
  }
 });
 
-// 🔥 START / STOP
+// 🔥 START / STOP OHNE PASSWORT
 window.toggleOrder = function(){
-
- if(!runningState){
-   set(ref(db,"status"), true);
- }else{
-   let pw = prompt("Passwort zum Stoppen:");
-   if(pw === "stop"){
-     set(ref(db,"status"), false);
-   }else{
-     alert("Falsches Passwort!");
-   }
- }
+  set(ref(db,"status"), !runningState);
 }
 
 // BESTELLUNGEN
