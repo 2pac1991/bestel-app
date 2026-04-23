@@ -103,6 +103,9 @@ li{
   font-size:22px;
   border:none;
 }
+
+/* 🔥 NEU */
+#orderCard{display:none;}
 </style>
 </head>
 
@@ -119,18 +122,21 @@ li{
 🕒 Wann
 <input id="time" placeholder="z. B. 17:20 Uhr">
 
-<button id="startBtn" onclick="toggleOrder()" style="width:100%;padding:12px;border-radius:10px;background:#3b82f6;color:white;margin-top:8px;">
-Bestellung Starten
-</button>
-
 🚪 Tor
 <select id="gate">
 <option selected>Nord-Tor</option>
 <option>Haupt-Tor</option>
 </select>
+
+<!-- ✅ JETZT UNTER TOR -->
+<button id="startBtn" onclick="toggleOrder()" style="width:100%;padding:12px;border-radius:10px;background:#3b82f6;color:white;margin-top:8px;">
+Bestellung Starten
+</button>
+
 </div>
 
-<div class="card">
+<!-- ✅ BESTELLFELD -->
+<div class="card" id="orderCard">
 <input id="order" placeholder="Was willst du essen?">
 <button class="add" onclick="addOrder()">+ Bestellung</button>
 </div>
@@ -182,7 +188,9 @@ restaurant.oninput=()=>localStorage.setItem("restaurant",restaurant.value);
 time.oninput=()=>localStorage.setItem("time",time.value);
 gate.onchange=()=>localStorage.setItem("gate",gate.value);
 
-// ✅ BESTELL STATUS (NEU)
+// 🔥 NEU
+const orderCard = document.getElementById("orderCard");
+
 let orderActive = localStorage.getItem("orderActive") === "true";
 const startBtn = document.getElementById("startBtn");
 
@@ -190,9 +198,11 @@ function updateStartButton(){
   if(orderActive){
     startBtn.innerText = "🟢 Bestellung läuft";
     startBtn.style.background = "#ef4444";
+    orderCard.style.display = "block"; // anzeigen
   } else {
     startBtn.innerText = "🔴 Bestellung Starten";
     startBtn.style.background = "#3b82f6";
+    orderCard.style.display = "none"; // verstecken
   }
 }
 updateStartButton();
@@ -217,7 +227,7 @@ const app = initializeApp({
 });
 const db=getDatabase(app);
 
-// BESTELLUNGEN
+// REST bleibt komplett gleich
 onValue(ref(db,"orders"), snap=>{
  list.innerHTML="";
  if(!snap.exists())return;
