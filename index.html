@@ -37,7 +37,7 @@
             padding: 20px;
         }
 
-        /* --- Moderner Header Bereich mit kleinem Logo --- */
+        /* --- Moderner Header Bereich mit dem neuen Logo --- */
         .app-header {
             width: 100%;
             background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(248, 250, 252, 0) 100%);
@@ -52,16 +52,15 @@
         .header-content {
             display: flex;
             align-items: center;
-            gap: 15px; /* Abstand Logo <-> Text */
+            gap: 15px;
         }
 
-        /* Kleines Logo Icon */
         .header-logo {
-            width: 50px; /* Klein und fein */
-            height: 50px;
-            border-radius: 50%; /* Kreisrund */
+            width: 60px; /* Leicht vergrößert für bessere Sichtbarkeit */
+            height: 60px;
+            border-radius: 50%;
             background: #fff;
-            object-fit: cover; /* Bild füllt Kreis */
+            object-fit: cover;
             border: 2px solid #fff;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
@@ -76,7 +75,6 @@
             -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.05));
         }
-        /* --- Ende Header Bereich --- */
 
         /* User Button */
         #nameBtn {
@@ -92,7 +90,6 @@
             cursor: pointer;
         }
 
-        /* Modern Cards */
         .card {
             background: var(--card-bg);
             padding: 24px;
@@ -123,14 +120,6 @@
             color: var(--text-main);
         }
 
-        input:focus, select:focus {
-            background: #fff;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-            outline: none;
-        }
-
-        /* Buttons */
         .btn {
             width: 100%;
             padding: 16px;
@@ -147,15 +136,8 @@
 
         #startBtn { color: white; background: var(--primary); }
         .add-btn { background: var(--success); color: white; margin-top: 10px; }
-        .wa-btn { 
-            background: #25D366; 
-            color: white; 
-            margin-top: 15px; 
-            box-shadow: 0 8px 16px rgba(37, 211, 102, 0.2);
-            text-decoration: none;
-        }
+        .wa-btn { background: #25D366; color: white; margin-top: 15px; text-decoration: none; }
 
-        /* List Styles */
         ul { padding: 0; margin: 0; }
         li {
             background: white;
@@ -199,7 +181,7 @@
 
     <header class="app-header">
         <div class="header-content">
-            <img src="PFAD_ZU_DEINEM_LOGO.png" alt="Logo" class="header-logo">
+            <img src="logo.png" alt="Logo" class="header-logo">
             <h1>Bestell-Liste</h1>
         </div>
     </header>
