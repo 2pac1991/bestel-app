@@ -35,7 +35,7 @@ h1{text-align:center;font-size:22px;}
   margin:10px 0;
 }
 
-/* 🔥 SCHÖNE BUTTONS */
+/* BUTTONS */
 .main-btn{
   width:100%;
   padding:12px;
@@ -45,22 +45,14 @@ h1{text-align:center;font-size:22px;}
   margin-top:8px;
 }
 
-.start{
-  background:#22c55e;
-  color:white;
-}
-
-.stop{
-  background:#ef4444;
-  color:white;
-}
+.start{background:#22c55e;color:white;}
+.stop{background:#ef4444;color:white;}
 
 .card{
   background:white;
   padding:14px;
   border-radius:12px;
   margin-bottom:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 input, select{
@@ -69,6 +61,12 @@ input, select{
   margin:6px 0;
   border-radius:10px;
   border:1px solid #ddd;
+}
+
+/* 🔥 GRAU WENN DISABLED */
+input:disabled, select:disabled{
+  background:#e5e7eb;
+  color:#888;
 }
 
 .add{
@@ -110,7 +108,6 @@ li{
   border-radius:50%;
   width:60px;
   height:60px;
-  font-size:22px;
 }
 </style>
 </head>
@@ -200,6 +197,7 @@ const db = getDatabase(app);
 // STATUS
 onValue(ref(db,"status"), snap=>{
   let running = snap.val();
+
   let status = document.getElementById("status");
   let btn = document.getElementById("startBtn");
 
@@ -207,10 +205,21 @@ onValue(ref(db,"status"), snap=>{
     status.innerText="🟢 Bestellung läuft...";
     btn.innerText="Bestellung stoppen";
     btn.className="main-btn stop";
+
+    // 🔥 FELDER SPERREN
+    restaurant.disabled = true;
+    time.disabled = true;
+    gate.disabled = true;
+
   }else{
     status.innerText="🔴 Bestellung gestoppt";
     btn.innerText="Bestellung starten";
     btn.className="main-btn start";
+
+    // 🔓 FELDER FREIGEBEN
+    restaurant.disabled = false;
+    time.disabled = false;
+    gate.disabled = false;
   }
 });
 
