@@ -24,38 +24,64 @@
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 0; /* Geändert für Header */
             display: flex;
             flex-direction: column;
             align-items: center;
             -webkit-font-smoothing: antialiased;
         }
 
-        .container { width: 100%; max-width: 500px; }
+        /* Container für den Inhalt unter dem Header */
+        .content-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
 
+        /* --- Neuer, geiler Header Bereich --- */
+        .app-header {
+            width: 100%;
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(248, 250, 252, 0) 100%);
+            padding: 30px 20px 10px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Abstand Logo <-> Text */
+        }
+
+        /* Logo Styling */
+        .header-logo {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%; /* Kreisrund */
+            background: #fff;
+            object-fit: cover; /* Bild füllt Kreis */
+            border: 3px solid #fff;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Modernisierte Überschrift im Header */
         h1 {
-            font-size: 38px;
+            font-size: 36px;
             font-weight: 900;
-            text-align: center;
-            margin-bottom: 35px;
+            margin: 0;
             letter-spacing: -1.5px;
             background: linear-gradient(135deg, #1e293b 30%, #3b82f6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.05));
         }
+        /* --- Ende Header Bereich --- */
 
-        h1::after {
-            content: '';
-            display: block;
-            width: 50px;
-            height: 5px;
-            background: var(--primary);
-            margin: 10px auto 0;
-            border-radius: 10px;
-            opacity: 0.8;
-        }
 
+        /* User Button */
         #nameBtn {
             width: 100%;
             background: rgba(59, 130, 246, 0.05);
@@ -69,6 +95,7 @@
             cursor: pointer;
         }
 
+        /* Modern Cards */
         .card {
             background: var(--card-bg);
             padding: 24px;
@@ -106,6 +133,7 @@
             outline: none;
         }
 
+        /* Buttons */
         .btn {
             width: 100%;
             padding: 16px;
@@ -130,6 +158,7 @@
             text-decoration: none;
         }
 
+        /* List Styles */
         ul { padding: 0; margin: 0; }
         li {
             background: white;
@@ -171,41 +200,46 @@
 </head>
 <body>
 
-<div class="container">
-    <h1>Bestell-Liste</h1>
+    <header class="app-header">
+        <div class="header-content">
+            <img src="logo.png" alt="Logo" class="header-logo">
+            <h1>Bestell-Liste</h1>
+        </div>
+    </header>
 
-    <button id="nameBtn" onclick="changeName()">👤 Profil lädt...</button>
+    <div class="content-container">
+        <button id="nameBtn" onclick="changeName()">👤 Profil lädt...</button>
 
-    <div class="card">
-        <span class="label">📍 Restaurant / Laden</span>
-        <input id="restaurant" placeholder="z. B. Burger House">
+        <div class="card">
+            <span class="label">📍 Restaurant / Laden</span>
+            <input id="restaurant" placeholder="z. B. Burger House">
 
-        <span class="label">🕒 Uhrzeit</span>
-        <input id="time" placeholder="z. B. 12:00 Uhr">
+            <span class="label">🕒 Uhrzeit</span>
+            <input id="time" placeholder="z. B. 12:00 Uhr">
 
-        <span class="label">🚪 Treffpunkt</span>
-        <select id="gate">
-            <option>Nord-Tor</option>
-            <option>Haupt-Tor</option>
-        </select>
+            <span class="label">🚪 Treffpunkt</span>
+            <select id="gate">
+                <option>Nord-Tor</option>
+                <option>Haupt-Tor</option>
+            </select>
 
-        <button id="startBtn" class="btn" onclick="toggleOrder()">Laden...</button>
+            <button id="startBtn" class="btn" onclick="toggleOrder()">Laden...</button>
+        </div>
+
+        <div class="card" id="orderCard">
+            <span class="label">Deine Auswahl</span>
+            <input id="order" placeholder="Was darf's sein?">
+            <button class="btn add-btn" onclick="addOrder()">+ Speichern</button>
+        </div>
+
+        <ul id="list"></ul>
+
+        <button class="btn wa-btn" onclick="shareWhatsApp()">
+            📲 Per WhatsApp teilen
+        </button>
     </div>
 
-    <div class="card" id="orderCard">
-        <span class="label">Deine Auswahl</span>
-        <input id="order" placeholder="Was darf's sein?">
-        <button class="btn add-btn" onclick="addOrder()">+ Speichern</button>
-    </div>
-
-    <ul id="list"></ul>
-
-    <button class="btn wa-btn" onclick="shareWhatsApp()">
-        📲 Per WhatsApp teilen
-    </button>
-</div>
-
-<button id="clearBtn" onclick="clearAll()">🧹</button>
+    <button id="clearBtn" onclick="clearAll()">🧹</button>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -323,7 +357,9 @@
     window.changeQty = (id, delta) => {
         const r = ref(db, `orders/${id}`);
         get(r).then(s => {
-            const n = (s.val().qty || 1) + delta;
+            const data = s.val();
+            if(!data) return;
+            const n = (data.qty || 1) + delta;
             n <= 0 ? remove(r) : update(r, { qty: n });
         });
     };
