@@ -167,6 +167,7 @@ li{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
+// USER
 let userId = localStorage.getItem("userId") || Math.random();
 localStorage.setItem("userId", userId);
 
@@ -186,6 +187,7 @@ window.changeName = function(){
   updateNameButton();
 }
 
+// INPUTS
 const restaurant=document.getElementById("restaurant");
 const time=document.getElementById("time");
 const gate=document.getElementById("gate");
@@ -198,6 +200,7 @@ restaurant.oninput=()=>localStorage.setItem("restaurant",restaurant.value);
 time.oninput=()=>localStorage.setItem("time",time.value);
 gate.onchange=()=>localStorage.setItem("gate",gate.value);
 
+// FIREBASE
 const app = initializeApp({
  apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
  databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
@@ -227,6 +230,27 @@ onValue(ref(db,"status"), snap=>{
   gate.disabled=false;
  }
 });
+
+// START / STOP (FIX)
+window.startOrder = function(){
+ const statusRef = ref(db,"status");
+
+ onValue(statusRef, snap=>{
+  let running = snap.val();
+
+  if(!running){
+    set(statusRef, true);
+  }else{
+    let pw = prompt("Passwort zum Stoppen:");
+    if(pw === "stop"){
+      set(statusRef, false);
+    }else{
+      alert("Falsches Passwort!");
+    }
+  }
+
+ }, {onlyOnce:true});
+}
 
 // BESTELLUNGEN
 onValue(ref(db,"orders"), snap=>{
@@ -271,7 +295,6 @@ window.saveEdit=id=>{
  update(ref(db,"orders/"+id),{name:val});
 }
 
-// 🔥 HIER IST DER FIX
 window.changeQty=(id,delta)=>{
  let itemRef = ref(db,"orders/"+id);
 
@@ -289,19 +312,6 @@ window.changeQty=(id,delta)=>{
 
 window.deleteOrder=id=>{
  if(confirm("Löschen?")) remove(ref(db,"orders/"+id));
-}
-
-window.startOrder=()=>{
- onValue(ref(db,"status"),snap=>{
-  let running=snap.val();
-
-  if(!running){
-   set(ref(db,"status"),true);
-  }else{
-   let pw=prompt("Passwort:");
-   if(pw==="stop") set(ref(db,"status"),false);
-  }
- },{onlyOnce:true});
 }
 
 window.addOrder=()=>{
