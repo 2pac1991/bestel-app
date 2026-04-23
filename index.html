@@ -16,22 +16,34 @@ body{
   padding:10px;
 }
 
-h1{
-  text-align:center;
-  font-size:22px;
-  margin-bottom:10px;
-}
+h1{text-align:center;font-size:22px;}
 
-/* 👤 Anzeige */
 #nameBtn{
   display:block;
   margin:0 auto 10px auto;
   background:#3b82f6;
   color:white;
-  border:none;
-  padding:8px 12px;
+  padding:8px;
   border-radius:8px;
+}
+
+/* STATUS */
+#status{
+  text-align:center;
   font-weight:bold;
+  margin-bottom:10px;
+}
+
+.start{
+  width:100%;
+  background:#22c55e;
+  color:white;
+}
+
+.stop{
+  width:100%;
+  background:#ef4444;
+  color:white;
 }
 
 .card{
@@ -39,7 +51,6 @@ h1{
   padding:14px;
   border-radius:12px;
   margin-bottom:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 input, select{
@@ -48,14 +59,6 @@ input, select{
   margin:6px 0;
   border-radius:10px;
   border:1px solid #ddd;
-  font-size:16px;
-}
-
-button{
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
 }
 
 .add{width:100%;background:#22c55e;color:white;}
@@ -72,39 +75,7 @@ li{
 .item-top{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  font-weight:bold;
 }
-
-.edit-btn{
-  background:#3b82f6;
-  color:white;
-  border-radius:50%;
-  width:32px;
-  height:32px;
-}
-
-.controls{
-  display:none;
-  gap:5px;
-  margin-top:8px;
-}
-
-.controls.active{display:flex;}
-.controls button{flex:1;}
-
-.plus{background:#22c55e;color:white;}
-.minus{background:#f59e0b;color:white;}
-.delete{background:#ef4444;color:white;}
-
-.edit-input{
-  width:100%;
-  padding:8px;
-  margin-top:8px;
-}
-
-#footer{text-align:center;margin-top:15px;}
-#footer img{width:60px;height:60px;border-radius:50%;}
 
 #clearBtn{
   position:fixed;
@@ -115,7 +86,6 @@ li{
   border-radius:50%;
   width:60px;
   height:60px;
-  font-size:22px;
 }
 </style>
 </head>
@@ -138,6 +108,9 @@ li{
   <option value="Nord-Tor" selected>Nord-Tor</option>
   <option value="Haupt-Tor">Haupt-Tor</option>
 </select>
+
+<div id="status">🔴 Bestellung gestoppt</div>
+<button id="startBtn" class="start" onclick="startOrder()">Bestellung starten</button>
 </div>
 
 <div class="card">
@@ -149,173 +122,108 @@ li{
 
 <button class="wa" onclick="shareWhatsApp()">📲 WhatsApp</button>
 
-<div id="footer">
-<img src="logo.png">
-</div>
-
 <button id="clearBtn" onclick="clearAll()">🧹</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
-// USER ID
+// USER
 let userId = localStorage.getItem("userId");
 if(!userId){
-  userId = Math.random().toString(36).substring(2);
+  userId = Math.random();
   localStorage.setItem("userId", userId);
 }
 
-// NAME
 let userName = localStorage.getItem("userName");
-
 if(!userName){
   userName = prompt("Wie heißt du?");
-  if(!userName) userName = "Unbekannt";
   localStorage.setItem("userName", userName);
 }
 
-// 👉 TEXT SETZEN
 function updateNameButton(){
   document.getElementById("nameBtn").innerText =
     "Eingeloggt als: " + userName + " (ändern)";
 }
 updateNameButton();
 
-// NAME ÄNDERN
-window.changeName = async function(){
-  let newName = prompt("Neuer Name:");
-  if(!newName) return;
-
-  userName = newName;
-  localStorage.setItem("userName", userName);
+window.changeName = function(){
+  let n = prompt("Neuer Name:");
+  if(!n) return;
+  userName = n;
+  localStorage.setItem("userName", n);
   updateNameButton();
-
-  // 🔥 ALTE BESTELLUNGEN UPDATEN
-  const snapshot = await get(ref(db,"orders"));
-  if(snapshot.exists()){
-    snapshot.forEach(child=>{
-      let data = child.val();
-      if(data.owner === userId){
-        update(ref(db,"orders/"+child.key),{
-          user:userName
-        });
-      }
-    });
-  }
-
-  alert("Name aktualisiert!");
 }
 
-// INPUTS
-const restaurantInput = document.getElementById("restaurant");
-const timeInput = document.getElementById("time");
-const gateInput = document.getElementById("gate");
+// INPUTS speichern
+const restaurant = document.getElementById("restaurant");
+const time = document.getElementById("time");
+const gate = document.getElementById("gate");
 
-restaurantInput.value = localStorage.getItem("restaurant") || "";
-timeInput.value = localStorage.getItem("time") || "";
-gateInput.value = localStorage.getItem("gate") || "Nord-Tor";
+restaurant.value = localStorage.getItem("restaurant")||"";
+time.value = localStorage.getItem("time")||"";
+gate.value = localStorage.getItem("gate")||"Nord-Tor";
 
-restaurantInput.oninput = () => localStorage.setItem("restaurant", restaurantInput.value);
-timeInput.oninput = () => localStorage.setItem("time", timeInput.value);
-gateInput.onchange = () => localStorage.setItem("gate", gateInput.value);
+restaurant.oninput=()=>localStorage.setItem("restaurant",restaurant.value);
+time.oninput=()=>localStorage.setItem("time",time.value);
+gate.onchange=()=>localStorage.setItem("gate",gate.value);
 
 // FIREBASE
 const app = initializeApp({
-  apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
+  apiKey:"AIzaSy...",
   databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
 });
-
 const db = getDatabase(app);
-const list = document.getElementById("list");
 
-// LIVE
-onValue(ref(db,"orders"), snapshot=>{
-  list.innerHTML="";
-  if(!snapshot.exists()) return;
+// STATUS SYNC
+onValue(ref(db,"status"), snap=>{
+  let running = snap.val();
 
-  snapshot.forEach(child=>{
-    let data = child.val();
+  let status = document.getElementById("status");
+  let btn = document.getElementById("startBtn");
 
-    let li = document.createElement("li");
-
-    li.innerHTML = `
-      <div class="item-top">
-        <span>${data.user}: ${data.name} x${data.qty}</span>
-        ${data.owner===userId ? `<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>` : ""}
-      </div>
-
-      <input id="edit-${child.key}" class="edit-input" value="${data.name}" style="display:none">
-
-      <div id="controls-${child.key}" class="controls">
-        <button class="plus" onclick="changeQty('${child.key}', ${data.qty+1})">+</button>
-        <button class="minus" onclick="changeQty('${child.key}', ${data.qty-1})">-</button>
-        <button class="delete" onclick="deleteOrder('${child.key}')">🗑</button>
-        <button onclick="saveEdit('${child.key}')">💾</button>
-      </div>
-    `;
-
-    list.appendChild(li);
-  });
+  if(running){
+    status.innerText="🟢 Bestellung läuft...";
+    btn.innerText="Bestellung stoppen";
+    btn.className="stop";
+  }else{
+    status.innerText="🔴 Bestellung gestoppt";
+    btn.innerText="Bestellung starten";
+    btn.className="start";
+  }
 });
 
-// ADD
+// START/STOP
+window.startOrder = function(){
+  onValue(ref(db,"status"), snap=>{
+    let running = snap.val();
+
+    if(!running){
+      set(ref(db,"status"), true);
+    }else{
+      let pw = prompt("Passwort:");
+      if(pw==="stop"){
+        set(ref(db,"status"), false);
+      }else{
+        alert("Falsch!");
+      }
+    }
+  }, {onlyOnce:true});
+}
+
+// BESTELLUNG
 window.addOrder = function(){
-  let input=document.getElementById("order");
-  if(input.value==="") return;
+  let val = document.getElementById("order").value;
+  if(!val) return;
 
   push(ref(db,"orders"),{
-    name:input.value,
+    name:val,
     qty:1,
-    owner:userId,
-    user:userName
+    user:userName,
+    owner:userId
   });
 
-  input.value="";
-}
-
-// QTY
-window.changeQty = function(id, qty){
-  if(qty<=0){
-    remove(ref(db,"orders/"+id));
-  } else {
-    update(ref(db,"orders/"+id), { qty: qty });
-  }
-}
-
-// DELETE
-window.deleteOrder = function(id){
-  if(confirm("Löschen?")){
-    remove(ref(db,"orders/"+id));
-  }
-}
-
-// EDIT
-window.toggleEdit = function(id){
-  let controls = document.getElementById("controls-"+id);
-  let input = document.getElementById("edit-"+id);
-
-  controls.classList.toggle("active");
-  input.style.display = input.style.display === "none" ? "block" : "none";
-}
-
-window.saveEdit = function(id){
-  let value = document.getElementById("edit-"+id).value;
-  update(ref(db,"orders/"+id),{ name:value });
-}
-
-// WHATSAPP
-window.shareWhatsApp = function(){
-  let msg="🍽️ Bestellung\n\n";
-  msg+="📍 "+restaurantInput.value+"\n";
-  msg+="🕒 "+timeInput.value+"\n";
-  msg+="🚪 "+gateInput.value+"\n\n";
-
-  document.querySelectorAll(".item-top span").forEach(el=>{
-    msg += "- " + el.innerText + "\n";
-  });
-
-  window.open("https://wa.me/?text="+encodeURIComponent(msg));
+  document.getElementById("order").value="";
 }
 
 // CLEAR
@@ -324,12 +232,6 @@ window.clearAll = function(){
   if(pw!=="clear") return;
 
   remove(ref(db,"orders"));
-
-  restaurantInput.value="";
-  timeInput.value="";
-  gateInput.value="Nord-Tor";
-
-  localStorage.clear();
 }
 </script>
 
