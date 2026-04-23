@@ -9,7 +9,13 @@
 <style>
 *{box-sizing:border-box;}
 
-body{font-family:Arial;background:#f5f5f5;margin:0;padding:10px;}
+body{
+  font-family:Arial;
+  background:#f5f5f5;
+  margin:0;
+  padding:10px;
+}
+
 h1{text-align:center;font-size:22px;}
 
 #nameBtn{
@@ -29,6 +35,7 @@ h1{text-align:center;font-size:22px;}
   border-radius:10px;
   margin-top:8px;
   color:white;
+  border:none;
 }
 
 .start{background:#22c55e;}
@@ -54,8 +61,22 @@ input:disabled, select:disabled{
   color:#888;
 }
 
-.add{background:#22c55e;color:white;width:100%;padding:12px;border-radius:10px;}
-.wa{background:#25D366;color:white;width:100%;padding:12px;border-radius:10px;margin-top:10px;}
+.add{
+  background:#22c55e;
+  color:white;
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+}
+
+.wa{
+  background:#25D366;
+  color:white;
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  margin-top:10px;
+}
 
 li{
   background:white;
@@ -69,6 +90,16 @@ li{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  font-weight:bold;
+}
+
+.edit-btn{
+  background:#3b82f6;
+  color:white;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  border:none;
 }
 
 .controls{
@@ -79,19 +110,33 @@ li{
 
 .controls.active{display:flex;}
 
-.controls button{flex:1;}
-
-.edit-btn{
-  background:#3b82f6;
-  color:white;
-  border-radius:50%;
-  width:32px;
-  height:32px;
+.controls button{
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  border:none;
 }
 
 .plus{background:#22c55e;color:white;}
 .minus{background:#f59e0b;color:white;}
 .delete{background:#ef4444;color:white;}
+
+.edit-input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+}
+
+#footer{
+  text-align:center;
+  margin-top:20px;
+}
+
+#footer img{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+}
 
 #clearBtn{
   position:fixed;
@@ -102,6 +147,8 @@ li{
   border-radius:50%;
   width:60px;
   height:60px;
+  font-size:22px;
+  border:none;
 }
 </style>
 </head>
@@ -130,13 +177,17 @@ li{
 </div>
 
 <div class="card">
-<input id="order">
+<input id="order" placeholder="Was willst du essen?">
 <button class="add" onclick="addOrder()">+ Bestellung</button>
 </div>
 
 <ul id="list"></ul>
 
 <button class="wa" onclick="shareWhatsApp()">📲 WhatsApp</button>
+
+<div id="footer">
+<img src="logo.png">
+</div>
 
 <button id="clearBtn" onclick="clearAll()">🧹</button>
 
@@ -184,12 +235,11 @@ const db=getDatabase(app);
 // STATUS
 onValue(ref(db,"status"), snap=>{
  let running=snap.val();
- let btn=startBtn;
 
  if(running){
   status.innerText="🟢 Bestellung läuft...";
-  btn.innerText="Bestellung stoppen";
-  btn.className="main-btn stop";
+  startBtn.innerText="Bestellung stoppen";
+  startBtn.className="main-btn stop";
 
   restaurant.disabled=true;
   time.disabled=true;
@@ -197,8 +247,8 @@ onValue(ref(db,"status"), snap=>{
 
  }else{
   status.innerText="🔴 Bestellung gestoppt";
-  btn.innerText="Bestellung starten";
-  btn.className="main-btn start";
+  startBtn.innerText="Bestellung starten";
+  startBtn.className="main-btn start";
 
   restaurant.disabled=false;
   time.disabled=false;
@@ -206,7 +256,7 @@ onValue(ref(db,"status"), snap=>{
  }
 });
 
-// BESTELLUNGEN + EDIT
+// BESTELLUNGEN
 onValue(ref(db,"orders"), snap=>{
  list.innerHTML="";
  if(!snap.exists())return;
@@ -222,10 +272,13 @@ onValue(ref(db,"orders"), snap=>{
     ${d.owner===userId?`<button class="edit-btn" onclick="toggleEdit('${child.key}')">✏️</button>`:""}
    </div>
 
+   <input id="edit-${child.key}" class="edit-input" value="${d.name}" style="display:none">
+
    <div id="c-${child.key}" class="controls">
     <button class="plus" onclick="changeQty('${child.key}',1)">+</button>
     <button class="minus" onclick="changeQty('${child.key}',-1)">-</button>
     <button class="delete" onclick="deleteOrder('${child.key}')">🗑</button>
+    <button onclick="saveEdit('${child.key}')">💾</button>
    </div>
   `;
 
@@ -234,13 +287,22 @@ onValue(ref(db,"orders"), snap=>{
 });
 
 window.toggleEdit=id=>{
- document.getElementById("c-"+id).classList.toggle("active");
+ let c=document.getElementById("c-"+id);
+ let i=document.getElementById("edit-"+id);
+
+ c.classList.toggle("active");
+ i.style.display=i.style.display==="none"?"block":"none";
 }
 
-window.changeQty=(id,delta)=>{
- update(ref(db,"orders/"+id),{
-  name: prompt("Neuer Text?") || "?"
- });
+window.saveEdit=id=>{
+ let val=document.getElementById("edit-"+id).value;
+ update(ref(db,"orders/"+id),{name:val});
+}
+
+window.changeQty=(id)=>{
+ let val=prompt("Neue Menge?");
+ if(!val)return;
+ update(ref(db,"orders/"+id),{name:val});
 }
 
 window.deleteOrder=id=>{
@@ -250,6 +312,7 @@ window.deleteOrder=id=>{
 window.startOrder=()=>{
  onValue(ref(db,"status"),snap=>{
   let running=snap.val();
+
   if(!running){
    set(ref(db,"status"),true);
   }else{
