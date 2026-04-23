@@ -28,14 +28,12 @@ h1{text-align:center;font-size:22px;}
   width:100%;
 }
 
-/* STATUS */
 #status{
   text-align:center;
   font-weight:bold;
   margin:10px 0;
 }
 
-/* BUTTONS */
 .main-btn{
   width:100%;
   padding:12px;
@@ -63,7 +61,6 @@ input, select{
   border:1px solid #ddd;
 }
 
-/* 🔥 GRAU WENN DISABLED */
 input:disabled, select:disabled{
   background:#e5e7eb;
   color:#888;
@@ -189,7 +186,7 @@ gate.onchange=()=>localStorage.setItem("gate",gate.value);
 
 // FIREBASE
 const app = initializeApp({
-  apiKey:"AIzaSy...",
+  apiKey:"AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
   databaseURL:"https://essen-bestelliste-default-rtdb.firebaseio.com"
 });
 const db = getDatabase(app);
@@ -206,7 +203,6 @@ onValue(ref(db,"status"), snap=>{
     btn.innerText="Bestellung stoppen";
     btn.className="main-btn stop";
 
-    // 🔥 FELDER SPERREN
     restaurant.disabled = true;
     time.disabled = true;
     gate.disabled = true;
@@ -216,11 +212,30 @@ onValue(ref(db,"status"), snap=>{
     btn.innerText="Bestellung starten";
     btn.className="main-btn start";
 
-    // 🔓 FELDER FREIGEBEN
     restaurant.disabled = false;
     time.disabled = false;
     gate.disabled = false;
   }
+});
+
+// 🔥 BESTELLUNGEN ANZEIGEN
+onValue(ref(db,"orders"), snapshot=>{
+  let list = document.getElementById("list");
+  list.innerHTML="";
+
+  if(!snapshot.exists()) return;
+
+  snapshot.forEach(child=>{
+    let data = child.val();
+
+    let li = document.createElement("li");
+    li.innerHTML = `
+      <div class="item-top">
+        <span>${data.user}: ${data.name}</span>
+      </div>
+    `;
+    list.appendChild(li);
+  });
 });
 
 // START/STOP
@@ -239,7 +254,7 @@ window.startOrder = function(){
   }, {onlyOnce:true});
 }
 
-// BESTELLUNG
+// ADD
 window.addOrder = function(){
   let val = document.getElementById("order").value;
   if(!val) return;
@@ -247,13 +262,27 @@ window.addOrder = function(){
   push(ref(db,"orders"),{
     name:val,
     user:userName,
-    owner:userId,
-    qty:1
+    owner:userId
   });
 
   document.getElementById("order").value="";
 }
 
+// WHATSAPP
+window.shareWhatsApp = function(){
+  let msg="🍽️ Bestellung\n\n";
+  msg+="📍 "+restaurant.value+"\n";
+  msg+="🕒 "+time.value+"\n";
+  msg+="🚪 "+gate.value+"\n\n";
+
+  document.querySelectorAll("#list li").forEach(li=>{
+    msg += "- " + li.innerText + "\n";
+  });
+
+  window.open("https://wa.me/?text="+encodeURIComponent(msg));
+}
+
+// CLEAR
 window.clearAll = function(){
   let pw = prompt("Passwort:");
   if(pw!=="clear") return;
