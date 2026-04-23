@@ -119,6 +119,10 @@ li{
 🕒 Wann
 <input id="time" placeholder="z. B. 17:20 Uhr">
 
+<button id="startBtn" onclick="toggleOrder()" style="width:100%;padding:12px;border-radius:10px;background:#3b82f6;color:white;margin-top:8px;">
+Bestellung Starten
+</button>
+
 🚪 Tor
 <select id="gate">
 <option selected>Nord-Tor</option>
@@ -177,6 +181,34 @@ gate.value=localStorage.getItem("gate")||"Nord-Tor";
 restaurant.oninput=()=>localStorage.setItem("restaurant",restaurant.value);
 time.oninput=()=>localStorage.setItem("time",time.value);
 gate.onchange=()=>localStorage.setItem("gate",gate.value);
+
+// ✅ BESTELL STATUS (NEU)
+let orderActive = localStorage.getItem("orderActive") === "true";
+const startBtn = document.getElementById("startBtn");
+
+function updateStartButton(){
+  if(orderActive){
+    startBtn.innerText = "🟢 Bestellung läuft";
+    startBtn.style.background = "#ef4444";
+  } else {
+    startBtn.innerText = "🔴 Bestellung Starten";
+    startBtn.style.background = "#3b82f6";
+  }
+}
+updateStartButton();
+
+window.toggleOrder = function(){
+  if(orderActive){
+    let pw = prompt("Passwort zum Stoppen:");
+    if(pw !== "stop") return;
+    orderActive = false;
+  } else {
+    orderActive = true;
+  }
+
+  localStorage.setItem("orderActive", orderActive);
+  updateStartButton();
+}
 
 // FIREBASE
 const app = initializeApp({
@@ -248,6 +280,11 @@ window.deleteOrder=id=>{
 }
 
 window.addOrder=()=>{
+  if(!orderActive){
+    alert("Bestellung ist gestoppt!");
+    return;
+  }
+
  let val=order.value;
  if(!val)return;
 
