@@ -106,9 +106,12 @@ li{
 
 #orderCard{display:none;}
 
-/* 🔥 NEU: ausgegraut */
-.disabled{
-  opacity:0.5;
+/* NEU: Styling für deaktivierte Felder */
+input:disabled, select:disabled {
+  background-color: #e9e9e9;
+  color: #888;
+  cursor: not-allowed;
+  border-color: #ccc;
 }
 </style>
 </head>
@@ -193,28 +196,23 @@ const orderCard = document.getElementById("orderCard");
 let orderActive = localStorage.getItem("orderActive") === "true";
 const startBtn = document.getElementById("startBtn");
 
-// 🔥 NEU: disable function
-function setInputsDisabled(state){
-  restaurant.disabled = state;
-  time.disabled = state;
-  gate.disabled = state;
-
-  restaurant.classList.toggle("disabled", state);
-  time.classList.toggle("disabled", state);
-  gate.classList.toggle("disabled", state);
-}
-
 function updateStartButton(){
   if(orderActive){
-    startBtn.innerText = "🟢 Bestellung läuft";
+    startBtn.innerText = "🟢 Bestellung läuft (Stoppen)";
     startBtn.style.background = "#ef4444";
     orderCard.style.display = "block";
-    setInputsDisabled(true); // 🔥
+    // Felder sperren
+    restaurant.disabled = true;
+    time.disabled = true;
+    gate.disabled = true;
   } else {
     startBtn.innerText = "🔴 Bestellung Starten";
     startBtn.style.background = "#3b82f6";
     orderCard.style.display = "none";
-    setInputsDisabled(false); // 🔥
+    // Felder freigeben
+    restaurant.disabled = false;
+    time.disabled = false;
+    gate.disabled = false;
   }
 }
 updateStartButton();
@@ -323,7 +321,9 @@ window.shareWhatsApp=()=>{
  msg+=restaurant.value+"\n"+time.value+"\n"+gate.value+"\n\n";
 
  document.querySelectorAll("#list li").forEach(li=>{
-  msg+="- "+li.innerText+"\n";
+  // Um nur den Text der Bestellung ohne Button-Emojis zu senden:
+  const orderText = li.querySelector(".item-top span").innerText;
+  msg+="- "+orderText+"\n";
  });
 
  window.open("https://wa.me/?text="+encodeURIComponent(msg));
