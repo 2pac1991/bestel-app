@@ -14,20 +14,9 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --whatsapp: #25D366;
-            --border: #e2e8f0;
-            --input-bg: #f8fafc;
         }
 
-        body.dark-mode {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --input-bg: #1e293b;
-        }
-
-        * { box-sizing: border-box; transition: background-color 0.2s, color 0.2s; }
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -42,94 +31,123 @@
         }
 
         .app-header {
-            width: 100%; background: var(--card-bg); padding: 15px 20px;
+            width: 100%; background: #fff; padding: 15px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             position: sticky; top: 0; z-index: 1100;
         }
 
         .header-left { display: flex; align-items: center; gap: 10px; }
         .header-logo { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
-        h1 { font-size: 18px; font-weight: 800; margin: 0; }
-
-        .header-right { display: flex; align-items: center; gap: 10px; }
-
-        #darkModeBtn {
-            background: var(--input-bg); 
-            border: 1.5px solid var(--border); 
-            width: 38px; height: 38px;
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            color: var(--text-main);
-        }
+        h1 { font-size: 20px; font-weight: 800; margin: 0; }
 
         #profileBtn {
-            background: var(--input-bg); border: 1.5px solid var(--border); padding: 8px 12px;
+            background: #f1f5f9; border: 1.5px solid #e2e8f0; padding: 8px 14px;
             border-radius: 12px; display: flex; align-items: center; gap: 8px;
-            cursor: pointer; font-weight: 600; font-size: 13px; color: var(--text-main);
-            height: 38px;
+            cursor: pointer; font-weight: 600; font-size: 13px;
         }
 
         .container { width: 100%; max-width: 500px; padding: 20px; }
 
         #statusDisplay {
-            background: var(--card-bg); border-radius: 20px; padding: 18px; margin-bottom: 20px;
-            border: 2px solid #fee2e2; display: none;
+            background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
+            border: 2px solid #fee2e2; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
+            display: none;
         }
         .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .status-item { background: var(--input-bg); padding: 10px; border-radius: 12px; }
+        .status-item { background: #f8fafc; padding: 10px; border-radius: 12px; }
         .status-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; display: block; }
         .status-val { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .timer-highlight { grid-column: span 2; background: #fee2e2; color: #dc2626; text-align: center; border: 1px solid #fecaca; }
-        body.dark-mode .timer-highlight { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
 
         .card {
             background: var(--card-bg); padding: 20px; border-radius: 20px;
-            margin-bottom: 20px; border: 1px solid var(--border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
         }
 
         .label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block; }
 
         input, select {
             width: 100%; padding: 12px; margin: 4px 0 15px 0; border-radius: 12px;
-            border: 2px solid var(--border); background: var(--input-bg); font-size: 16px;
-            color: var(--text-main); outline: none;
+            border: 2px solid #f1f5f9; background: #f8fafc; font-size: 16px;
+            -webkit-appearance: none;
+        }
+        input:focus { border-color: var(--primary); background: #fff; outline: none; }
+
+        .btn {
+            width: 100%; padding: 15px; border-radius: 15px; border: none;
+            font-weight: 700; font-size: 16px; cursor: pointer;
         }
 
-        .btn { width: 100%; padding: 15px; border-radius: 15px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; }
         .add-btn { background: var(--success); color: white; margin-top: 5px; }
 
         .order-container-box {
-            background: var(--card-bg); border-radius: 24px; border: 2px solid var(--primary);
-            padding: 20px; margin-bottom: 20px; display: none;
+            background: white; border-radius: 24px; border: 2px solid var(--primary);
+            padding: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+            margin-bottom: 20px; display: none;
         }
+        .box-header {
+            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;
+        }
+        .box-title-container { flex-grow: 1; }
+        .box-title-main { 
+            font-size: 14px; font-weight: 900; color: var(--danger); 
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
+            display: none; 
+        }
+        .box-title-sub {
+            font-size: 11px; font-weight: 700; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .box-title-sub::after { content: ""; height: 2px; background: #eff6ff; flex: 1; margin-left: 8px; }
         
+        .clear-list-btn {
+            background: none; border: none; font-size: 18px; cursor: pointer; padding: 0 0 0 10px;
+            filter: grayscale(1); opacity: 0.5; transition: 0.2s; display: none;
+        }
+
         ul { padding: 0; list-style: none; width: 100%; margin: 0; }
-        li { padding: 15px 0; border-bottom: 1px solid var(--border); width: 100%; }
+        li {
+            background: white; padding: 15px 0; border-bottom: 1px solid #f1f5f9;
+            width: 100%;
+        }
         li:last-child { border-bottom: none; }
 
         .order-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .order-info { flex: 1; display: flex; flex-direction: column; }
-        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
-        .food-name { font-weight: 700; font-size: 17px; color: var(--text-main); }
+        
+        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 2px; }
+        .food-name { font-weight: 700; font-size: 17px; color: var(--text-main); line-height: 1.2; }
 
-        .edit-btn { background: var(--input-bg); color: var(--text-muted); border: none; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .edit-btn { 
+            background: #f1f5f9; color: var(--text-muted); border: none; 
+            padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+        }
 
-        .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 10px; background: var(--input-bg); border-radius: 12px; }
-        .save-btn { background: var(--primary); color: white; padding: 10px; border-radius: 8px; border: none; font-weight: 700; flex: 2; }
-        .del-btn { background: var(--danger); color: white; padding: 10px; border-radius: 8px; border: none; font-weight: 700; flex: 1; }
+        .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 10px; background: #f8fafc; border-radius: 12px; }
+        .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); font-size: 16px; margin: 0; }
+        .edit-actions { display: flex; gap: 8px; }
+        .save-btn { background: var(--primary); color: white; padding: 8px; border-radius: 8px; border: none; font-weight: 700; flex: 2; }
+        .del-btn { background: var(--danger); color: white; padding: 8px; border-radius: 8px; border: none; font-weight: 700; flex: 1; }
+
+        .stop-btn-minimal {
+            background: none; border: 1px solid #e2e8f0; color: #94a3b8;
+            padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+            cursor: pointer; width: 100%; margin-top: 15px; text-transform: uppercase;
+        }
 
         #timeModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            background: white; padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
             z-index: 2000; width: 85%; max-width: 320px; text-align: center;
         }
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 1999; }
 
-        .wa-sticky { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(0deg, var(--bg) 80%, transparent); display: none; justify-content: center; z-index: 1000; }
-        .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; max-width: 460px; }
+        .wa-sticky { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
+        .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; max-width: 460px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .wa-btn svg { width: 22px; height: 22px; fill: white; }
     </style>
 </head>
 <body>
@@ -139,40 +157,60 @@
             <img src="logo.png" alt="Logo" class="header-logo">
             <h1>Bestell-Liste</h1>
         </div>
-        <div class="header-right">
-            <button id="darkModeBtn" title="Modus wechseln">🌙</button>
-            <button id="profileBtn">👤 <span id="userNameDisplay">...</span></button>
-        </div>
+        <button id="profileBtn">
+            <span>👤</span>
+            <span id="userNameDisplay">...</span>
+        </button>
     </header>
 
     <div class="container">
         <div id="statusDisplay">
             <div class="status-grid">
-                <div class="status-item timer-highlight"><span class="status-label">⌛ Schluss</span><div id="disp-deadline" class="status-val">--:--</div></div>
-                <div class="status-item"><span class="status-label">📍 Wo</span><div id="disp-res" class="status-val">---</div></div>
-                <div class="status-item"><span class="status-label">🕒 Wann</span><div id="disp-time" class="status-val">---</div></div>
-                <div class="status-item" style="grid-column: span 2;"><span class="status-label">📦 Ort</span><div id="disp-cham" class="status-val">---</div></div>
+                <div class="status-item timer-highlight">
+                    <span class="status-label">⌛ Bestellschluss</span>
+                    <div class="status-val" id="disp-deadline">--:-- Uhr</div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">📍 Restaurant</span>
+                    <div class="status-val" id="disp-res">---</div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">🕒 Lieferung</span>
+                    <div class="status-val" id="disp-time">---</div>
+                </div>
+                <div class="status-item" style="grid-column: span 2;">
+                    <span class="status-label">📦 Kammerl </span>
+                    <div class="status-val" id="disp-cham">---</div>
+                </div>
             </div>
-            <button id="stopActionBtn" style="width:100%; margin-top:10px; background:none; border:1px solid var(--border); color:var(--text-muted); padding:5px; border-radius:8px; font-size:10px;">BEENDEN</button>
+            <button id="stopActionBtn" class="stop-btn-minimal">Bestellung beenden</button>
         </div>
 
         <div id="setupCard" class="card">
-            <span class="label">📍 Restaurant</span><input id="restaurant" placeholder="z. B. Baron">
-            <span class="label">🕒 Lieferung</span><input id="time" type="time" value="17:10">
-            <span class="label">🍴 Kammerl</span><select id="chamber"><option>Spinnereikammerl</option><option>NB-Kammerl</option></select>
-            <span class="label">🚪 Tor</span><select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
-            <button id="startBtn" class="btn" style="background: var(--primary); color: white;">🟢 STARTEN</button>
+            <span class="label">📍 Restaurant</span>
+            <input id="restaurant" placeholder="z. B. Baron" autocomplete="off">
+            <span class="label">🕒 Lieferung um</span>
+            <input id="time" type="time" value="17:10">
+            <span class="label">🍴 Kammerl</span>
+            <select id="chamber"><option>Spinnereikammerl</option><option>NB-Kammerl</option></select>
+            <span class="label">🚪 Tor </span>
+            <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
+            <button id="startBtn" class="btn" style="background: var(--primary); color: white;">🟢 Bestellung Starten</button>
         </div>
 
-        <div id="orderCard" class="card" style="display:none; border: 2px solid var(--success);">
-            <span class="label">Bestellung</span><input id="orderInput" placeholder="Was willst du essen?">
+        <div id="orderCard" class="card" style="display:none; border: 2px solid #22c55e; background: #f0fdf4;">
+            <span class="label">Deine Bestellung</span>
+            <input id="orderInput" type="text" placeholder="Was möchtest du?" autocomplete="off">
             <button id="addOrderBtn" class="btn add-btn">+ Hinzufügen</button>
         </div>
 
         <div id="orderBox" class="order-container-box">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <span id="orderBoxDetails" style="font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase;">Liste</span>
-                <button id="clearAllBtn" style="background:none; border:none; cursor:pointer;">🗑️</button>
+            <div class="box-header">
+                <div class="box-title-container">
+                    <div class="box-title-main" id="orderBoxStatus">❌ Bestellung Beendet</div>
+                    <div class="box-title-sub" id="orderBoxDetails">Aktuelle Bestellungen</div>
+                </div>
+                <button id="clearAllBtn" class="clear-list-btn">🗑️</button>
             </div>
             <ul id="list"></ul>
         </div>
@@ -180,12 +218,18 @@
 
     <div id="modalOverlay"></div>
     <div id="timeModal">
-        <span class="label">Bestellschluss</span><input type="time" id="deadlineInput" value="15:30">
-        <button id="confirmStartBtn" class="btn" style="background:var(--primary); color:white;">Starten</button>
-        <button id="cancelModalBtn" style="background:none; border:none; margin-top:10px; color:var(--text-muted);">Abbrechen</button>
+        <span class="label">Einsendeschluss festlegen</span>
+        <input type="time" id="deadlineInput" value="15:30">
+        <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white;">Starten</button>
+        <button id="cancelModalBtn" class="btn" style="background: #f1f5f9; color: #64748b; margin-top: 8px;">Abbrechen</button>
     </div>
 
-    <div id="waLeiste" class="wa-sticky"><button id="shareWaBtn" class="wa-btn">Auf WhatsApp teilen</button></div>
+    <div id="waLeiste" class="wa-sticky">
+        <button id="shareWaBtn" class="wa-btn">
+            <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.445 0 .081 5.363.079 11.971c0 2.112.551 4.176 1.596 5.979L0 24l6.15-1.613a11.826 11.826 0 005.897 1.568h.005c6.604 0 11.967-5.363 11.97-11.971a11.811 11.811 0 00-3.505-8.469z"/></svg>
+            Auf WhatsApp teilen
+        </button>
+    </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -195,82 +239,141 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Dark Mode
-    const darkModeBtn = document.getElementById("darkModeBtn");
-    const body = document.body;
-    const updateIcon = () => { darkModeBtn.innerText = body.classList.contains("dark-mode") ? "☀️" : "🌙"; };
-    if (localStorage.getItem("theme") === "dark") { body.classList.add("dark-mode"); updateIcon(); }
-    darkModeBtn.onclick = () => { body.classList.toggle("dark-mode"); updateIcon(); localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light"); };
-
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
-    let userName = localStorage.getItem("userName") || prompt("Name?") || "Gast";
+    let userName = localStorage.getItem("userName") || prompt("Wie heißt du?") || "Gast";
     localStorage.setItem("userName", userName);
     document.getElementById("userNameDisplay").innerText = userName;
 
     let currentlyEditing = null;
     let isGlobalActive = false;
 
-    // Firebase Settings
+    const closeModal = () => {
+        document.getElementById("modalOverlay").style.display = "none";
+        document.getElementById("timeModal").style.display = "none";
+    };
+
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
         isGlobalActive = d.orderActive && now < d.endTime;
+        
         document.getElementById("setupCard").style.display = isGlobalActive ? "none" : "block";
         document.getElementById("statusDisplay").style.display = isGlobalActive ? "block" : "none";
         document.getElementById("orderCard").style.display = isGlobalActive ? "block" : "none";
+        document.getElementById("clearAllBtn").style.display = isGlobalActive ? "none" : "block";
+        
+        const statusEl = document.getElementById("orderBoxStatus");
+        const detailsEl = document.getElementById("orderBoxDetails");
+
         if(isGlobalActive) {
             const date = new Date(d.endTime);
-            document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0');
-            document.getElementById("disp-res").innerText = d.restaurant;
-            document.getElementById("disp-time").innerText = d.time;
-            document.getElementById("disp-cham").innerText = d.chamber;
+            document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
+            document.getElementById("disp-res").innerText = d.restaurant || "---";
+            document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
+            document.getElementById("disp-cham").innerText = d.chamber || "---";
+            
+            statusEl.style.display = "none";
+            detailsEl.innerText = "Aktuelle Bestellungen";
+        } else if (d.restaurant) {
+            statusEl.style.display = "block";
+            detailsEl.innerHTML = `${d.restaurant} | ${d.time} Uhr | ${d.chamber}`;
+        } else {
+            statusEl.style.display = "none";
+            detailsEl.innerText = "Aktuelle Bestellungen";
         }
     });
 
-    document.getElementById("startBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "block"; document.getElementById("timeModal").style.display = "block"; };
-    document.getElementById("cancelModalBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
-    
+    document.getElementById("startBtn").onclick = () => {
+        document.getElementById("modalOverlay").style.display = "block";
+        document.getElementById("timeModal").style.display = "block";
+    };
+
+    document.getElementById("cancelModalBtn").onclick = closeModal;
+    document.getElementById("modalOverlay").onclick = closeModal;
+
     document.getElementById("confirmStartBtn").onclick = () => {
         const t = document.getElementById("deadlineInput").value;
         const [h, m] = t.split(":").map(Number);
         const end = new Date(); end.setHours(h, m, 0, 0);
         if (end < new Date()) end.setDate(end.getDate() + 1);
+        
         remove(ref(db, "orders")).then(() => {
-            update(ref(db, "settings"), { orderActive: true, endTime: end.getTime(), restaurant: document.getElementById("restaurant").value, time: document.getElementById("time").value, chamber: document.getElementById("chamber").value, gate: document.getElementById("gate").value });
-            document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none";
+            update(ref(db, "settings"), { 
+                orderActive: true, 
+                endTime: end.getTime(), 
+                restaurant: document.getElementById("restaurant").value, 
+                time: document.getElementById("time").value, 
+                chamber: document.getElementById("chamber").value, 
+                gate: document.getElementById("gate").value 
+            });
         });
+        closeModal();
     };
 
-    document.getElementById("stopActionBtn").onclick = () => { if(prompt("Passwort:") === "admin") update(ref(db, "settings"), { orderActive: false }); };
-    document.getElementById("clearAllBtn").onclick = () => { if(prompt("Passwort:") === "admin") { remove(ref(db, "orders")); remove(ref(db, "settings")); } };
-
-    document.getElementById("addOrderBtn").onclick = () => {
-        const val = document.getElementById("orderInput").value.trim();
-        if(val) push(ref(db, "orders"), { name: val, user: userName, owner: userId }).then(() => { document.getElementById("orderInput").value = ""; });
+    document.getElementById("stopActionBtn").onclick = () => { 
+        if(prompt("Admin Passwort:") === "admin") {
+            update(ref(db, "settings"), { orderActive: false, endTime: 0 }); 
+        } else {
+            alert("Falsches Passwort!");
+        }
+    };
+    
+    document.getElementById("clearAllBtn").onclick = () => {
+        if(prompt("Admin Passwort zum Löschen:") === "admin") {
+            if(confirm("Sollen wirklich ALLE Bestellungen und Daten gelöscht werden?")) {
+                remove(ref(db, "orders"));
+                remove(ref(db, "settings"));
+            }
+        } else {
+            alert("Falsches Passwort!");
+        }
     };
 
-    // Bestellliste
+    const addOrder = () => {
+        const input = document.getElementById("orderInput");
+        const val = input.value.trim();
+        if(!val) return;
+        push(ref(db, "orders"), { name: val, user: userName, owner: userId }).then(() => { input.value = ""; });
+    };
+
+    document.getElementById("addOrderBtn").onclick = addOrder;
+    document.getElementById("orderInput").addEventListener("keypress", (e) => { if(e.key === "Enter") addOrder(); });
+
     onValue(ref(db, "orders"), snap => {
         if (currentlyEditing !== null) return;
         const listEl = document.getElementById("list");
+        const waLeiste = document.getElementById("waLeiste");
+        const orderBox = document.getElementById("orderBox");
+        
         listEl.innerHTML = "";
-        if(!snap.exists()) { document.getElementById("waLeiste").style.display = "none"; document.getElementById("orderBox").style.display = "none"; return; }
-        document.getElementById("waLeiste").style.display = "flex";
-        document.getElementById("orderBox").style.display = "block";
+        if(!snap.exists()) { 
+            waLeiste.style.display = "none"; 
+            orderBox.style.display = "none";
+            return; 
+        }
+        
+        waLeiste.style.display = "flex";
+        orderBox.style.display = "block";
+        
         snap.forEach(child => {
             const d = child.val();
             const key = child.key;
             const li = document.createElement("li");
-            const isMe = d.owner === userId;
+            const showEdit = isGlobalActive && d.owner === userId;
+
             li.innerHTML = `
                 <div class="order-row" id="view-${key}">
-                    <div class="order-info"><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>
-                    ${isMe && isGlobalActive ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
+                    <div class="order-info">
+                        <span class="user-label">${d.user}</span>
+                        <span class="food-name">${d.name}</span>
+                    </div>
+                    ${showEdit ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
                 </div>
                 <div class="edit-container" id="edit-${key}" style="display:none">
-                    <input class="edit-input" id="inp-${key}" value="${d.name}" style="width:100%; padding:10px; border-radius:8px; border:2px solid var(--primary); background:var(--card-bg); color:var(--text-main);">
-                    <div style="display:flex; gap:5px; margin-top:5px;">
+                    <span class="user-label">${d.user}</span>
+                    <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
+                    <div class="edit-actions">
                         <button class="del-btn" onclick="window.deleteOrder('${key}')">Löschen</button>
                         <button class="save-btn" onclick="window.saveOrder('${key}')">Speichern</button>
                     </div>
@@ -283,31 +386,47 @@
         currentlyEditing = key;
         document.getElementById(`view-${key}`).style.display = 'none';
         document.getElementById(`edit-${key}`).style.display = 'flex';
+        document.getElementById(`inp-${key}`).focus();
     };
 
     window.saveOrder = (key) => {
-        const newVal = document.getElementById(`inp-${key}`).value.trim();
-        if(newVal) {
-            update(ref(db, `orders/${key}`), { name: newVal }).then(() => {
+        const newVal = document.getElementById(`inp-${key}`).value;
+        if(newVal.trim()) {
+            update(ref(db, `orders/${key}`), { name: newVal.trim() }).then(() => {
                 currentlyEditing = null;
-                // Ansicht wird durch onValue automatisch aktualisiert
+                location.reload(); 
             });
         }
     };
 
     window.deleteOrder = (key) => {
-        if(confirm("Löschen?")) {
+        if(confirm("Diesen Eintrag wirklich löschen?")) {
             remove(ref(db, `orders/${key}`)).then(() => {
                 currentlyEditing = null;
+                location.reload();
             });
         }
     };
 
     document.getElementById("shareWaBtn").onclick = async () => {
-        const s = (await get(ref(db, "settings"))).val() || {};
-        const o = (await get(ref(db, "orders"))).val() || {};
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant}*\n🕒 Zeit: ${s.time} Uhr\n🚪 Tor: ${s.gate}\n––––––––––––––––––\n`;
-        Object.values(o).forEach(v => { m += `• ${v.name}\n`; });
+        const sSnap = await get(ref(db, "settings"));
+        const s = sSnap.val() || {};
+        const oSnap = await get(ref(db, "orders"));
+        
+        // KORREKTUR: Kammerl entfernt
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n––––––––––––––––––\n`;
+        
+        const counts = {};
+        const displayNames = {};
+        oSnap.forEach(child => {
+            const rawDish = child.val().name;
+            const lowerDish = rawDish.toLowerCase().trim();
+            counts[lowerDish] = (counts[lowerDish] || 0) + 1;
+            if (!displayNames[lowerDish]) displayNames[lowerDish] = rawDish;
+        });
+        for (const [lowerDish, qty] of Object.entries(counts)) {
+            m += `• ${qty > 1 ? qty + 'x ' : ''}${displayNames[lowerDish]}\n`;
+        }
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 </script>
