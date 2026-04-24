@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bestell-Liste</title>
+    <title>Bestell-Liste Pro</title>
     <style>
         :root {
             --primary: #3b82f6;
@@ -37,9 +37,7 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 1100;
+            position: sticky; top: 0; z-index: 1100;
         }
 
         .header-left { display: flex; align-items: center; gap: 10px; }
@@ -47,25 +45,24 @@
         h1 { font-size: 20px; font-weight: 800; margin: 0; }
 
         #profileBtn {
-            background: #f1f5f9;
-            border: 1.5px solid #e2e8f0;
-            padding: 8px 14px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
+            background: #f1f5f9; border: 1.5px solid #e2e8f0; padding: 8px 14px;
+            border-radius: 12px; display: flex; align-items: center; gap: 8px;
+            cursor: pointer; font-weight: 600; font-size: 13px;
         }
 
         .container { width: 100%; max-width: 500px; padding: 20px; }
 
-        #timerDisplay {
-            background: #fee2e2; color: #dc2626; padding: 14px; border-radius: 18px;
-            font-weight: 800; text-align: center; margin-bottom: 15px;
-            display: none; border: 1.5px solid #fecaca;
+        /* ERWEITERTES INFO-DISPLAY */
+        #statusDisplay {
+            background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
+            border: 2px solid #fee2e2; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
+            display: none;
         }
+        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .status-item { background: #f8fafc; padding: 10px; border-radius: 12px; }
+        .status-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; display: block; }
+        .status-val { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .timer-highlight { grid-column: span 2; background: #fee2e2; color: #dc2626; text-align: center; border: 1px solid #fecaca; }
 
         .card {
             background: var(--card-bg); padding: 20px; border-radius: 20px;
@@ -98,7 +95,6 @@
         .food-name { font-weight: 700; font-size: 19px; color: var(--text-main); }
 
         .edit-btn { background: #f1f5f9; color: var(--text-muted); border: none; padding: 6px 10px; border-radius: 8px; font-size: 12px; margin-top: 8px; cursor: pointer; }
-
         .controls { display: none; margin-top: 10px; flex-direction: column; gap: 5px; }
         .controls.active { display: flex; }
 
@@ -129,27 +125,37 @@
     </header>
 
     <div class="container">
-        <div id="timerDisplay">⌛ Ende der Bestellung: <span id="endTimeText">--:--</span></div>
+        <div id="statusDisplay">
+            <div class="status-grid">
+                <div class="status-item timer-highlight">
+                    <span class="status-label">⌛ Bestellschluss</span>
+                    <div class="status-val" id="disp-deadline">--:-- Uhr</div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">📍 Restaurant</span>
+                    <div class="status-val" id="disp-res">---</div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">🕒 Lieferung</span>
+                    <div class="status-val" id="disp-time">---</div>
+                </div>
+                <div class="status-item" style="grid-column: span 2;">
+                    <span class="status-label">📦 Ort</span>
+                    <div class="status-val" id="disp-cham">---</div>
+                </div>
+            </div>
+            <button id="stopActionBtn" class="btn" style="margin-top:15px; background: var(--danger); color:white;">🛑 Bestellung Stoppen</button>
+        </div>
 
-        <div class="card">
+        <div id="setupCard" class="card">
             <span class="label">📍 Restaurant</span>
             <input id="restaurant" placeholder="Name des Ladens">
-            
             <span class="label">🕒 Lieferung um</span>
             <input id="time" placeholder="z. B. 12:30 Uhr">
-            
             <span class="label">📦 Kammerl</span>
-            <select id="chamber">
-                <option>Spinnereikammerl</option>
-                <option>NB-Kammerl</option>
-            </select>
-
-            <span class="label">🚪 Tor</span>
-            <select id="gate">
-                <option>Nord-Tor</option>
-                <option>Haupt-Tor</option>
-            </select>
-            
+            <select id="chamber"><option>Spinnereikammerl</option><option>NB-Kammerl</option></select>
+            <span class="label">🚪 Tor (für WA)</span>
+            <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
             <button id="startBtn" class="btn">Laden...</button>
         </div>
 
@@ -180,79 +186,56 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
-        databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs", databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // --- USER INITIALISIERUNG ---
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
-    
-    let userName = localStorage.getItem("userName");
-    if(!userName) {
-        userName = prompt("Wie heißt du?") || "Gast";
-        localStorage.setItem("userName", userName);
-    }
+    let userName = localStorage.getItem("userName") || prompt("Wie heißt du?") || "Gast";
+    localStorage.setItem("userName", userName);
+    document.getElementById("userNameDisplay").innerText = userName;
 
-    const userNameDisplay = document.getElementById("userNameDisplay");
-    userNameDisplay.innerText = userName;
-
-    // Name ändern Funktion
     document.getElementById("profileBtn").onclick = () => {
         let n = prompt("Neuer Name:", userName);
-        if(n && n.trim() !== "") {
-            userName = n.trim();
-            localStorage.setItem("userName", userName);
-            userNameDisplay.innerText = userName;
-        }
+        if(n && n.trim() !== "") { userName = n.trim(); localStorage.setItem("userName", userName); document.getElementById("userNameDisplay").innerText = userName; }
     };
 
-    // --- EINSTELLUNGEN & STATUS ---
+    // --- STATUS LOGIK ---
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
         const isActive = d.orderActive && now < d.endTime;
         
-        const startBtn = document.getElementById("startBtn");
-        startBtn.innerText = isActive ? "🛑 Stoppen" : "🟢 Starten";
-        startBtn.style.background = isActive ? "var(--danger)" : "var(--primary)";
-        
+        // Sichtbarkeit umschalten
+        document.getElementById("setupCard").style.display = isActive ? "none" : "block";
+        document.getElementById("statusDisplay").style.display = isActive ? "block" : "none";
         document.getElementById("orderCard").style.display = isActive ? "block" : "none";
         
-        ['restaurant', 'time', 'gate', 'chamber'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) {
-                el.disabled = isActive;
-                if(d[id] !== undefined) el.value = d[id];
-            }
-        });
-        
-        const timerBox = document.getElementById("timerDisplay");
         if(isActive) {
             const date = new Date(d.endTime);
-            document.getElementById("endTimeText").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
-            timerBox.style.display = "block";
+            document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
+            document.getElementById("disp-res").innerText = d.restaurant || "---";
+            document.getElementById("disp-time").innerText = d.time || "---";
+            document.getElementById("disp-cham").innerText = d.chamber || "---";
         } else {
-            timerBox.style.display = "none";
+            document.getElementById("startBtn").innerText = "🟢 Bestellung Starten";
         }
     });
 
-    // Start/Stopp Logik
-    document.getElementById("startBtn").onclick = async () => {
-        const snap = await get(ref(db, "settings"));
-        const data = snap.val() || {};
-        if (data.orderActive) {
-            if(prompt("Passwort zum Stoppen:") === "stop") {
-                update(ref(db, "settings"), { orderActive: false });
-            }
-        } else {
-            document.getElementById("modalOverlay").style.display = "block";
-            document.getElementById("timeModal").style.display = "block";
+    // Starten & Stoppen Funktionen
+    const triggerStop = async () => {
+        if(prompt("Passwort zum Stoppen:") === "stop") {
+            update(ref(db, "settings"), { orderActive: false });
         }
     };
+
+    document.getElementById("startBtn").onclick = () => {
+        document.getElementById("modalOverlay").style.display = "block";
+        document.getElementById("timeModal").style.display = "block";
+    };
+    
+    document.getElementById("stopActionBtn").onclick = triggerStop;
 
     document.getElementById("cancelModalBtn").onclick = () => {
         document.getElementById("modalOverlay").style.display = "none";
@@ -261,7 +244,6 @@
 
     document.getElementById("confirmStartBtn").onclick = () => {
         const t = document.getElementById("deadlineInput").value;
-        if (!t) return;
         const [h, m] = t.split(":").map(Number);
         const end = new Date(); end.setHours(h, m, 0, 0);
         if (end < new Date()) end.setDate(end.getDate() + 1);
@@ -274,86 +256,50 @@
             chamber: document.getElementById("chamber").value,
             gate: document.getElementById("gate").value 
         });
-        
         document.getElementById("modalOverlay").style.display = "none";
         document.getElementById("timeModal").style.display = "none";
     };
 
     // --- BESTELLUNGEN ---
-    const handleAddOrder = () => {
+    const addOrder = () => {
         const input = document.getElementById("order");
         if(!input.value.trim()) return;
-        push(ref(db, "orders"), { 
-            name: input.value.trim(), 
-            user: userName, 
-            owner: userId 
-        });
+        push(ref(db, "orders"), { name: input.value.trim(), user: userName, owner: userId });
         input.value = "";
     };
-
-    document.getElementById("addOrderBtn").onclick = handleAddOrder;
-    document.getElementById("order").onkeypress = (e) => { if(e.key === "Enter") handleAddOrder(); };
+    document.getElementById("addOrderBtn").onclick = addOrder;
+    document.getElementById("order").onkeypress = (e) => { if(e.key === "Enter") addOrder(); };
 
     onValue(ref(db, "orders"), snap => {
-        const list = document.getElementById("list"); 
-        list.innerHTML = "";
+        const list = document.getElementById("list"); list.innerHTML = "";
         const waLeiste = document.getElementById("waLeiste");
         const count = snap.numChildren();
-        
         waLeiste.style.display = count > 0 ? "flex" : "none";
-        
         if(count === 0) return;
-
         snap.forEach(child => {
             const d = child.val();
             const li = document.createElement("li");
-            li.innerHTML = `
-                <div class="item-content">
-                    <span class="user-label">${d.user}</span>
-                    <span class="food-name" data-food="${d.name}">${d.name}</span>
-                    ${d.owner === userId ? `<button class="edit-btn" id="eb-${child.key}">Bearbeiten</button>` : ""}
-                    <div id="c-${child.key}" class="controls">
-                        <input id="inp-${child.key}" value="${d.name}">
-                        <button class="btn" style="background:var(--danger); color:white; padding:10px; margin-bottom:5px;" id="del-${child.key}">Löschen</button>
-                        <button class="btn" style="background:var(--primary); color:white; padding:10px;" id="sav-${child.key}">Speichern</button>
-                    </div>
-                </div>`;
+            li.innerHTML = `<div class="item-content"><span class="user-label">${d.user}</span><span class="food-name" data-food="${d.name}">${d.name}</span>${d.owner === userId ? `<button class="edit-btn" id="eb-${child.key}">Bearbeiten</button>` : ""}<div id="c-${child.key}" class="controls"><input id="inp-${child.key}" value="${d.name}"><button class="btn" style="background:var(--danger); color:white; padding:10px; margin-bottom:5px;" id="del-${child.key}">Löschen</button><button class="btn" style="background:var(--primary); color:white; padding:10px;" id="sav-${child.key}">Speichern</button></div></div>`;
             list.appendChild(li);
-
             if(d.owner === userId) {
                 document.getElementById(`eb-${child.key}`).onclick = () => document.getElementById(`c-${child.key}`).classList.toggle("active");
                 document.getElementById(`del-${child.key}`).onclick = () => confirm("Wirklich löschen?") && remove(ref(db, `orders/${child.key}`));
-                document.getElementById(`sav-${child.key}`).onclick = () => {
-                    const newVal = document.getElementById(`inp-${child.key}`).value;
-                    update(ref(db, `orders/${child.key}`), { name: newVal });
-                };
+                document.getElementById(`sav-${child.key}`).onclick = () => update(ref(db, `orders/${child.key}`), { name: document.getElementById(`inp-${child.key}`).value });
             }
         });
     });
 
-    // --- WHATSAPP & CLEAR ---
-    document.getElementById("shareWaBtn").onclick = () => {
-        const res = document.getElementById("restaurant").value;
-        const tim = document.getElementById("time").value;
-        const cha = document.getElementById("chamber").value;
-        const gat = document.getElementById("gate").value;
-
-        let m = `*🍽️ BESTELLUNG: ${res}*\n🕒 Zeit: ${tim}\n📦 Kammerl: ${cha}\n🚪 Ort: ${gat}\n––––––––––––––––––\n`;
+    document.getElementById("shareWaBtn").onclick = async () => {
+        const snap = await get(ref(db, "settings"));
+        const s = snap.val() || {};
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n📦 Kammerl: ${s.chamber || '---'}\n🚪 Ort: ${s.gate || '---'}\n––––––––––––––––––\n`;
         const sum = {}; 
-        document.querySelectorAll(".food-name").forEach(i => { 
-            const n = i.getAttribute("data-food"); 
-            sum[n] = (sum[n] || 0) + 1; 
-        });
+        document.querySelectorAll(".food-name").forEach(i => { const n = i.getAttribute("data-food"); sum[n] = (sum[n] || 0) + 1; });
         for (const [f, q] of Object.entries(sum)) { m += `• ${q > 1 ? q + 'x ' : ''}${f}\n`; }
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 
-    document.getElementById("clearBtn").onclick = () => {
-        if(prompt("Passwort zum Leeren:") === "clear") {
-            remove(ref(db, "orders"));
-            update(ref(db, "settings"), {orderActive: false});
-        }
-    };
+    document.getElementById("clearBtn").onclick = () => { if(prompt("Passwort zum Leeren:") === "clear") { remove(ref(db, "orders")); update(ref(db, "settings"), {orderActive: false}); } };
 </script>
 </body>
 </html>
