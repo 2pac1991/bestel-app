@@ -144,7 +144,7 @@
                 </div>
                 <div class="status-item"><span class="status-label">📍 Restaurant</span><div class="status-val" id="disp-res">---</div></div>
                 <div class="status-item"><span class="status-label">🕒 Lieferung</span><div class="status-val" id="disp-time">---</div></div>
-                <div class="status-item" style="grid-column: span 2;"><span class="status-label">📦 Ort</span><div class="status-val" id="disp-cham">---</div></div>
+                <div class="status-item" style="grid-column: span 2;"><span class="status-label">🚪 Tor</span><div class="status-val" id="disp-gate">---</div></div>
             </div>
             <button id="stopActionBtn" style="margin-top:10px; background: #fee2e2; color: #ef4444; border:none; padding:8px; width:100%; border-radius:10px; font-weight:700;">STOPPEN</button>
         </div>
@@ -266,7 +266,7 @@
             document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = d.time || "---";
-            document.getElementById("disp-cham").innerText = d.chamber || "---";
+            document.getElementById("disp-gate").innerText = d.gate || "---"; // Update Display auf Gate
         }
     });
 
@@ -316,23 +316,21 @@
         }
     };
 
-    // --- WHATSAPP LOGIK: ZUSAMMENFASSEN & OHNE NAMEN ---
+    // --- WHATSAPP LOGIK: TOR STATT KAMMERL ---
     document.getElementById("shareWaBtn").onclick = async () => {
         const snapS = await get(ref(db, "settings"));
         const s = snapS.val() || {};
         
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n📦 Ort: ${s.chamber || '---'}\n––––––––––––––––––\n`;
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n🚪 Ort: ${s.gate || '---'}\n––––––––––––––––––\n`;
         
         const snapO = await get(ref(db, "orders"));
         const counts = {};
 
-        // Zählen der gleichen Gerichte (Namen ignorieren)
         snapO.forEach(c => {
             const dish = c.val().name.trim();
             counts[dish] = (counts[dish] || 0) + 1;
         });
 
-        // Liste für WhatsApp erstellen
         for (const [dish, qty] of Object.entries(counts)) {
             m += `• ${qty > 1 ? qty + 'x ' : ''}${dish}\n`;
         }
