@@ -29,7 +29,6 @@
             align-items: center;
         }
 
-        /* HEADER MIT PROFIL-BUTTON */
         .app-header {
             width: 100%;
             background: #fff;
@@ -125,7 +124,7 @@
         </div>
         <button id="profileBtn">
             <span>👤</span>
-            <span id="userNameDisplay">Lädt...</span>
+            <span id="userNameDisplay">Gast</span>
         </button>
     </header>
 
@@ -178,4 +177,183 @@
     <button id="clearBtn">🧹</button>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs",
+        databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // --- USER INITIALISIERUNG ---
+    let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
+    localStorage.setItem("userId", userId);
+    
+    let userName = localStorage.getItem("userName");
+    if(!userName) {
+        userName = prompt("Wie heißt du?") || "Gast";
+        localStorage.setItem("userName", userName);
+    }
+
+    const userNameDisplay = document.getElementById("userNameDisplay");
+    userNameDisplay.innerText = userName;
+
+    // Name ändern Funktion
+    document.getElementById("profileBtn").onclick = () => {
+        let n = prompt("Neuer Name:", userName);
+        if(n && n.trim() !== "") {
+            userName = n.trim();
+            localStorage.setItem("userName", userName);
+            userNameDisplay.innerText = userName;
+        }
+    };
+
+    // --- EINSTELLUNGEN & STATUS ---
+    onValue(ref(db, "settings"), snap => {
+        const d = snap.val() || {};
+        const now = new Date().getTime();
+        const isActive = d.orderActive && now < d.endTime;
+        
+        const startBtn = document.getElementById("startBtn");
+        startBtn.innerText = isActive ? "🛑 Stoppen" : "🟢 Starten";
+        startBtn.style.background = isActive ? "var(--danger)" : "var(--primary)";
+        
+        document.getElementById("orderCard").style.display = isActive ? "block" : "none";
+        
+        ['restaurant', 'time', 'gate', 'chamber'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.disabled = isActive;
+                if(d[id] !== undefined) el.value = d[id];
+            }
+        });
+        
+        const timerBox = document.getElementById("timerDisplay");
+        if(isActive) {
+            const date = new Date(d.endTime);
+            document.getElementById("endTimeText").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
+            timerBox.style.display = "block";
+        } else {
+            timerBox.style.display = "none";
+        }
+    });
+
+    // Start/Stopp Logik
+    document.getElementById("startBtn").onclick = async () => {
+        const snap = await get(ref(db, "settings"));
+        const data = snap.val() || {};
+        if (data.orderActive) {
+            if(prompt("Passwort zum Stoppen:") === "stop") {
+                update(ref(db, "settings"), { orderActive: false });
+            }
+        } else {
+            document.getElementById("modalOverlay").style.display = "block";
+            document.getElementById("timeModal").style.display = "block";
+        }
+    };
+
+    document.getElementById("cancelModalBtn").onclick = () => {
+        document.getElementById("modalOverlay").style.display = "none";
+        document.getElementById("timeModal").style.display = "none";
+    };
+
+    document.getElementById("confirmStartBtn").onclick = () => {
+        const t = document.getElementById("deadlineInput").value;
+        if (!t) return;
+        const [h, m] = t.split(":").map(Number);
+        const end = new Date(); end.setHours(h, m, 0, 0);
+        if (end < new Date()) end.setDate(end.getDate() + 1);
+        
+        update(ref(db, "settings"), { 
+            orderActive: true, 
+            endTime: end.getTime(), 
+            restaurant: document.getElementById("restaurant").value, 
+            time: document.getElementById("time").value, 
+            chamber: document.getElementById("chamber").value,
+            gate: document.getElementById("gate").value 
+        });
+        
+        document.getElementById("modalOverlay").style.display = "none";
+        document.getElementById("timeModal").style.display = "none";
+    };
+
+    // --- BESTELLUNGEN ---
+    const handleAddOrder = () => {
+        const input = document.getElementById("order");
+        if(!input.value.trim()) return;
+        push(ref(db, "orders"), { 
+            name: input.value.trim(), 
+            user: userName, 
+            owner: userId 
+        });
+        input.value = "";
+    };
+
+    document.getElementById("addOrderBtn").onclick = handleAddOrder;
+    document.getElementById("order").onkeypress = (e) => { if(e.key === "Enter") handleAddOrder(); };
+
+    onValue(ref(db, "orders"), snap => {
+        const list = document.getElementById("list"); 
+        list.innerHTML = "";
+        const waLeiste = document.getElementById("waLeiste");
+        const count = snap.numChildren();
+        
+        waLeiste.style.display = count > 0 ? "flex" : "none";
+        
+        if(count === 0) return;
+
+        snap.forEach(child => {
+            const d = child.val();
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <div class="item-content">
+                    <span class="user-label">${d.user}</span>
+                    <span class="food-name" data-food="${d.name}">${d.name}</span>
+                    ${d.owner === userId ? `<button class="edit-btn" id="eb-${child.key}">Bearbeiten</button>` : ""}
+                    <div id="c-${child.key}" class="controls">
+                        <input id="inp-${child.key}" value="${d.name}">
+                        <button class="btn" style="background:var(--danger); color:white; padding:10px; margin-bottom:5px;" id="del-${child.key}">Löschen</button>
+                        <button class="btn" style="background:var(--primary); color:white; padding:10px;" id="sav-${child.key}">Speichern</button>
+                    </div>
+                </div>`;
+            list.appendChild(li);
+
+            if(d.owner === userId) {
+                document.getElementById(`eb-${child.key}`).onclick = () => document.getElementById(`c-${child.key}`).classList.toggle("active");
+                document.getElementById(`del-${child.key}`).onclick = () => confirm("Wirklich löschen?") && remove(ref(db, `orders/${child.key}`));
+                document.getElementById(`sav-${child.key}`).onclick = () => {
+                    const newVal = document.getElementById(`inp-${child.key}`).value;
+                    update(ref(db, `orders/${child.key}`), { name: newVal });
+                };
+            }
+        });
+    });
+
+    // --- WHATSAPP & CLEAR ---
+    document.getElementById("shareWaBtn").onclick = () => {
+        const res = document.getElementById("restaurant").value;
+        const tim = document.getElementById("time").value;
+        const cha = document.getElementById("chamber").value;
+        const gat = document.getElementById("gate").value;
+
+        let m = `*🍽️ BESTELLUNG: ${res}*\n🕒 Zeit: ${tim}\n📦 Kammerl: ${cha}\n🚪 Ort: ${gat}\n––––––––––––––––––\n`;
+        const sum = {}; 
+        document.querySelectorAll(".food-name").forEach(i => { 
+            const n = i.getAttribute("data-food"); 
+            sum[n] = (sum[n] || 0) + 1; 
+        });
+        for (const [f, q] of Object.entries(sum)) { m += `• ${q > 1 ? q + 'x ' : ''}${f}\n`; }
+        window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
+    };
+
+    document.getElementById("clearBtn").onclick = () => {
+        if(prompt("Passwort zum Leeren:") === "clear") {
+            remove(ref(db, "orders"));
+            update(ref(db, "settings"), {orderActive: false});
+        }
+    };
+</script>
+</body>
+</html>
