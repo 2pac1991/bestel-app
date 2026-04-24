@@ -26,15 +26,20 @@
             padding-bottom: 140px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: center; /* Zentriert den Inhalt horizontal */
+            min-height: 100vh;
             touch-action: manipulation;
         }
 
         .app-header {
-            width: 100%; background: #fff; padding: 15px 20px;
+            width: 100%; 
+            max-width: 500px; /* Gleiche Breite wie der Container für perfekte Zentrierung */
+            background: #fff; padding: 15px 20px;
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid rgba(0,0,0,0.05);
             position: sticky; top: 0; z-index: 1100;
+            border-radius: 0 0 20px 20px; /* Optional: sieht schöner aus wenn zentriert */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
 
         .header-left { display: flex; align-items: center; gap: 10px; }
@@ -47,7 +52,14 @@
             cursor: pointer; font-weight: 600; font-size: 13px;
         }
 
-        .container { width: 100%; max-width: 500px; padding: 20px; }
+        .container { 
+            width: 100%; 
+            max-width: 500px; 
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
 
         #statusDisplay {
             background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
@@ -145,8 +157,8 @@
         }
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 1999; }
 
-        .wa-sticky { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
-        .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; max-width: 460px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .wa-sticky { position: fixed; bottom: 0; width: 100%; max-width: 500px; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
+        .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .wa-btn svg { width: 22px; height: 22px; fill: white; }
     </style>
 </head>
@@ -413,7 +425,6 @@
         const s = sSnap.val() || {};
         const oSnap = await get(ref(db, "orders"));
         
-        // KORREKTUR: Kammerl entfernt
         let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n––––––––––––––––––\n`;
         
         const counts = {};
