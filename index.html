@@ -63,7 +63,7 @@
         #timerDisplay {
             background: #fee2e2; color: #dc2626; padding: 14px; border-radius: 18px;
             font-weight: 800; text-align: center; margin-bottom: 15px;
-            display: none; border: 1.5px solid #fecaca; font-size: 14px;
+            display: none; border: 1.5px solid #fecaca; font-size: 15px;
         }
 
         #nameBtn {
@@ -110,7 +110,6 @@
         .controls.active { display: flex; }
         .control-btn { padding: 12px; border-radius: 12px; border: none; color: white; font-weight: bold; cursor: pointer; }
 
-        /* MODAL FIX */
         #timeModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: white; padding: 20px; border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
@@ -120,11 +119,7 @@
         
         #deadlineInput {
             text-align: center; font-size: 24px; font-weight: 700; 
-            margin: 10px 0 20px 0;
-            width: 100%; 
-            padding: 10px; /* Reduziertes Padding für bessere Passform */
-            display: block;
-            border: 1.5px solid #f1f5f9;
+            margin: 10px 0 20px 0; width: 100%; padding: 10px; display: block; border: 1.5px solid #f1f5f9;
         }
 
         .wa-sticky-container { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(0deg, #f8fafc 40%, transparent 100%); display: flex; justify-content: center; z-index: 1000; }
@@ -143,7 +138,7 @@
     </header>
 
     <div class="container">
-        <div id="timerDisplay">⌛ Ende der Bestellung: <span id="endTimeText">--:--</span> | <span id="timeLeft">--:--</span></div>
+        <div id="timerDisplay">⌛ Ende der Bestellung: <span id="endTimeText">--:--</span></div>
 
         <button id="nameBtn">👤 Profil lädt...</button>
 
@@ -205,32 +200,22 @@
         if(n) { userName = n; localStorage.setItem("userName", n); updateNameBtn(); }
     };
 
-    let countdownInterval;
-    function runTimer(endTime) {
-        clearInterval(countdownInterval);
+    function showEndTime(endTime) {
         const display = document.getElementById("timerDisplay");
-        const spanTimeLeft = document.getElementById("timeLeft");
         const spanEndTime = document.getElementById("endTimeText");
         
         const dateObj = new Date(endTime);
         const hours = dateObj.getHours().toString().padStart(2, '0');
         const mins = dateObj.getMinutes().toString().padStart(2, '0');
-        spanEndTime.innerText = `${hours}:${mins} Uhr`;
-
-        display.style.display = "block";
-        countdownInterval = setInterval(() => {
-            const now = new Date().getTime();
-            const diff = endTime - now;
-            if (diff <= 0) {
-                clearInterval(countdownInterval);
-                display.innerHTML = "🚫 Bestellzeit beendet!";
-                document.getElementById("orderCard").style.display = "none";
-                return;
-            }
-            const m = Math.floor(diff / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            spanTimeLeft.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-        }, 1000);
+        
+        // Prüfen, ob die Zeit bereits abgelaufen ist
+        if (new Date().getTime() > endTime) {
+            display.innerHTML = "🚫 Bestellzeit beendet!";
+            document.getElementById("orderCard").style.display = "none";
+        } else {
+            spanEndTime.innerText = `${hours}:${mins} Uhr`;
+            display.style.display = "block";
+        }
     }
 
     onValue(ref(db, "settings"), snap => {
@@ -241,7 +226,7 @@
         startBtn.style.background = isActive ? "var(--danger)" : "var(--primary)";
         document.getElementById("orderCard").style.display = isActive ? "block" : "none";
         ['restaurant', 'time', 'gate'].forEach(id => document.getElementById(id).disabled = isActive);
-        if(isActive) runTimer(d.endTime); else document.getElementById("timerDisplay").style.display = "none";
+        if(isActive) showEndTime(d.endTime); else document.getElementById("timerDisplay").style.display = "none";
     });
 
     document.getElementById("startBtn").onclick = async () => {
