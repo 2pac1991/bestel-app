@@ -52,7 +52,7 @@
 
         .container { width: 100%; max-width: 500px; padding: 20px; }
 
-        /* ERWEITERTES INFO-DISPLAY */
+        /* INFO-DISPLAY OBEN */
         #statusDisplay {
             background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
             border: 2px solid #fee2e2; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
@@ -85,10 +85,11 @@
         #startBtn { color: white; background: var(--primary); }
         .add-btn { background: var(--success); color: white; }
 
-        ul { padding: 0; list-style: none; width: 100%; }
+        ul { padding: 0; list-style: none; width: 100%; margin: 0; }
         li {
             background: white; padding: 18px; border-radius: 18px; margin-bottom: 12px;
             border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            width: 100%;
         }
 
         .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; display: block; margin-bottom: 2px; }
@@ -156,7 +157,7 @@
             <select id="chamber"><option>Spinnereikammerl</option><option>NB-Kammerl</option></select>
             <span class="label">🚪 Tor (für WA)</span>
             <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
-            <button id="startBtn" class="btn">Laden...</button>
+            <button id="startBtn" class="btn">🟢 Bestellung Starten</button>
         </div>
 
         <div id="orderCard" class="card" style="display:none; border: 2px solid #bbf7d0; background: #f0fdf4;">
@@ -201,13 +202,12 @@
         if(n && n.trim() !== "") { userName = n.trim(); localStorage.setItem("userName", userName); document.getElementById("userNameDisplay").innerText = userName; }
     };
 
-    // --- STATUS LOGIK ---
+    // --- STATUS & SETUP LOGIK ---
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
         const isActive = d.orderActive && now < d.endTime;
         
-        // Sichtbarkeit umschalten
         document.getElementById("setupCard").style.display = isActive ? "none" : "block";
         document.getElementById("statusDisplay").style.display = isActive ? "block" : "none";
         document.getElementById("orderCard").style.display = isActive ? "block" : "none";
@@ -218,24 +218,19 @@
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = d.time || "---";
             document.getElementById("disp-cham").innerText = d.chamber || "---";
-        } else {
-            document.getElementById("startBtn").innerText = "🟢 Bestellung Starten";
         }
     });
-
-    // Starten & Stoppen Funktionen
-    const triggerStop = async () => {
-        if(prompt("Passwort zum Stoppen:") === "stop") {
-            update(ref(db, "settings"), { orderActive: false });
-        }
-    };
 
     document.getElementById("startBtn").onclick = () => {
         document.getElementById("modalOverlay").style.display = "block";
         document.getElementById("timeModal").style.display = "block";
     };
     
-    document.getElementById("stopActionBtn").onclick = triggerStop;
+    document.getElementById("stopActionBtn").onclick = async () => {
+        if(prompt("Passwort zum Stoppen:") === "stop") {
+            update(ref(db, "settings"), { orderActive: false });
+        }
+    };
 
     document.getElementById("cancelModalBtn").onclick = () => {
         document.getElementById("modalOverlay").style.display = "none";
@@ -271,16 +266,31 @@
     document.getElementById("order").onkeypress = (e) => { if(e.key === "Enter") addOrder(); };
 
     onValue(ref(db, "orders"), snap => {
-        const list = document.getElementById("list"); list.innerHTML = "";
+        const list = document.getElementById("list"); 
+        list.innerHTML = "";
         const waLeiste = document.getElementById("waLeiste");
         const count = snap.numChildren();
+        
         waLeiste.style.display = count > 0 ? "flex" : "none";
-        if(count === 0) return;
+        
+        if(!snap.exists()) return;
+
         snap.forEach(child => {
             const d = child.val();
             const li = document.createElement("li");
-            li.innerHTML = `<div class="item-content"><span class="user-label">${d.user}</span><span class="food-name" data-food="${d.name}">${d.name}</span>${d.owner === userId ? `<button class="edit-btn" id="eb-${child.key}">Bearbeiten</button>` : ""}<div id="c-${child.key}" class="controls"><input id="inp-${child.key}" value="${d.name}"><button class="btn" style="background:var(--danger); color:white; padding:10px; margin-bottom:5px;" id="del-${child.key}">Löschen</button><button class="btn" style="background:var(--primary); color:white; padding:10px;" id="sav-${child.key}">Speichern</button></div></div>`;
+            li.innerHTML = `
+                <div class="item-content">
+                    <span class="user-label">${d.user}</span>
+                    <span class="food-name" data-food="${d.name}">${d.name}</span>
+                    ${d.owner === userId ? `<button class="edit-btn" id="eb-${child.key}">Bearbeiten</button>` : ""}
+                    <div id="c-${child.key}" class="controls">
+                        <input id="inp-${child.key}" value="${d.name}">
+                        <button class="btn" style="background:var(--danger); color:white; padding:10px; margin-bottom:5px;" id="del-${child.key}">Löschen</button>
+                        <button class="btn" style="background:var(--primary); color:white; padding:10px;" id="sav-${child.key}">Speichern</button>
+                    </div>
+                </div>`;
             list.appendChild(li);
+
             if(d.owner === userId) {
                 document.getElementById(`eb-${child.key}`).onclick = () => document.getElementById(`c-${child.key}`).classList.toggle("active");
                 document.getElementById(`del-${child.key}`).onclick = () => confirm("Wirklich löschen?") && remove(ref(db, `orders/${child.key}`));
@@ -299,7 +309,12 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 
-    document.getElementById("clearBtn").onclick = () => { if(prompt("Passwort zum Leeren:") === "clear") { remove(ref(db, "orders")); update(ref(db, "settings"), {orderActive: false}); } };
+    document.getElementById("clearBtn").onclick = () => { 
+        if(prompt("Passwort zum Leeren:") === "clear") { 
+            remove(ref(db, "orders")); 
+            update(ref(db, "settings"), {orderActive: false}); 
+        } 
+    };
 </script>
 </body>
 </html>
