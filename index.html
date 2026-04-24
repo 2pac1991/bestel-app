@@ -54,7 +54,6 @@
 
         .header-right { display: flex; align-items: center; gap: 10px; }
 
-        /* Professioneller Dark Mode Schalter */
         #darkModeBtn {
             background: var(--input-bg); 
             border: 1.5px solid var(--border); 
@@ -115,11 +114,6 @@
             padding: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
             margin-bottom: 20px; display: none;
         }
-        .box-title-main { 
-            font-size: 14px; font-weight: 900; color: var(--danger); 
-            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
-            display: none; 
-        }
         .box-title-sub {
             font-size: 11px; font-weight: 700; color: var(--primary);
             text-transform: uppercase; letter-spacing: 0.5px;
@@ -140,6 +134,7 @@
         li:last-child { border-bottom: none; }
 
         .order-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .order-info { flex: 1; display: flex; flex-direction: column; }
         .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 2px; }
         .food-name { font-weight: 700; font-size: 17px; color: var(--text-main); line-height: 1.2; }
 
@@ -147,6 +142,12 @@
             background: var(--input-bg); color: var(--text-muted); border: none; 
             padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;
         }
+
+        .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 10px; background: var(--input-bg); border-radius: 12px; }
+        .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); font-size: 16px; margin: 0; }
+        .edit-actions { display: flex; gap: 8px; }
+        .save-btn { background: var(--primary); color: white; padding: 8px; border-radius: 8px; border: none; font-weight: 700; flex: 2; }
+        .del-btn { background: var(--danger); color: white; padding: 8px; border-radius: 8px; border: none; font-weight: 700; flex: 1; }
 
         .stop-btn-minimal {
             background: none; border: 1px solid var(--border); color: var(--text-muted);
@@ -223,9 +224,8 @@
         </div>
 
         <div id="orderBox" class="order-container-box">
-            <div class="box-header" style="display: flex; justify-content: space-between;">
+            <div class="box-header" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                 <div class="box-title-container">
-                    <div class="box-title-main" id="orderBoxStatus">❌ Bestellung Beendet</div>
                     <div class="box-title-sub" id="orderBoxDetails">Aktuelle Bestellungen</div>
                 </div>
                 <button id="clearAllBtn" class="clear-list-btn">🗑️</button>
@@ -254,23 +254,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // DARK MODE
     const darkModeBtn = document.getElementById("darkModeBtn");
     const body = document.body;
-    
-    const updateIcon = () => {
-        darkModeBtn.innerText = body.classList.contains("dark-mode") ? "☀️" : "🌙";
-    };
-
-    if (localStorage.getItem("theme") === "dark") {
-        body.classList.add("dark-mode");
-        updateIcon();
-    }
-    
-    darkModeBtn.onclick = () => {
-        body.classList.toggle("dark-mode");
-        updateIcon();
-        localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
-    };
+    const updateIcon = () => { darkModeBtn.innerText = body.classList.contains("dark-mode") ? "☀️" : "🌙"; };
+    if (localStorage.getItem("theme") === "dark") { body.classList.add("dark-mode"); updateIcon(); }
+    darkModeBtn.onclick = () => { body.classList.toggle("dark-mode"); updateIcon(); localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light"); };
 
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
@@ -296,20 +285,16 @@
         document.getElementById("orderCard").style.display = isGlobalActive ? "block" : "none";
         document.getElementById("clearAllBtn").style.display = isGlobalActive ? "none" : "block";
         
-        const statusEl = document.getElementById("orderBoxStatus");
         const detailsEl = document.getElementById("orderBoxDetails");
-
         if(isGlobalActive) {
             const date = new Date(d.endTime);
             document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
             document.getElementById("disp-cham").innerText = d.chamber || "---";
-            statusEl.style.display = "none";
             detailsEl.innerText = "Aktuelle Bestellungen";
         } else if (d.restaurant) {
-            statusEl.style.display = "block";
-            detailsEl.innerHTML = `${d.restaurant} | ${d.time} Uhr | ${d.chamber}`;
+            detailsEl.innerHTML = `${d.restaurant} | ${d.time} Uhr`;
         }
     });
 
@@ -341,9 +326,7 @@
     };
 
     document.getElementById("clearAllBtn").onclick = () => {
-        if(prompt("Admin Passwort zum Löschen:") === "admin") {
-            remove(ref(db, "orders")); remove(ref(db, "settings"));
-        }
+        if(prompt("Admin Passwort zum Löschen:") === "admin") { remove(ref(db, "orders")); remove(ref(db, "settings")); }
     };
 
     const addOrder = () => {
@@ -353,19 +336,67 @@
     };
 
     document.getElementById("addOrderBtn").onclick = addOrder;
+
+    // REPARIERTE BESTELL-LISTE MIT EDIT-LOGIK
     onValue(ref(db, "orders"), snap => {
+        if (currentlyEditing !== null) return;
         const listEl = document.getElementById("list");
         listEl.innerHTML = "";
         if(!snap.exists()) { document.getElementById("waLeiste").style.display = "none"; document.getElementById("orderBox").style.display = "none"; return; }
+        
         document.getElementById("waLeiste").style.display = "flex";
         document.getElementById("orderBox").style.display = "block";
+        
         snap.forEach(child => {
             const d = child.val();
+            const key = child.key;
             const li = document.createElement("li");
-            li.innerHTML = `<div class="order-row"><div><span class="user-label">${d.user}</span><div class="food-name">${d.name}</div></div></div>`;
+            const showEdit = isGlobalActive && d.owner === userId;
+
+            li.innerHTML = `
+                <div class="order-row" id="view-${key}">
+                    <div class="order-info">
+                        <span class="user-label">${d.user}</span>
+                        <span class="food-name">${d.name}</span>
+                    </div>
+                    ${showEdit ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
+                </div>
+                <div class="edit-container" id="edit-${key}" style="display:none">
+                    <span class="user-label">${d.user}</span>
+                    <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
+                    <div class="edit-actions">
+                        <button class="del-btn" onclick="window.deleteOrder('${key}')">Löschen</button>
+                        <button class="save-btn" onclick="window.saveOrder('${key}')">Speichern</button>
+                    </div>
+                </div>`;
             listEl.appendChild(li);
         });
     });
+
+    // WINDOW FUNCTIONS FÜR BUTTONS
+    window.startEdit = (key) => {
+        currentlyEditing = key;
+        document.getElementById(`view-${key}`).style.display = 'none';
+        document.getElementById(`edit-${key}`).style.display = 'flex';
+        document.getElementById(`inp-${key}`).focus();
+    };
+
+    window.saveOrder = (key) => {
+        const newVal = document.getElementById(`inp-${key}`).value;
+        if(newVal.trim()) {
+            update(ref(db, `orders/${key}`), { name: newVal.trim() }).then(() => {
+                currentlyEditing = null;
+            });
+        }
+    };
+
+    window.deleteOrder = (key) => {
+        if(confirm("Diesen Eintrag wirklich löschen?")) {
+            remove(ref(db, `orders/${key}`)).then(() => {
+                currentlyEditing = null;
+            });
+        }
+    };
 
     document.getElementById("shareWaBtn").onclick = async () => {
         const sSnap = await get(ref(db, "settings"));
