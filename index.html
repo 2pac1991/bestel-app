@@ -27,7 +27,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Verhindert Ghost-Clicks auf Mobile */
             touch-action: manipulation;
         }
 
@@ -69,11 +68,10 @@
 
         .label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block; }
 
-        /* WICHTIG: Transitions hier entfernt, um Tastatur-Lag zu vermeiden */
         input, select {
-            width: 100%; padding: 14px; margin: 4px 0 15px 0; border-radius: 12px;
+            width: 100%; padding: 12px; margin: 4px 0 15px 0; border-radius: 12px;
             border: 2px solid #f1f5f9; background: #f8fafc; font-size: 16px;
-            -webkit-appearance: none; /* Fix für iOS */
+            -webkit-appearance: none;
         }
         input:focus { border-color: var(--primary); background: #fff; outline: none; }
 
@@ -81,7 +79,6 @@
             width: 100%; padding: 15px; border-radius: 15px; border: none;
             font-weight: 700; font-size: 16px; cursor: pointer;
         }
-        .btn:active { opacity: 0.8; }
 
         .add-btn { background: var(--success); color: white; margin-top: 5px; }
 
@@ -92,18 +89,24 @@
             width: 100%;
         }
 
-        .order-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .order-row { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }
         .order-info { flex: 1; display: flex; flex-direction: column; }
-        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
+        
+        /* Abstand zwischen Name und Essen */
+        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; }
         .food-name { font-weight: 700; font-size: 19px; color: var(--text-main); line-height: 1.2; }
 
         .edit-btn { 
             background: #f1f5f9; color: var(--text-muted); border: none; 
-            padding: 8px 12px; border-radius: 10px; font-size: 12px; cursor: pointer;
+            padding: 8px; border-radius: 10px; font-size: 14px; cursor: pointer; margin-left: 10px;
         }
-        
-        .controls { display: none; margin-top: 15px; flex-direction: column; gap: 8px; width: 100%; border-top: 1px solid #f1f5f9; padding-top: 10px; }
-        .controls.active { display: flex; }
+
+        /* Inline-Edit Styles */
+        .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); font-size: 16px; font-family: inherit; }
+        .edit-actions { display: flex; gap: 8px; }
+        .save-btn { background: var(--primary); color: white; padding: 8px 15px; border-radius: 8px; border: none; font-weight: 700; flex: 2; }
+        .del-btn { background: var(--danger); color: white; padding: 8px 15px; border-radius: 8px; border: none; font-weight: 700; flex: 1; }
 
         #timeModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -262,18 +265,51 @@
         listEl.innerHTML = "";
         if(!snap.exists()) { waLeiste.style.display = "none"; return; }
         waLeiste.style.display = "flex";
+        
         snap.forEach(child => {
             const d = child.val();
             const key = child.key;
             const li = document.createElement("li");
-            li.innerHTML = `<div class="order-row"><div class="order-info"><span class="user-label">${d.user}</span><span class="food-name" data-food="${d.name}">${d.name}</span></div>${d.owner === userId ? `<button class="edit-btn" onclick="document.getElementById('c-${key}').classList.toggle('active')">✏️</button>` : ""}</div><div id="c-${key}" class="controls"><input id="inp-${key}" value="${d.name}"><div style="display:flex; gap:10px;"><button class="btn" style="background:var(--danger); color:white; flex:1;" id="del-${key}">Löschen</button><button class="btn" style="background:var(--primary); color:white; flex:2;" id="sav-${key}">OK</button></div></div>`;
+            li.id = `li-${key}`;
+            
+            li.innerHTML = `
+                <div class="order-row" id="view-${key}">
+                    <div class="order-info">
+                        <span class="user-label">${d.user}</span>
+                        <span class="food-name" data-food="${d.name}">${d.name}</span>
+                    </div>
+                    ${d.owner === userId ? `<button class="edit-btn" onclick="startEdit('${key}', '${d.name}')">✏️</button>` : ""}
+                </div>
+                <div class="edit-container" id="edit-${key}" style="display:none;">
+                    <span class="user-label">${d.user}</span>
+                    <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
+                    <div class="edit-actions">
+                        <button class="del-btn" onclick="deleteOrder('${key}')">Löschen</button>
+                        <button class="save-btn" onclick="saveOrder('${key}')">Speichern</button>
+                    </div>
+                </div>`;
             listEl.appendChild(li);
-            if(d.owner === userId) {
-                document.getElementById(`del-${key}`).onclick = () => confirm("Löschen?") && remove(ref(db, `orders/${key}`));
-                document.getElementById(`sav-${key}`).onclick = () => update(ref(db, `orders/${key}`), { name: document.getElementById(`inp-${key}`).value });
-            }
         });
     });
+
+    window.startEdit = (key, currentVal) => {
+        document.getElementById(`view-${key}`).style.display = 'none';
+        document.getElementById(`edit-${key}`).style.display = 'flex';
+        document.getElementById(`inp-${key}`).focus();
+    };
+
+    window.saveOrder = (key) => {
+        const newVal = document.getElementById(`inp-${key}`).value;
+        if(newVal.trim()) {
+            update(ref(db, `orders/${key}`), { name: newVal.trim() });
+        }
+    };
+
+    window.deleteOrder = (key) => {
+        if(confirm("Diesen Eintrag wirklich löschen?")) {
+            remove(ref(db, `orders/${key}`));
+        }
+    };
 
     document.getElementById("shareWaBtn").onclick = async () => {
         const snap = await get(ref(db, "settings"));
