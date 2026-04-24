@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bestell-Liste</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bestell-Liste Pro</title>
     <style>
         :root {
             --primary: #3b82f6;
@@ -18,225 +18,130 @@
             --whatsapp: #25D366;
         }
 
-        * { box-sizing: border-box; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        * { box-sizing: border-box; transition: all 0.2s ease; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding: 0;
-            padding-bottom: 100px; /* Platz für den fixierten Button unten */
+            padding-bottom: 120px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            -webkit-font-smoothing: antialiased;
         }
 
-        .container { 
-            width: 100%; 
-            max-width: 500px; 
-            padding: 20px;
-        }
+        .container { width: 100%; max-width: 500px; padding: 20px; }
 
-        /* --- Moderner Header Bereich --- */
         .app-header {
             width: 100%;
-            background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(248, 250, 252, 0) 100%);
-            padding: 30px 20px 10px 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+            padding: 25px 20px;
+            text-align: center;
             border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+        }
+
+        h1 { font-size: 28px; font-weight: 900; margin: 0; background: linear-gradient(135deg, #1e293b, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* Timer Style */
+        #timerDisplay {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 10px;
+            border-radius: 12px;
+            font-weight: 800;
+            text-align: center;
             margin-bottom: 15px;
+            display: none;
+            border: 1px solid #fecaca;
+            animation: pulse 2s infinite;
         }
 
-        .header-content {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header-logo {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #fff;
-            object-fit: cover;
-            border: 2px solid #fff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            font-size: 36px;
-            font-weight: 900;
-            margin: 0;
-            letter-spacing: -1.5px;
-            background: linear-gradient(135deg, #1e293b 30%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.05));
-        }
-
-        #nameBtn {
-            width: 100%;
-            background: rgba(59, 130, 246, 0.05);
-            color: var(--primary);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            padding: 12px;
-            border-radius: 14px;
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 25px;
-            cursor: pointer;
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
 
         .card {
             background: var(--card-bg);
-            padding: 24px;
-            border-radius: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 0 1px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             margin-bottom: 20px;
-            border: 1px solid rgba(226, 232, 240, 0.8);
+            border: 1px solid #e2e8f0;
         }
 
-        .label {
-            font-size: 12px;
-            font-weight: 800;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-            display: block;
-        }
+        .label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block; }
 
         input, select {
-            width: 100%;
-            padding: 14px;
-            margin: 4px 0 20px 0;
-            border-radius: 14px;
-            border: 1.5px solid #f1f5f9;
-            background: #f8fafc;
-            font-size: 16px;
-            color: var(--text-main);
+            width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 12px;
+            border: 1.5px solid #e2e8f0; background: #fff; font-size: 16px;
         }
+
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
 
         .btn {
-            width: 100%;
-            padding: 16px;
-            border-radius: 16px;
-            border: none;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
+            width: 100%; padding: 15px; border-radius: 14px; border: none;
+            font-weight: 700; font-size: 16px; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
         }
 
-        #startBtn { color: white; background: var(--primary); }
-        .add-btn { background: var(--success); color: white; margin-top: 10px; }
-        
-        /* Neuer fixierter WhatsApp Button */
-        .wa-sticky-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px;
-            background: linear-gradient(0deg, rgba(248, 250, 252, 1) 40%, rgba(248, 250, 252, 0) 100%);
-            display: flex;
-            justify-content: center;
-            z-index: 1000;
-        }
+        .btn:active { transform: scale(0.98); }
+        #startBtn { background: var(--primary); color: white; }
+        .add-btn { background: var(--success); color: white; }
 
-        .wa-btn { 
-            background: var(--whatsapp); 
-            color: white; 
-            text-decoration: none; 
-            box-shadow: 0 10px 25px rgba(37, 211, 102, 0.3);
-            max-width: 460px;
-            width: 100%;
-        }
-        
-        .wa-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(37, 211, 102, 0.4);
-            background: #20bd5a;
-        }
-
-        ul { padding: 0; margin: 0; }
+        ul { padding: 0; list-style: none; }
         li {
-            background: white;
-            padding: 18px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-            border: 1px solid rgba(0,0,0,0.03);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            list-style: none;
+            background: white; padding: 15px; border-radius: 18px; margin-bottom: 10px;
+            border: 1px solid #f1f5f9; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
 
         .item-top { display: flex; justify-content: space-between; align-items: center; }
-        .user-label { font-size: 11px; font-weight: 700; color: var(--primary); opacity: 0.8; }
-        .food-name { font-weight: 700; font-size: 18px; display: block; margin-top: 2px; }
+        .user-label { font-size: 10px; color: var(--primary); font-weight: 700; }
+        .food-name { font-weight: 700; font-size: 17px; }
 
-        .edit-btn {
-            background: #f1f5f9;
-            color: var(--text-muted);
-            border-radius: 10px;
-            padding: 8px 12px;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .controls { display: none; margin-top: 15px; gap: 8px; flex-wrap: wrap; }
+        .controls { display: none; margin-top: 12px; gap: 5px; flex-wrap: wrap; }
         .controls.active { display: flex; }
-        .control-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; color: white; font-weight: bold; cursor: pointer; }
-        
-        #orderCard { border: 2.5px solid rgba(34, 197, 94, 0.3); background: #f0fdf4; display: none; }
-        input:disabled, select:disabled { opacity: 0.6; cursor: not-allowed; }
+        .control-btn { flex: 1; padding: 8px; border-radius: 8px; border: none; color: white; font-weight: bold; }
+
+        .wa-sticky-container {
+            position: fixed; bottom: 0; width: 100%; padding: 20px;
+            background: linear-gradient(0deg, white 50%, transparent); z-index: 100;
+        }
+        .wa-btn { background: var(--whatsapp); color: white; text-decoration: none; box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3); }
 
         #clearBtn {
-            position: fixed; bottom: 100px; right: 25px; background: white; border: none;
-            border-radius: 50%; width: 50px; height: 50px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            z-index: 999;
+            position: fixed; bottom: 100px; right: 20px; background: white; border: none;
+            border-radius: 50%; width: 45px; height: 45px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            cursor: pointer; z-index: 99;
         }
     </style>
 </head>
 <body>
 
     <header class="app-header">
-        <div class="header-content">
-            <img src="logo.png" alt="Logo" class="header-logo">
-            <h1>Bestell-Liste</h1>
-        </div>
+        <h1>Bestell-Liste</h1>
     </header>
 
     <div class="container">
-        <button id="nameBtn" onclick="changeName()">👤 Profil lädt...</button>
+        <div id="timerDisplay">⏳ Zeit läuft ab: <span id="timeLeft">--:--</span></div>
+        
+        <button id="nameBtn" onclick="changeName()" style="width:100%; background:none; border:none; color:var(--primary); font-weight:600; margin-bottom:15px; cursor:pointer;">👤 Name laden...</button>
 
         <div class="card">
-            <span class="label">📍 Restaurant / Laden</span>
-            <input id="restaurant" placeholder="z. B. Baron">
-
-            <span class="label">🕒 Uhrzeit</span>
-            <input id="time" placeholder="z. B. 17:20 Uhr">
-
-            <span class="label">🚪 Lieferung zu</span>
-            <select id="gate">
-                <option>Nord-Tor</option>
-                <option>Haupt-Tor</option>
-            </select>
-
-            <button id="startBtn" class="btn" onclick="toggleOrder()">Laden...</button>
+            <span class="label">📍 Wo wird bestellt?</span>
+            <input id="restaurant" placeholder="z.B. Baron, Pizzeria...">
+            <span class="label">🕒 Geplante Lieferung</span>
+            <input id="time" placeholder="z.B. 12:30 Uhr">
+            <span class="label">🚪 Ort</span>
+            <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
+            <button id="startBtn" class="btn" onclick="toggleOrder()">Lade Modus...</button>
         </div>
 
-        <div class="card" id="orderCard">
-            <span class="label">Deine Auswahl</span>
-            <input id="order" placeholder="Was darf's sein?">
+        <div class="card" id="orderCard" style="display:none; border: 2px solid var(--success);">
+            <span class="label">Deine Bestellung</span>
+            <input id="order" placeholder="Was möchtest du essen?">
             <button class="btn add-btn" onclick="addOrder()">+ Hinzufügen</button>
         </div>
 
@@ -244,12 +149,7 @@
     </div>
 
     <div class="wa-sticky-container">
-        <button class="btn wa-btn" onclick="shareWhatsApp()">
-            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="margin-bottom: -2px;">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.659 1.432 5.631 1.433h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            Per WhatsApp teilen
-        </button>
+        <button class="btn wa-btn" onclick="shareWhatsApp()">WhatsApp Liste teilen</button>
     </div>
 
     <button id="clearBtn" onclick="clearAll()">🧹</button>
@@ -267,54 +167,118 @@
 
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
-    let userName = localStorage.getItem("userName") || prompt("Wie heißt du?");
+    let userName = localStorage.getItem("userName") || prompt("Dein Name?");
     localStorage.setItem("userName", userName || "Gast");
 
-    function updateNameButton() {
-        document.getElementById("nameBtn").innerText = `👤 ${userName} (Name ändern)`;
-    }
-    updateNameButton();
-
-    window.changeName = () => {
-        let n = prompt("Neuer Name:", userName);
-        if(n) { userName = n; localStorage.setItem("userName", n); updateNameButton(); }
+    const updateNameBtn = () => document.getElementById("nameBtn").innerText = `👤 ${userName} (ändern)`;
+    updateNameBtn();
+    window.changeName = () => { 
+        let n = prompt("Neuer Name:", userName); 
+        if(n) { userName = n; localStorage.setItem("userName", n); updateNameBtn(); }
     };
 
-    const fields = ['restaurant', 'time', 'gate'];
-    fields.forEach(id => {
-        const el = document.getElementById(id);
-        el.value = localStorage.getItem(id) || (id === 'gate' ? 'Nord-Tor' : '');
-        el.oninput = () => localStorage.setItem(id, el.value);
-    });
+    // --- Timer & Bestellstatus Logik ---
+    let countdownInterval;
 
-    let orderActive = localStorage.getItem("orderActive") === "true";
-    function updateUI() {
+    function startTimer(endTime) {
+        clearInterval(countdownInterval);
+        const display = document.getElementById("timerDisplay");
+        const span = document.getElementById("timeLeft");
+        
+        display.style.display = "block";
+
+        countdownInterval = setInterval(() => {
+            const now = new Date().getTime();
+            const diff = endTime - now;
+
+            if (diff <= 0) {
+                clearInterval(countdownInterval);
+                display.innerHTML = "🚫 Bestellzeit abgelaufen!";
+                document.getElementById("orderCard").style.display = "none";
+                return;
+            }
+
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            span.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }, 1000);
+    }
+
+    // Synchronisiere Status mit Firebase (damit alle den gleichen Timer sehen)
+    onValue(ref(db, "settings"), (snap) => {
+        const data = snap.val() || {};
+        const isActive = data.orderActive || false;
+        const endTime = data.endTime || 0;
+        
         const startBtn = document.getElementById("startBtn");
         const orderCard = document.getElementById("orderCard");
-        if(orderActive) {
-            startBtn.innerText = "🛑 Bestellung stoppen";
+        const fields = ['restaurant', 'time', 'gate'];
+
+        if(isActive && new Date().getTime() < endTime) {
+            startBtn.innerText = "🛑 Stoppen (Admin)";
             startBtn.style.background = "var(--danger)";
             orderCard.style.display = "block";
             fields.forEach(id => document.getElementById(id).disabled = true);
+            startTimer(endTime);
         } else {
             startBtn.innerText = "🟢 Bestellung starten";
             startBtn.style.background = "var(--primary)";
             orderCard.style.display = "none";
             fields.forEach(id => document.getElementById(id).disabled = false);
+            document.getElementById("timerDisplay").style.display = "none";
+            clearInterval(countdownInterval);
         }
-    }
-    updateUI();
+    });
 
-    window.toggleOrder = () => {
-        if(orderActive) {
-            if(prompt("Passwort zum Stoppen:") !== "stop") return;
-            orderActive = false;
+    window.toggleOrder = async () => {
+        const snap = await get(ref(db, "settings"));
+        const current = snap.val() || {};
+
+        if (current.orderActive) {
+            if(prompt("Passwort zum Stoppen:") === "stop") {
+                update(ref(db, "settings"), { orderActive: false });
+            }
         } else {
-            orderActive = true;
+            const duration = prompt("Wie viele Minuten soll die Liste offen sein?", "15");
+            if (duration) {
+                const endTime = new Date().getTime() + (parseInt(duration) * 60000);
+                update(ref(db, "settings"), { 
+                    orderActive: true, 
+                    endTime: endTime,
+                    restaurant: document.getElementById("restaurant").value,
+                    time: document.getElementById("time").value,
+                    gate: document.getElementById("gate").value
+                });
+            }
         }
-        localStorage.setItem("orderActive", orderActive);
-        updateUI();
     };
+
+    // --- Bestellungen verarbeiten ---
+    window.addOrder = async () => {
+        const input = document.getElementById("order");
+        const val = input.value.trim();
+        if(!val) return;
+
+        const snap = await get(ref(db, "orders"));
+        let foundKey = null, foundQty = 0;
+        
+        if(snap.exists()) {
+            snap.forEach(c => {
+                if(c.val().owner === userId && c.val().name.toLowerCase() === val.toLowerCase()) {
+                    foundKey = c.key; foundQty = c.val().qty || 1;
+                }
+            });
+        }
+
+        if(foundKey) update(ref(db, `orders/${foundKey}`), { qty: foundQty + 1 });
+        else push(ref(db, "orders"), { name: val, user: userName, owner: userId, qty: 1 });
+        
+        input.value = "";
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    };
+
+    // Enter-Taste Support
+    document.getElementById("order").addEventListener("keypress", (e) => { if(e.key === "Enter") addOrder(); });
 
     onValue(ref(db, "orders"), snap => {
         const list = document.getElementById("list");
@@ -329,38 +293,20 @@
                         <span class="user-label">${d.user}</span>
                         <span class="food-name" data-food="${d.name}" data-qty="${d.qty}">${d.name} <span style="color:var(--primary)">x${d.qty}</span></span>
                     </div>
-                    ${d.owner === userId ? `<button class="edit-btn" onclick="toggleEdit('${child.key}')">Bearbeiten</button>` : ""}
+                    ${d.owner === userId ? `<button onclick="toggleEdit('${child.key}')" style="background:#f1f5f9; border:none; padding:5px 10px; border-radius:8px; font-size:12px;">Bearbeiten</button>` : ""}
                 </div>
                 <div id="c-${child.key}" class="controls">
-                    <input id="edit-${child.key}" value="${d.name}" style="margin-bottom:10px">
-                    <div style="display:flex; gap:8px;">
+                    <input id="edit-${child.key}" value="${d.name}" style="margin-bottom:8px">
+                    <div style="display:flex; gap:5px; width:100%">
                         <button class="control-btn" style="background:var(--success)" onclick="changeQty('${child.key}',1)">+</button>
                         <button class="control-btn" style="background:var(--warning)" onclick="changeQty('${child.key}',-1)">-</button>
-                        <button class="control-btn" style="background:var(--danger)" onclick="deleteOrder('${child.key}')">Löschen</button>
+                        <button class="control-btn" style="background:var(--danger)" onclick="deleteOrder('${child.key}')">🗑️</button>
                     </div>
-                    <button class="control-btn" style="background:var(--primary); width:100%; margin-top:5px" onclick="saveEdit('${child.key}')">💾 Speichern</button>
+                    <button class="control-btn" style="background:var(--primary); width:100%; margin-top:5px" onclick="saveEdit('${child.key}')">Speichern</button>
                 </div>`;
             list.appendChild(li);
         });
     });
-
-    window.addOrder = async () => {
-        const input = document.getElementById("order");
-        const val = input.value.trim();
-        if(!val) return;
-        const snap = await get(ref(db, "orders"));
-        let foundKey = null, foundQty = 0;
-        if(snap.exists()) {
-            snap.forEach(c => {
-                if(c.val().owner === userId && c.val().name.toLowerCase() === val.toLowerCase()) {
-                    foundKey = c.key; foundQty = c.val().qty || 1;
-                }
-            });
-        }
-        if(foundKey) update(ref(db, `orders/${foundKey}`), { qty: foundQty + 1 });
-        else push(ref(db, "orders"), { name: val, user: userName, owner: userId, qty: 1 });
-        input.value = "";
-    };
 
     window.toggleEdit = id => document.getElementById(`c-${id}`).classList.toggle("active");
     window.saveEdit = id => {
@@ -375,13 +321,26 @@
         });
     };
     window.deleteOrder = id => confirm("Löschen?") && remove(ref(db, `orders/${id}`));
+
+    // WhatsApp mit Zusammenfassung
     window.shareWhatsApp = () => {
-        let m = `*🍽️ BESTELL-LISTE: ${document.getElementById("restaurant").value}*\n🕒 Zeit: ${document.getElementById("time").value}\n🚪 Ort: ${document.getElementById("gate").value}\n––––––––––––––––––\n`;
-        document.querySelectorAll(".food-name").forEach(i => m += `• ${i.getAttribute("data-food")} (x${i.getAttribute("data-qty")})\n`);
+        const rest = document.getElementById("restaurant").value || "Bestellung";
+        let m = `*🍽️ BESTELLUNG: ${rest.toUpperCase()}*\n🕒 Zeit: ${document.getElementById("time").value}\n🚪 Ort: ${document.getElementById("gate").value}\n––––––––––––––––––\n`;
+        
+        const summary = {};
+        document.querySelectorAll(".food-name").forEach(i => {
+            const n = i.getAttribute("data-food");
+            const q = parseInt(i.getAttribute("data-qty"));
+            summary[n] = (summary[n] || 0) + q;
+        });
+
+        for (const [food, qty] of Object.entries(summary)) {
+            m += `✅ *${qty}x* ${food}\n`;
+        }
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
-    window.clearAll = () => prompt("Passwort:") === "clear" && remove(ref(db, "orders"));
-</script>
 
+    window.clearAll = () => prompt("Passwort:") === "clear" && (remove(ref(db, "orders")), update(ref(db, "settings"), {orderActive: false}));
+</script>
 </body>
 </html>
