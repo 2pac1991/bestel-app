@@ -295,7 +295,7 @@
                         <span class="user-label">${d.user}</span>
                         <span class="food-name" data-food="${d.name}" data-qty="${d.qty}">${d.name} <span style="color:var(--primary)">x${d.qty}</span></span>
                     </div>
-                    ${d.owner === userId ? `<button class="edit-btn" onclick="toggleEdit('${child.key}')">Optionen</button>` : ""}
+                    ${d.owner === userId ? `<button class="edit-btn" onclick="toggleEdit('${child.key}')">Bearbeiten</button>` : ""}
                 </div>
                 <div id="c-${child.key}" class="controls">
                     <input id="edit-${child.key}" value="${d.name}" style="margin-bottom:10px">
