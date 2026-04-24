@@ -85,11 +85,25 @@
             border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
 
-        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; display: block; }
-        .food-name { font-weight: 700; font-size: 19px; color: var(--text-main); }
+        /* NEU: Flex-Layout für die Zeile */
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .order-info { flex: 1; }
 
-        .edit-btn { background: #f1f5f9; color: var(--text-muted); border: none; padding: 6px 10px; border-radius: 8px; font-size: 12px; margin-top: 8px; cursor: pointer; }
-        .controls { display: none; margin-top: 10px; flex-direction: column; gap: 5px; }
+        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; display: block; }
+        .food-name { font-weight: 700; font-size: 19px; color: var(--text-main); line-height: 1.2; }
+
+        .edit-btn { 
+            background: #f1f5f9; color: var(--text-muted); border: none; 
+            padding: 8px 12px; border-radius: 10px; font-size: 12px; 
+            cursor: pointer; white-space: nowrap;
+        }
+        
+        .controls { display: none; margin-top: 15px; flex-direction: column; gap: 5px; width: 100%; border-top: 1px solid #f1f5f9; padding-top: 10px; }
         .controls.active { display: flex; }
 
         #timeModal {
@@ -220,8 +234,6 @@
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = d.time || "---";
             document.getElementById("disp-cham").innerText = d.chamber || "---";
-            // Fix: Sicherstellen, dass das Feld aktiv ist
-            document.getElementById("orderInput").disabled = false;
         }
     });
 
@@ -266,12 +278,7 @@
     };
 
     document.getElementById("addOrderBtn").onclick = addOrder;
-    document.getElementById("orderInput").onkeydown = (e) => {
-        if(e.key === "Enter") {
-            e.preventDefault();
-            addOrder();
-        }
-    };
+    document.getElementById("orderInput").onkeydown = (e) => e.key === "Enter" && addOrder();
 
     onValue(ref(db, "orders"), snap => {
         const listEl = document.getElementById("list");
@@ -283,7 +290,22 @@
             const d = child.val();
             const key = child.key;
             const li = document.createElement("li");
-            li.innerHTML = `<div><span class="user-label">${d.user}</span><span class="food-name" data-food="${d.name}">${d.name}</span>${d.owner === userId ? `<button class="edit-btn" onclick="document.getElementById('c-${key}').classList.toggle('active')">Bearbeiten</button>` : ""}<div id="c-${key}" class="controls"><input id="inp-${key}" value="${d.name}"><button class="btn" style="background:var(--danger); color:white; padding:10px; margin-bottom:5px;" id="del-${key}">Löschen</button><button class="btn" style="background:var(--primary); color:white; padding:10px;" id="sav-${key}">Speichern</button></div></div>`;
+            li.innerHTML = `
+                <div class="order-row">
+                    <div class="order-info">
+                        <span class="user-label">${d.user}</span>
+                        <span class="food-name" data-food="${d.name}">${d.name}</span>
+                    </div>
+                    ${d.owner === userId ? `<button class="edit-btn" onclick="document.getElementById('c-${key}').classList.toggle('active')">✏️ Bearbeiten</button>` : ""}
+                </div>
+                <div id="c-${key}" class="controls">
+                    <span class="label">Eintrag ändern</span>
+                    <input id="inp-${key}" value="${d.name}">
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn" style="background:var(--danger); color:white; flex:1;" id="del-${key}">Löschen</button>
+                        <button class="btn" style="background:var(--primary); color:white; flex:2;" id="sav-${key}">Speichern</button>
+                    </div>
+                </div>`;
             listEl.appendChild(li);
             if(d.owner === userId) {
                 document.getElementById(`del-${key}`).onclick = () => confirm("Löschen?") && remove(ref(db, `orders/${key}`));
