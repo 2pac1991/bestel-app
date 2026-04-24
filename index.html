@@ -3,190 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bestell-Liste Pro</title>
+    <title>Essen-Bestellliste</title>
     <style>
-        :root {
-            --primary: #3b82f6;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --whatsapp: #25D366;
-            --border: #e2e8f0;
-        }
-
-        * { box-sizing: border-box; }
-
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
             margin: 0;
-            padding-bottom: 120px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .app-header {
-            width: 100%; background: #fff; padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border);
-            position: sticky; top: 0; z-index: 1100;
+        .container {
+            width: 100%;
+            max-width: 500px;
         }
-
-        .header-left { display: flex; align-items: center; gap: 10px; }
-        .header-logo { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
-        h1 { font-size: 18px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
-
-        #profileBtn {
-            background: #f1f5f9; border: 1px solid var(--border); padding: 8px 12px;
-            border-radius: 12px; display: flex; align-items: center; gap: 8px;
-            cursor: pointer; font-weight: 600; font-size: 13px;
-        }
-
-        .container { width: 100%; max-width: 480px; padding: 15px; }
-
-        #statusDisplay {
-            background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px;
-            border: 1px solid var(--border); display: none;
-        }
-        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .status-item { background: #f8fafc; padding: 10px; border-radius: 12px; border: 1px solid #f1f5f9; }
-        .status-label { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px; }
-        .status-val { font-size: 13px; font-weight: 700; }
-        .timer-highlight { grid-column: span 2; background: #fff1f2; color: #e11d48; border-color: #ffe4e6; text-align: center; }
 
         .card {
-            background: var(--card-bg); padding: 20px; border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); margin-bottom: 15px;
-            border: 1px solid var(--border);
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
 
-        .label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; display: block; }
+        h1 {
+            text-align: center;
+            color: #1c1e21;
+            margin-top: 0;
+        }
 
         input, select {
-            width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 12px;
-            border: 2px solid #f1f5f9; background: #f8fafc; font-size: 16px;
-        }
-        input:focus { border-color: var(--primary); background: #fff; outline: none; }
-
-        .btn {
-            width: 100%; padding: 14px; border-radius: 14px; border: none;
-            font-weight: 700; font-size: 15px; cursor: pointer;
-        }
-
-        .add-btn { background: var(--success); color: white; }
-
-        .order-container-box {
-            background: white; border-radius: 24px; border: 2px solid var(--primary);
-            padding: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
-            margin-bottom: 20px; display: none;
-        }
-        .box-title {
-            font-size: 12px; font-weight: 900; color: var(--primary);
-            text-transform: uppercase; letter-spacing: 1px;
-            margin-bottom: 15px; display: flex; align-items: center; gap: 8px;
-        }
-        .box-title::after { content: ""; height: 2px; background: #eff6ff; flex: 1; }
-
-        .order-item-card {
-            background: #fff; padding: 12px 0; border-bottom: 1px solid #f1f5f9;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .order-item-card:last-child { border-bottom: none; }
-        
-        .order-content { display: flex; flex-direction: column; }
-        .order-user { font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
-        .order-name { font-size: 16px; font-weight: 700; color: var(--text-main); }
-
-        .edit-mini-btn {
-            background: #f8fafc; border: 1px solid var(--border);
-            padding: 6px 10px; border-radius: 8px; font-size: 11px;
-            font-weight: 600; color: var(--text-muted); cursor: pointer;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
         }
 
-        .edit-box { width: 100%; background: #f8fafc; padding: 10px; border-radius: 12px; }
-        .edit-input { margin-bottom: 8px; border: 2px solid var(--primary); width: 100%; padding: 8px; border-radius: 8px; font-size: 15px; }
-
-        #timeModal {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            z-index: 2000; width: 85%; max-width: 320px; text-align: center;
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
-        #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 1999; }
 
-        .wa-sticky { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
-        .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; max-width: 450px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
-        .wa-btn svg { width: 20px; height: 20px; fill: white; }
+        .btn-start {
+            background-color: #007bff;
+            color: white;
+        }
 
-        #clearBtn { position: fixed; bottom: 90px; right: 20px; background: white; border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; z-index: 999; }
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+            margin-top: 20px;
+        }
+
+        /* Die Bestell-Bubbles aus deinem ersten Entwurf */
+        .order-bubble {
+            background-color: #e7f3ff;
+            border-radius: 20px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #cce5ff;
+        }
+
+        .order-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-user {
+            font-size: 12px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .order-text {
+            font-size: 16px;
+            color: #000;
+        }
+
+        .edit-btn {
+            background: #fff;
+            border: 1px solid #007bff;
+            color: #007bff;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            width: auto;
+        }
+
+        .edit-mode-box {
+            width: 100%;
+        }
+
+        #status-info {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        #time-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            z-index: 1001;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
-    <header class="app-header">
-        <div class="header-left">
-            <img src="logo.png" alt="Logo" class="header-logo">
-            <h1>BESTELL-LISTE</h1>
-        </div>
-        <button id="profileBtn">👤 <span id="userNameDisplay">...</span></button>
-    </header>
+<div class="container">
+    <h1>🍕 Bestellliste</h1>
 
-    <div class="container">
-        <div id="statusDisplay">
-            <div class="status-grid">
-                <div class="status-item timer-highlight">
-                    <span class="status-label">⏳ Einsendeschluss</span>
-                    <div class="status-val" id="disp-deadline">--:-- Uhr</div>
-                </div>
-                <div class="status-item"><span class="status-label">📍 Restaurant</span><div class="status-val" id="disp-res">---</div></div>
-                <div class="status-item"><span class="status-label">🕒 Lieferung</span><div class="status-val" id="disp-time">---</div></div>
-                <div class="status-item" style="grid-column: span 2;"><span class="status-label">📦 Ort</span><div class="status-val" id="disp-cham">---</div></div>
-            </div>
-            <button id="stopActionBtn" style="margin-top:10px; background: #fee2e2; color: #ef4444; border:none; padding:8px; width:100%; border-radius:10px; font-weight:700;">STOPPEN</button>
-        </div>
-
-        <div id="setupCard" class="card">
-            <span class="label">Restaurant & Zeit</span>
-            <input id="restaurant" placeholder="Name des Restaurants" autocomplete="off">
-            <input id="time" placeholder="Lieferzeit (z.B. 12:30)" autocomplete="off">
-            <span class="label">Abholung</span>
-            <select id="chamber"><option>Spinnereikammerl</option><option>NB-Kammerl</option></select>
-            <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
-            <button id="startBtn" class="btn" style="background: var(--primary); color: white;">Bestellrunde starten</button>
-        </div>
-
-        <div id="orderCard" class="card" style="display:none; border: 2px solid var(--success);">
-            <span class="label">Was bestellst du?</span>
-            <input id="orderInput" type="text" placeholder="z.B. Pizza Salami..." autocomplete="off">
-            <button id="addOrderBtn" class="btn add-btn">Hinzufügen</button>
-        </div>
-
-        <div id="orderPreviewBox" class="order-container-box">
-            <div class="box-title">Bestellungen:</div>
-            <div id="boxContent"></div>
-        </div>
+    <div id="setup-card" class="card">
+        <input id="restaurant" placeholder="Restaurant Name">
+        <input id="delivery-time" placeholder="Lieferzeit (z.B. 12:30)">
+        <select id="gate-select">
+            <option>Nord-Tor</option>
+            <option>Haupt-Tor</option>
+        </select>
+        <button class="btn-start" id="start-btn">Bestellrunde starten</button>
     </div>
 
-    <div id="modalOverlay"></div>
-    <div id="timeModal">
-        <span class="label">Bestellschluss wählen</span>
-        <input type="time" id="deadlineInput" value="11:00">
-        <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white;">Jetzt Starten</button>
-        <button id="cancelModalBtn" class="btn" style="background: transparent; color: var(--text-muted);">Abbrechen</button>
+    <div id="active-info" class="card" style="display:none;">
+        <div id="status-info">Lädt...</div>
+        <input id="order-input" placeholder="Was bestellst du?">
+        <button class="btn-add" id="add-btn">Hinzufügen</button>
     </div>
 
-    <div id="waLeiste" class="wa-sticky">
-        <button id="shareWaBtn" class="wa-btn">
-            <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.445 0 .081 5.363.079 11.971c0 2.112.551 4.176 1.596 5.979L0 24l6.15-1.613a11.826 11.826 0 005.897 1.568h.005c6.604 0 11.967-5.363 11.97-11.971a11.811 11.811 0 00-3.505-8.469z"/></svg>
-            Liste an WhatsApp senden
-        </button>
+    <div id="order-list-container" class="card" style="display:none;">
+        <div id="order-items"></div>
+        <button class="btn-whatsapp" id="wa-btn">Liste per WhatsApp senden</button>
     </div>
+</div>
 
-    <button id="clearBtn">🧹</button>
+<div id="modal-overlay"></div>
+<div id="time-modal">
+    <h3>Bestellschluss?</h3>
+    <input type="time" id="deadline-input" value="11:00">
+    <button class="btn-start" id="confirm-start">Starten</button>
+    <button style="background:none; color:gray; margin-top:10px;" id="cancel-modal">Abbrechen</button>
+</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -200,55 +190,50 @@
     localStorage.setItem("userId", userId);
     let userName = localStorage.getItem("userName") || prompt("Dein Name?") || "Gast";
     localStorage.setItem("userName", userName);
-    document.getElementById("userNameDisplay").innerText = userName;
 
-    let currentlyEditing = null;
+    let currentEditingKey = null;
     let lastSnap = null;
 
-    const renderOrders = (snap) => {
-        const box = document.getElementById("orderPreviewBox");
-        const content = document.getElementById("boxContent");
-        const wa = document.getElementById("waLeiste");
-        content.innerHTML = "";
+    // RENDERN DER BUBBLES
+    function renderOrders(snap) {
+        const container = document.getElementById("order-items");
+        container.innerHTML = "";
         
-        if(!snap || !snap.exists()) {
-            box.style.display = "none";
-            wa.style.display = "none";
+        if (!snap || !snap.exists()) {
+            document.getElementById("order-list-container").style.display = "none";
             return;
         }
-
-        box.style.display = "block";
-        wa.style.display = "flex";
+        document.getElementById("order-list-container").style.display = "block";
 
         snap.forEach(child => {
-            const d = child.val();
+            const data = child.val();
             const key = child.key;
-            const isEditing = currentlyEditing === key;
 
-            const item = document.createElement("div");
-            item.className = "order-item-card";
+            const bubble = document.createElement("div");
+            bubble.className = "order-bubble";
 
-            if(isEditing) {
-                item.innerHTML = `
-                    <div class="edit-box">
-                        <input class="edit-input" id="inp-${key}" value="${d.name}" autofocus>
+            if (currentEditingKey === key) {
+                // Edit-Modus innerhalb der Bubble
+                bubble.innerHTML = `
+                    <div class="edit-mode-box">
+                        <input id="edit-input-${key}" value="${data.name}">
                         <div style="display:flex; gap:5px;">
-                            <button class="btn" style="background:var(--primary); color:white; padding:8px; font-size:12px; flex:1;" onclick="window.saveOrder('${key}')">Sichern</button>
-                            <button class="btn" style="background:var(--danger); color:white; padding:8px; font-size:12px; flex:1;" onclick="window.deleteOrder('${key}')">Löschen</button>
+                            <button class="btn-add" style="padding:5px;" onclick="window.saveEdit('${key}')">Sichern</button>
+                            <button style="background:#dc3545; color:white; padding:5px;" onclick="window.deleteItem('${key}')">Löschen</button>
                         </div>
                     </div>`;
             } else {
-                item.innerHTML = `
-                    <div class="order-content">
-                        <span class="order-user">${d.user}</span>
-                        <span class="order-name">${d.name}</span>
+                bubble.innerHTML = `
+                    <div class="order-info">
+                        <span class="order-user">${data.user}</span>
+                        <span class="order-text">${data.name}</span>
                     </div>
-                    ${d.owner === userId ? `<button class="edit-mini-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
+                    ${data.owner === userId ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
                 `;
             }
-            content.appendChild(item);
+            container.appendChild(bubble);
         });
-    };
+    }
 
     onValue(ref(db, "orders"), snap => {
         lastSnap = snap;
@@ -256,93 +241,95 @@
     });
 
     onValue(ref(db, "settings"), snap => {
-        const d = snap.val() || {};
-        const isActive = d.orderActive && new Date().getTime() < d.endTime;
-        document.getElementById("setupCard").style.display = isActive ? "none" : "block";
-        document.getElementById("statusDisplay").style.display = isActive ? "block" : "none";
-        document.getElementById("orderCard").style.display = isActive ? "block" : "none";
-        if(isActive) {
-            const date = new Date(d.endTime);
-            document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
-            document.getElementById("disp-res").innerText = d.restaurant || "---";
-            document.getElementById("disp-time").innerText = d.time || "---";
-            document.getElementById("disp-cham").innerText = d.chamber || "---";
+        const s = snap.val() || {};
+        const active = s.orderActive && new Date().getTime() < s.endTime;
+        
+        document.getElementById("setup-card").style.display = active ? "none" : "block";
+        document.getElementById("active-info").style.display = active ? "block" : "none";
+        
+        if (active) {
+            const time = new Date(s.endTime);
+            document.getElementById("status-info").innerText = `${s.restaurant} (bis ${time.getHours()}:${time.getMinutes().toString().padStart(2,'0')} Uhr)`;
         }
     });
 
-    document.getElementById("startBtn").onclick = () => {
-        document.getElementById("modalOverlay").style.display = "block";
-        document.getElementById("timeModal").style.display = "block";
+    // START FUNKTIONEN
+    document.getElementById("start-btn").onclick = () => {
+        document.getElementById("modal-overlay").style.display = "block";
+        document.getElementById("time-modal").style.display = "block";
     };
 
-    document.getElementById("confirmStartBtn").onclick = () => {
-        const t = document.getElementById("deadlineInput").value;
-        const [h, m] = t.split(":").map(Number);
+    document.getElementById("confirm-start").onclick = () => {
+        const [h, m] = document.getElementById("deadline-input").value.split(":");
         const end = new Date(); end.setHours(h, m, 0, 0);
-        update(ref(db, "settings"), { 
-            orderActive: true, endTime: end.getTime(), 
-            restaurant: document.getElementById("restaurant").value, 
-            time: document.getElementById("time").value, 
-            chamber: document.getElementById("chamber").value, 
-            gate: document.getElementById("gate").value 
+        
+        remove(ref(db, "orders"));
+        update(ref(db, "settings"), {
+            orderActive: true,
+            endTime: end.getTime(),
+            restaurant: document.getElementById("restaurant").value || "Restaurant",
+            time: document.getElementById("delivery-time").value,
+            gate: document.getElementById("gate-select").value
         });
-        document.getElementById("modalOverlay").style.display = "none";
-        document.getElementById("timeModal").style.display = "none";
-    };
-
-    document.getElementById("addOrderBtn").onclick = () => {
-        const input = document.getElementById("orderInput");
-        if(!input.value.trim()) return;
-        push(ref(db, "orders"), { name: input.value.trim(), user: userName, owner: userId }).then(() => { input.value = ""; });
-    };
-
-    window.startEdit = (k) => { currentlyEditing = k; renderOrders(lastSnap); };
-    window.saveOrder = (k) => {
-        const val = document.getElementById(`inp-${k}`).value;
-        if(val.trim()) {
-            update(ref(db, `orders/${k}`), { name: val.trim() }).then(() => {
-                currentlyEditing = null;
-                renderOrders(lastSnap);
-            });
-        }
-    };
-
-    window.deleteOrder = (k) => {
-        if(confirm("Eintrag löschen?")) {
-            remove(ref(db, `orders/${k}`)).then(() => {
-                currentlyEditing = null;
-                renderOrders(lastSnap);
-            });
-        }
-    };
-
-    // --- WHATSAPP LOGIK: ZUSAMMENFASSEN & OHNE NAMEN ---
-    document.getElementById("shareWaBtn").onclick = async () => {
-        const snapS = await get(ref(db, "settings"));
-        const s = snapS.val() || {};
         
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n📦 Ort: ${s.chamber || '---'}\n––––––––––––––––––\n`;
+        document.getElementById("modal-overlay").style.display = "none";
+        document.getElementById("time-modal").style.display = "none";
+    };
+
+    document.getElementById("add-btn").onclick = () => {
+        const inp = document.getElementById("order-input");
+        if (!inp.value) return;
+        push(ref(db, "orders"), { name: inp.value, user: userName, owner: userId });
+        inp.value = "";
+    };
+
+    // EDIT FUNKTIONEN (Global für onclick)
+    window.startEdit = (key) => {
+        currentEditingKey = key;
+        renderOrders(lastSnap);
+    };
+
+    window.saveEdit = (key) => {
+        const val = document.getElementById(`edit-input-${key}`).value;
+        update(ref(db, `orders/${key}`), { name: val }).then(() => {
+            currentEditingKey = null;
+            renderOrders(lastSnap);
+        });
+    };
+
+    window.deleteItem = (key) => {
+        remove(ref(db, `orders/${key}`)).then(() => {
+            currentEditingKey = null;
+            renderOrders(lastSnap);
+        });
+    };
+
+    // WHATSAPP (Zusammenfassung x2, x3 und Tor)
+    document.getElementById("wa-btn").onclick = async () => {
+        const sSnap = await get(ref(db, "settings"));
+        const s = sSnap.val() || {};
+        const oSnap = await get(ref(db, "orders"));
         
-        const snapO = await get(ref(db, "orders"));
+        let msg = `*Bestellung: ${s.restaurant}*\n🕒 Zeit: ${s.time}\n🚪 Tor: ${s.gate}\n----------\n`;
+        
         const counts = {};
-
-        // Zählen der gleichen Gerichte (Namen ignorieren)
-        snapO.forEach(c => {
-            const dish = c.val().name.trim();
-            counts[dish] = (counts[dish] || 0) + 1;
+        oSnap.forEach(c => {
+            const name = c.val().name.trim();
+            counts[name] = (counts[name] || 0) + 1;
         });
 
-        // Liste für WhatsApp erstellen
         for (const [dish, qty] of Object.entries(counts)) {
-            m += `• ${qty > 1 ? qty + 'x ' : ''}${dish}\n`;
+            msg += `• ${qty > 1 ? qty + 'x ' : ''}${dish}\n`;
         }
 
-        window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
     };
 
-    document.getElementById("stopActionBtn").onclick = () => { if(prompt("Passwort:") === "stop") update(ref(db, "settings"), { orderActive: false }); };
-    document.getElementById("clearBtn").onclick = () => { if(confirm("Alles löschen?")) { remove(ref(db, "orders")); update(ref(db, "settings"), { orderActive: false }); } };
-    document.getElementById("cancelModalBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
+    document.getElementById("cancel-modal").onclick = () => {
+        document.getElementById("modal-overlay").style.display = "none";
+        document.getElementById("time-modal").style.display = "none";
+    };
 </script>
+
 </body>
 </html>
