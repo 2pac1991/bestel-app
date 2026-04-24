@@ -135,7 +135,14 @@
         .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; max-width: 460px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .wa-btn svg { width: 22px; height: 22px; fill: white; }
 
-        #clearBtn { position: fixed; bottom: 100px; right: 20px; background: white; border: 1px solid #eee; width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; z-index: 999; }
+        /* Neuer unauffälliger Löschen-Text unten rechts */
+        #clearBtn { 
+            position: fixed; bottom: 20px; right: 20px; 
+            background: none; border: none; 
+            color: #cbd5e1; font-size: 11px; font-weight: 600; 
+            text-transform: uppercase; cursor: pointer; z-index: 999;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -213,7 +220,7 @@
         </button>
     </div>
 
-    <button id="clearBtn">🧹</button>
+    <button id="clearBtn">Alle Bestellungen löschen</button>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -243,6 +250,10 @@
         document.getElementById("setupCard").style.display = isActive ? "none" : "block";
         document.getElementById("statusDisplay").style.display = isActive ? "block" : "none";
         document.getElementById("orderCard").style.display = isActive ? "block" : "none";
+        
+        // Löschen-Button nur anzeigen, wenn keine Bestellung läuft
+        document.getElementById("clearBtn").style.display = isActive ? "none" : "block";
+
         if(isActive) {
             const date = new Date(d.endTime);
             document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
@@ -338,10 +349,10 @@
         const newVal = document.getElementById(`inp-${key}`).value;
         if(newVal.trim()) {
             update(ref(db, `orders/${key}`), { name: newVal.trim() }).then(() => {
-                currentlyEditing = null; // Beendet den Modus sofort nach Server-Antwort
+                currentlyEditing = null;
             });
         } else {
-            currentlyEditing = null; // Falls leer, einfach schließen
+            currentlyEditing = null;
         }
     };
 
