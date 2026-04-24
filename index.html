@@ -134,10 +134,22 @@
         <div class="card">
             <span class="label">📍 Restaurant</span>
             <input id="restaurant" placeholder="Name des Ladens">
+            
             <span class="label">🕒 Lieferung um</span>
             <input id="time" placeholder="z. B. 12:30 Uhr">
+            
+            <span class="label">📦 Kammerl</span>
+            <select id="chamber">
+                <option>Spinnereikammerl</option>
+                <option>NB-Kammerl</option>
+            </select>
+
             <span class="label">🚪 Tor</span>
-            <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
+            <select id="gate">
+                <option>Nord-Tor</option>
+                <option>Haupt-Tor</option>
+            </select>
+            
             <button id="startBtn" class="btn">Laden...</button>
         </div>
 
@@ -175,7 +187,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // BENUTZER-SYSTEM
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
     let userName = localStorage.getItem("userName");
@@ -190,7 +201,6 @@
     const updateNameUI = () => { userNameDisplay.innerText = userName; };
     updateNameUI();
 
-    // DIE FIX-FUNKTION FÜR DEN BUTTON
     profileBtn.addEventListener('click', () => {
         let n = prompt("Neuer Name:", userName);
         if(n && n.trim() !== "") {
@@ -200,7 +210,6 @@
         }
     });
 
-    // SETTINGS & START/STOPP
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
@@ -211,7 +220,15 @@
         startBtn.style.background = isActive ? "var(--danger)" : "var(--primary)";
         
         document.getElementById("orderCard").style.display = isActive ? "block" : "none";
-        ['restaurant', 'time', 'gate'].forEach(id => document.getElementById(id).disabled = isActive);
+        
+        // Input-Felder sperren, wenn Bestellung läuft
+        ['restaurant', 'time', 'gate', 'chamber'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.disabled = isActive;
+                if(d[id]) el.value = d[id];
+            }
+        });
         
         const timerBox = document.getElementById("timerDisplay");
         if(isActive) {
@@ -249,13 +266,13 @@
             endTime: end.getTime(), 
             restaurant: document.getElementById("restaurant").value, 
             time: document.getElementById("time").value, 
+            chamber: document.getElementById("chamber").value,
             gate: document.getElementById("gate").value 
         });
         document.getElementById("modalOverlay").style.display = "none";
         document.getElementById("timeModal").style.display = "none";
     };
 
-    // BESTELLUNGEN HINZUFÜGEN
     const addOrder = () => {
         const input = document.getElementById("order");
         if(!input.value.trim()) return;
@@ -265,7 +282,6 @@
     document.getElementById("addOrderBtn").onclick = addOrder;
     document.getElementById("order").onkeypress = (e) => { if(e.key === "Enter") addOrder(); };
 
-    // LISTE ANZEIGEN
     onValue(ref(db, "orders"), snap => {
         const list = document.getElementById("list"); list.innerHTML = "";
         if(!snap.exists()) return;
@@ -295,9 +311,13 @@
         });
     });
 
-    // WHATSAPP TEILEN
     document.getElementById("shareWaBtn").onclick = () => {
-        let m = `*🍽️ BESTELLUNG: ${document.getElementById("restaurant").value}*\n🕒 Zeit: ${document.getElementById("time").value}\n🚪 Ort: ${document.getElementById("gate").value}\n––––––––––––––––––\n`;
+        const restaurant = document.getElementById("restaurant").value;
+        const time = document.getElementById("time").value;
+        const chamber = document.getElementById("chamber").value;
+        const gate = document.getElementById("gate").value;
+
+        let m = `*🍽️ BESTELLUNG: ${restaurant}*\n🕒 Zeit: ${time}\n📦 Kammerl: ${chamber}\n🚪 Ort: ${gate}\n––––––––––––––––––\n`;
         const sum = {}; 
         document.querySelectorAll(".food-name").forEach(i => { 
             const n = i.getAttribute("data-food"); 
@@ -307,7 +327,6 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 
-    // LEEREN
     document.getElementById("clearBtn").onclick = () => {
         if(prompt("Passwort zum Leeren:") === "clear") {
             remove(ref(db, "orders"));
