@@ -80,15 +80,10 @@
 
         .add-btn { background: var(--success); color: white; }
 
-        /* --- BESTELLUNGEN BOX --- */
         .order-container-box {
-            background: white;
-            border-radius: 24px;
-            border: 2px solid var(--primary);
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
-            margin-bottom: 20px;
-            display: none;
+            background: white; border-radius: 24px; border: 2px solid var(--primary);
+            padding: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+            margin-bottom: 20px; display: none;
         }
         .box-title {
             font-size: 12px; font-weight: 900; color: var(--primary);
@@ -98,12 +93,8 @@
         .box-title::after { content: ""; height: 2px; background: #eff6ff; flex: 1; }
 
         .order-item-card {
-            background: #fff;
-            padding: 12px 0;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: #fff; padding: 12px 0; border-bottom: 1px solid #f1f5f9;
+            display: flex; justify-content: space-between; align-items: center;
         }
         .order-item-card:last-child { border-bottom: none; }
         
@@ -214,7 +205,6 @@
     let currentlyEditing = null;
     let lastSnap = null;
 
-    // UI aktualisieren, wenn Daten kommen
     const renderOrders = (snap) => {
         const box = document.getElementById("orderPreviewBox");
         const content = document.getElementById("boxContent");
@@ -306,12 +296,7 @@
         push(ref(db, "orders"), { name: input.value.trim(), user: userName, owner: userId }).then(() => { input.value = ""; });
     };
 
-    // Globale Funktionen für die Klick-Events
-    window.startEdit = (k) => { 
-        currentlyEditing = k; 
-        renderOrders(lastSnap); 
-    };
-    
+    window.startEdit = (k) => { currentlyEditing = k; renderOrders(lastSnap); };
     window.saveOrder = (k) => {
         const val = document.getElementById(`inp-${k}`).value;
         if(val.trim()) {
@@ -331,12 +316,27 @@
         }
     };
 
+    // --- WHATSAPP LOGIK: ZUSAMMENFASSEN & OHNE NAMEN ---
     document.getElementById("shareWaBtn").onclick = async () => {
         const snapS = await get(ref(db, "settings"));
         const s = snapS.val() || {};
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n🚪 Ort: ${s.gate || '---'}\n––––––––––––––––––\n`;
+        
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n📦 Ort: ${s.chamber || '---'}\n––––––––––––––––––\n`;
+        
         const snapO = await get(ref(db, "orders"));
-        snapO.forEach(c => { m += `• *${c.val().user}:* ${c.val().name}\n`; });
+        const counts = {};
+
+        // Zählen der gleichen Gerichte (Namen ignorieren)
+        snapO.forEach(c => {
+            const dish = c.val().name.trim();
+            counts[dish] = (counts[dish] || 0) + 1;
+        });
+
+        // Liste für WhatsApp erstellen
+        for (const [dish, qty] of Object.entries(counts)) {
+            m += `• ${qty > 1 ? qty + 'x ' : ''}${dish}\n`;
+        }
+
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 
