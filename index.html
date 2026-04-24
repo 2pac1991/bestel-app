@@ -134,15 +134,6 @@
         .wa-sticky { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
         .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; max-width: 460px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .wa-btn svg { width: 22px; height: 22px; fill: white; }
-
-        /* Neuer unauffälliger Löschen-Text unten rechts */
-        #clearBtn { 
-            position: fixed; bottom: 20px; right: 20px; 
-            background: none; border: none; 
-            color: #cbd5e1; font-size: 11px; font-weight: 600; 
-            text-transform: uppercase; cursor: pointer; z-index: 999;
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -208,7 +199,7 @@
     <div id="modalOverlay"></div>
     <div id="timeModal">
         <span class="label">Einsendeschluss festlegen</span>
-        <input type="time" id="deadlineInput" value="11:30">
+        <input type="time" id="deadlineInput" value="15:30">
         <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white;">Starten</button>
         <button id="cancelModalBtn" class="btn" style="background: #f1f5f9; color: #64748b; margin-top: 8px;">Abbrechen</button>
     </div>
@@ -219,8 +210,6 @@
             Auf WhatsApp teilen
         </button>
     </div>
-
-    <button id="clearBtn">Alle Bestellungen löschen</button>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -251,9 +240,6 @@
         document.getElementById("statusDisplay").style.display = isActive ? "block" : "none";
         document.getElementById("orderCard").style.display = isActive ? "block" : "none";
         
-        // Löschen-Button nur anzeigen, wenn keine Bestellung läuft
-        document.getElementById("clearBtn").style.display = isActive ? "none" : "block";
-
         if(isActive) {
             const date = new Date(d.endTime);
             document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
@@ -296,6 +282,9 @@
     document.getElementById("orderInput").addEventListener("keypress", (e) => { if(e.key === "Enter") addOrder(); });
 
     onValue(ref(db, "orders"), snap => {
+        // WICHTIG: Wenn wir gerade editieren, lassen wir die Liste so wie sie ist!
+        if (currentlyEditing !== null) return;
+
         const listEl = document.getElementById("list");
         const waLeiste = document.getElementById("waLeiste");
         const orderBox = document.getElementById("orderBox");
@@ -317,14 +306,14 @@
             
             const li = document.createElement("li");
             li.innerHTML = `
-                <div class="order-row" id="view-${key}" style="${currentlyEditing === key ? 'display:none' : 'display:flex'}">
+                <div class="order-row" id="view-${key}">
                     <div class="order-info">
                         <span class="user-label">${d.user}</span>
                         <span class="food-name">${d.name}</span>
                     </div>
                     ${d.owner === userId ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
                 </div>
-                <div class="edit-container" id="edit-${key}" style="${currentlyEditing === key ? 'display:flex' : 'display:none'}">
+                <div class="edit-container" id="edit-${key}" style="display:none">
                     <span class="user-label">${d.user}</span>
                     <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
                     <div class="edit-actions">
@@ -338,8 +327,6 @@
 
     window.startEdit = (key) => {
         currentlyEditing = key;
-        document.querySelectorAll('[id^="view-"]').forEach(el => el.style.display = 'flex');
-        document.querySelectorAll('[id^="edit-"]').forEach(el => el.style.display = 'none');
         document.getElementById(`view-${key}`).style.display = 'none';
         document.getElementById(`edit-${key}`).style.display = 'flex';
         document.getElementById(`inp-${key}`).focus();
@@ -350,9 +337,9 @@
         if(newVal.trim()) {
             update(ref(db, `orders/${key}`), { name: newVal.trim() }).then(() => {
                 currentlyEditing = null;
+                // Manuelles Auslösen der Anzeige-Aktualisierung
+                location.reload(); 
             });
-        } else {
-            currentlyEditing = null;
         }
     };
 
@@ -360,6 +347,7 @@
         if(confirm("Diesen Eintrag wirklich löschen?")) {
             remove(ref(db, `orders/${key}`)).then(() => {
                 currentlyEditing = null;
+                location.reload();
             });
         }
     };
@@ -389,8 +377,6 @@
         
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
-
-    document.getElementById("clearBtn").onclick = () => { if(prompt("Passwort:") === "clear") { remove(ref(db, "orders")); update(ref(db, "settings"), { orderActive: false }); } };
 </script>
 </body>
 </html>
