@@ -49,7 +49,6 @@
 
         .container { width: 100%; max-width: 480px; padding: 15px; }
 
-        /* Status Anzeige */
         #statusDisplay {
             background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px;
             border: 1px solid var(--border); display: none;
@@ -60,7 +59,6 @@
         .status-val { font-size: 13px; font-weight: 700; }
         .timer-highlight { grid-column: span 2; background: #fff1f2; color: #e11d48; border-color: #ffe4e6; text-align: center; }
 
-        /* Setup & Order Cards */
         .card {
             background: var(--card-bg); padding: 20px; border-radius: 20px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); margin-bottom: 15px;
@@ -72,18 +70,17 @@
         input, select {
             width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 12px;
             border: 2px solid #f1f5f9; background: #f8fafc; font-size: 16px;
-            transition: all 0.2s;
         }
         input:focus { border-color: var(--primary); background: #fff; outline: none; }
 
         .btn {
             width: 100%; padding: 14px; border-radius: 14px; border: none;
-            font-weight: 700; font-size: 15px; cursor: pointer; transition: opacity 0.2s;
+            font-weight: 700; font-size: 15px; cursor: pointer;
         }
-        .btn:active { opacity: 0.8; }
+
         .add-btn { background: var(--success); color: white; }
 
-        /* --- DIE NEUE BESTELLUNGEN BOX --- */
+        /* --- BESTELLUNGEN BOX --- */
         .order-container-box {
             background: white;
             border-radius: 24px;
@@ -100,7 +97,6 @@
         }
         .box-title::after { content: ""; height: 2px; background: #eff6ff; flex: 1; }
 
-        /* Einzelne Karten in der Box */
         .order-item-card {
             background: #fff;
             padding: 12px 0;
@@ -121,11 +117,9 @@
             font-weight: 600; color: var(--text-muted); cursor: pointer;
         }
 
-        /* Edit Mode Styling */
-        .edit-box { width: 100%; background: #f8fafc; padding: 10px; border-radius: 12px; margin: 5px 0; }
-        .edit-input { margin-bottom: 8px; border: 2px solid var(--primary); }
+        .edit-box { width: 100%; background: #f8fafc; padding: 10px; border-radius: 12px; }
+        .edit-input { margin-bottom: 8px; border: 2px solid var(--primary); width: 100%; padding: 8px; border-radius: 8px; font-size: 15px; }
 
-        /* Footer & Modals */
         #timeModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: white; padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
@@ -137,7 +131,7 @@
         .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; max-width: 450px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
         .wa-btn svg { width: 20px; height: 20px; fill: white; }
 
-        #clearBtn { position: fixed; bottom: 90px; right: 20px; background: white; border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; z-index: 999; font-size: 16px; }
+        #clearBtn { position: fixed; bottom: 90px; right: 20px; background: white; border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; z-index: 999; }
     </style>
 </head>
 <body>
@@ -157,20 +151,11 @@
                     <span class="status-label">⏳ Einsendeschluss</span>
                     <div class="status-val" id="disp-deadline">--:-- Uhr</div>
                 </div>
-                <div class="status-item">
-                    <span class="status-label">📍 Restaurant</span>
-                    <div class="status-val" id="disp-res">---</div>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">🕒 Lieferung</span>
-                    <div class="status-val" id="disp-time">---</div>
-                </div>
-                <div class="status-item" style="grid-column: span 2;">
-                    <span class="status-label">📦 Ort</span>
-                    <div class="status-val" id="disp-cham">---</div>
-                </div>
+                <div class="status-item"><span class="status-label">📍 Restaurant</span><div class="status-val" id="disp-res">---</div></div>
+                <div class="status-item"><span class="status-label">🕒 Lieferung</span><div class="status-val" id="disp-time">---</div></div>
+                <div class="status-item" style="grid-column: span 2;"><span class="status-label">📦 Ort</span><div class="status-val" id="disp-cham">---</div></div>
             </div>
-            <button id="stopActionBtn" style="margin-top:12px; background: #fee2e2; color: #ef4444; border:none; padding:8px; width:100%; border-radius:10px; font-weight:700; font-size:12px;">STOPPEN</button>
+            <button id="stopActionBtn" style="margin-top:10px; background: #fee2e2; color: #ef4444; border:none; padding:8px; width:100%; border-radius:10px; font-weight:700;">STOPPEN</button>
         </div>
 
         <div id="setupCard" class="card">
@@ -190,7 +175,7 @@
         </div>
 
         <div id="orderPreviewBox" class="order-container-box">
-            <div class="box-title">Aktuelle Bestellungen</div>
+            <div class="box-title">Bestellungen:</div>
             <div id="boxContent"></div>
         </div>
     </div>
@@ -200,7 +185,7 @@
         <span class="label">Bestellschluss wählen</span>
         <input type="time" id="deadlineInput" value="11:00">
         <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white;">Jetzt Starten</button>
-        <button id="cancelModalBtn" class="btn" style="background: transparent; color: var(--text-muted); font-size: 13px;">Abbrechen</button>
+        <button id="cancelModalBtn" class="btn" style="background: transparent; color: var(--text-muted);">Abbrechen</button>
     </div>
 
     <div id="waLeiste" class="wa-sticky">
@@ -227,8 +212,59 @@
     document.getElementById("userNameDisplay").innerText = userName;
 
     let currentlyEditing = null;
+    let lastSnap = null;
 
-    // UI Logik für Einstellungen & Start
+    // UI aktualisieren, wenn Daten kommen
+    const renderOrders = (snap) => {
+        const box = document.getElementById("orderPreviewBox");
+        const content = document.getElementById("boxContent");
+        const wa = document.getElementById("waLeiste");
+        content.innerHTML = "";
+        
+        if(!snap || !snap.exists()) {
+            box.style.display = "none";
+            wa.style.display = "none";
+            return;
+        }
+
+        box.style.display = "block";
+        wa.style.display = "flex";
+
+        snap.forEach(child => {
+            const d = child.val();
+            const key = child.key;
+            const isEditing = currentlyEditing === key;
+
+            const item = document.createElement("div");
+            item.className = "order-item-card";
+
+            if(isEditing) {
+                item.innerHTML = `
+                    <div class="edit-box">
+                        <input class="edit-input" id="inp-${key}" value="${d.name}" autofocus>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn" style="background:var(--primary); color:white; padding:8px; font-size:12px; flex:1;" onclick="window.saveOrder('${key}')">Sichern</button>
+                            <button class="btn" style="background:var(--danger); color:white; padding:8px; font-size:12px; flex:1;" onclick="window.deleteOrder('${key}')">Löschen</button>
+                        </div>
+                    </div>`;
+            } else {
+                item.innerHTML = `
+                    <div class="order-content">
+                        <span class="order-user">${d.user}</span>
+                        <span class="order-name">${d.name}</span>
+                    </div>
+                    ${d.owner === userId ? `<button class="edit-mini-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
+                `;
+            }
+            content.appendChild(item);
+        });
+    };
+
+    onValue(ref(db, "orders"), snap => {
+        lastSnap = snap;
+        renderOrders(snap);
+    });
+
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const isActive = d.orderActive && new Date().getTime() < d.endTime;
@@ -254,8 +290,7 @@
         const [h, m] = t.split(":").map(Number);
         const end = new Date(); end.setHours(h, m, 0, 0);
         update(ref(db, "settings"), { 
-            orderActive: true, 
-            endTime: end.getTime(), 
+            orderActive: true, endTime: end.getTime(), 
             restaurant: document.getElementById("restaurant").value, 
             time: document.getElementById("time").value, 
             chamber: document.getElementById("chamber").value, 
@@ -265,88 +300,49 @@
         document.getElementById("timeModal").style.display = "none";
     };
 
-    document.getElementById("cancelModalBtn").onclick = () => {
-        document.getElementById("modalOverlay").style.display = "none";
-        document.getElementById("timeModal").style.display = "none";
-    };
-
-    // Bestell-Logik
-    const addOrder = () => {
+    document.getElementById("addOrderBtn").onclick = () => {
         const input = document.getElementById("orderInput");
-        const val = input.value.trim();
-        if(!val) return;
-        push(ref(db, "orders"), { name: val, user: userName, owner: userId }).then(() => { input.value = ""; });
+        if(!input.value.trim()) return;
+        push(ref(db, "orders"), { name: input.value.trim(), user: userName, owner: userId }).then(() => { input.value = ""; });
     };
 
-    document.getElementById("addOrderBtn").onclick = addOrder;
-
-    onValue(ref(db, "orders"), snap => {
-        const box = document.getElementById("orderPreviewBox");
-        const content = document.getElementById("boxContent");
-        const wa = document.getElementById("waLeiste");
-        
-        content.innerHTML = "";
-        
-        if(!snap.exists()) {
-            box.style.display = "none";
-            wa.style.display = "none";
-            return;
-        }
-
-        box.style.display = "block";
-        wa.style.display = "flex";
-
-        snap.forEach(child => {
-            const d = child.val();
-            const key = child.key;
-            const isEditing = currentlyEditing === key;
-
-            const item = document.createElement("div");
-            item.className = "order-item-card";
-
-            if(isEditing) {
-                item.innerHTML = `
-                    <div class="edit-box">
-                        <input class="edit-input" id="inp-${key}" value="${d.name}">
-                        <div style="display:flex; gap:5px;">
-                            <button class="btn" style="background:var(--primary); color:white; padding:8px; font-size:12px;" onclick="window.saveOrder('${key}')">Sichern</button>
-                            <button class="btn" style="background:var(--danger); color:white; padding:8px; font-size:12px;" onclick="window.deleteOrder('${key}')">Löschen</button>
-                        </div>
-                    </div>`;
-            } else {
-                item.innerHTML = `
-                    <div class="order-content">
-                        <span class="order-user">${d.user}</span>
-                        <span class="order-name">${d.name}</span>
-                    </div>
-                    ${d.owner === userId ? `<button class="edit-mini-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
-                `;
-            }
-            content.appendChild(item);
-        });
-    });
-
-    // Helper Funktionen
-    window.startEdit = (k) => { currentlyEditing = k; };
+    // Globale Funktionen für die Klick-Events
+    window.startEdit = (k) => { 
+        currentlyEditing = k; 
+        renderOrders(lastSnap); 
+    };
+    
     window.saveOrder = (k) => {
         const val = document.getElementById(`inp-${k}`).value;
-        update(ref(db, `orders/${k}`), { name: val }).then(() => currentlyEditing = null);
+        if(val.trim()) {
+            update(ref(db, `orders/${k}`), { name: val.trim() }).then(() => {
+                currentlyEditing = null;
+                renderOrders(lastSnap);
+            });
+        }
     };
+
     window.deleteOrder = (k) => {
-        if(confirm("Löschen?")) remove(ref(db, `orders/${k}`)).then(() => currentlyEditing = null);
+        if(confirm("Eintrag löschen?")) {
+            remove(ref(db, `orders/${k}`)).then(() => {
+                currentlyEditing = null;
+                renderOrders(lastSnap);
+            });
+        }
     };
 
     document.getElementById("shareWaBtn").onclick = async () => {
-        const snap = await get(ref(db, "settings"));
-        const s = snap.val() || {};
+        const snapS = await get(ref(db, "settings"));
+        const s = snapS.val() || {};
         let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n🚪 Ort: ${s.gate || '---'}\n––––––––––––––––––\n`;
-        const orderSnap = await get(ref(db, "orders"));
-        orderSnap.forEach(c => { m += `• *${c.val().user}:* ${c.val().name}\n`; });
+        const snapO = await get(ref(db, "orders"));
+        snapO.forEach(c => { m += `• *${c.val().user}:* ${c.val().name}\n`; });
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 
     document.getElementById("stopActionBtn").onclick = () => { if(prompt("Passwort:") === "stop") update(ref(db, "settings"), { orderActive: false }); };
     document.getElementById("clearBtn").onclick = () => { if(confirm("Alles löschen?")) { remove(ref(db, "orders")); update(ref(db, "settings"), { orderActive: false }); } };
+    document.getElementById("cancelModalBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
 </script>
 </body>
 </html>
