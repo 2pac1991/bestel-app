@@ -208,7 +208,8 @@
     localStorage.setItem("userName", userName);
     document.getElementById("userNameDisplay").innerText = userName;
 
-    let currentlyEditing = null;
+    // Diese Variable merkt sich, was gerade editiert wird
+    let currentlyEditingKey = null;
 
     document.getElementById("profileBtn").onclick = () => {
         let n = prompt("Neuer Name:", userName);
@@ -260,7 +261,9 @@
     document.getElementById("orderInput").addEventListener("keypress", (e) => { if(e.key === "Enter") addOrder(); });
 
     onValue(ref(db, "orders"), snap => {
-        if (currentlyEditing) return;
+        // WICHTIG: Liste nur aktualisieren, wenn wir NICHT gerade editierten
+        if (currentlyEditingKey !== null) return;
+
         const listEl = document.getElementById("list");
         const waLeiste = document.getElementById("waLeiste");
         listEl.innerHTML = "";
@@ -294,40 +297,10 @@
     });
 
     window.startEdit = (key) => {
-        currentlyEditing = key;
+        currentlyEditingKey = key; // Lock setzen
         document.getElementById(`view-${key}`).style.display = 'none';
         document.getElementById(`edit-${key}`).style.display = 'flex';
         document.getElementById(`inp-${key}`).focus();
     };
 
-    window.saveOrder = (key) => {
-        const newVal = document.getElementById(`inp-${key}`).value;
-        if(newVal.trim()) {
-            update(ref(db, `orders/${key}`), { name: newVal.trim() }).then(() => {
-                currentlyEditing = null;
-            });
-        }
-    };
-
-    window.deleteOrder = (key) => {
-        if(confirm("Diesen Eintrag wirklich löschen?")) {
-            remove(ref(db, `orders/${key}`)).then(() => {
-                currentlyEditing = null;
-            });
-        }
-    };
-
-    document.getElementById("shareWaBtn").onclick = async () => {
-        const snap = await get(ref(db, "settings"));
-        const s = snap.val() || {};
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n🚪 Ort: ${s.gate || '---'}\n––––––––––––––––––\n`;
-        const counts = {};
-        document.querySelectorAll(".food-name").forEach(el => { const dish = el.getAttribute("data-food"); counts[dish] = (counts[dish] || 0) + 1; });
-        for (const [dish, qty] of Object.entries(counts)) { m += `• ${qty > 1 ? qty + 'x ' : ''}${dish}\n`; }
-        window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
-    };
-
-    document.getElementById("clearBtn").onclick = () => { if(prompt("Passwort:") === "clear") { remove(ref(db, "orders")); update(ref(db, "settings"), { orderActive: false }); } };
-</script>
-</body>
-</html>
+    window.
