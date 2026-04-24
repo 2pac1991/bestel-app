@@ -83,16 +83,22 @@
         li {
             background: white; padding: 18px; border-radius: 18px; margin-bottom: 12px;
             border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            width: 100%;
         }
 
-        /* NEU: Flex-Layout für die Zeile */
+        /* FIX: Flex-Layout für die Zeile */
         .order-row {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 10px;
+            justify-content: space-between; /* Drückt Inhalt auseinander */
+            align-items: center;
+            width: 100%;
         }
-        .order-info { flex: 1; }
+        
+        .order-info { 
+            flex: 1; /* Nimmt allen verfügbaren Platz ein */
+            display: flex;
+            flex-direction: column;
+        }
 
         .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; display: block; }
         .food-name { font-weight: 700; font-size: 19px; color: var(--text-main); line-height: 1.2; }
@@ -100,7 +106,7 @@
         .edit-btn { 
             background: #f1f5f9; color: var(--text-muted); border: none; 
             padding: 8px 12px; border-radius: 10px; font-size: 12px; 
-            cursor: pointer; white-space: nowrap;
+            cursor: pointer; white-space: nowrap; margin-left: 10px;
         }
         
         .controls { display: none; margin-top: 15px; flex-direction: column; gap: 5px; width: 100%; border-top: 1px solid #f1f5f9; padding-top: 10px; }
