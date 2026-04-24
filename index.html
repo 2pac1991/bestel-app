@@ -96,9 +96,18 @@
         .food-name { font-weight: 700; font-size: 19px; color: var(--text-main); line-height: 1.2; }
 
         .edit-btn { 
-            background: #f1f5f9; color: var(--text-muted); border: none; 
-            padding: 8px; border-radius: 10px; font-size: 14px; cursor: pointer; margin-left: 10px;
+            background: #f1f5f9; 
+            color: var(--primary); 
+            border: 1px solid #e2e8f0; 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-left: 10px;
+            transition: all 0.2s;
         }
+        .edit-btn:hover { background: #e2e8f0; }
 
         .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; }
         .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); font-size: 16px; font-family: inherit; }
@@ -260,9 +269,15 @@
     document.getElementById("orderInput").addEventListener("keypress", (e) => { if(e.key === "Enter") addOrder(); });
 
     onValue(ref(db, "orders"), snap => {
-        if (currentlyEditing) return;
         const listEl = document.getElementById("list");
         const waLeiste = document.getElementById("waLeiste");
+        
+        let activeInputVal = "";
+        if (currentlyEditing) {
+            const activeInp = document.getElementById(`inp-${currentlyEditing}`);
+            if (activeInp) activeInputVal = activeInp.value;
+        }
+
         listEl.innerHTML = "";
         if(!snap.exists()) { waLeiste.style.display = "none"; return; }
         waLeiste.style.display = "flex";
@@ -273,17 +288,19 @@
             const li = document.createElement("li");
             li.id = `li-${key}`;
             
+            const isEditing = currentlyEditing === key;
+
             li.innerHTML = `
-                <div class="order-row" id="view-${key}">
+                <div class="order-row" id="view-${key}" style="display: ${isEditing ? 'none' : 'flex'}">
                     <div class="order-info">
                         <span class="user-label">${d.user}</span>
                         <span class="food-name" data-food="${d.name}">${d.name}</span>
                     </div>
-                    ${d.owner === userId ? `<button class="edit-btn" onclick="window.startEdit('${key}')">✏️</button>` : ""}
+                    ${d.owner === userId ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Bearbeiten</button>` : ""}
                 </div>
-                <div class="edit-container" id="edit-${key}" style="display:none;">
+                <div class="edit-container" id="edit-${key}" style="display: ${isEditing ? 'flex' : 'none'}">
                     <span class="user-label">${d.user}</span>
-                    <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
+                    <input class="edit-input" id="inp-${key}" value="${isEditing ? activeInputVal || d.name : d.name}" autocomplete="off">
                     <div class="edit-actions">
                         <button class="del-btn" onclick="window.deleteOrder('${key}')">Löschen</button>
                         <button class="save-btn" onclick="window.saveOrder('${key}')">Speichern</button>
@@ -295,9 +312,13 @@
 
     window.startEdit = (key) => {
         currentlyEditing = key;
-        document.getElementById(`view-${key}`).style.display = 'none';
-        document.getElementById(`edit-${key}`).style.display = 'flex';
-        document.getElementById(`inp-${key}`).focus();
+        const viewEl = document.getElementById(`view-${key}`);
+        const editEl = document.getElementById(`edit-${key}`);
+        if(viewEl) viewEl.style.display = 'none';
+        if(editEl) {
+            editEl.style.display = 'flex';
+            document.getElementById(`inp-${key}`).focus();
+        }
     };
 
     window.saveOrder = (key) => {
