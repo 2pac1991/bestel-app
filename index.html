@@ -118,6 +118,13 @@
         .save-btn { background: var(--primary); color: white; padding: 8px; border-radius: 8px; border: none; font-weight: 700; flex: 2; }
         .del-btn { background: var(--danger); color: white; padding: 8px; border-radius: 8px; border: none; font-weight: 700; flex: 1; }
 
+        /* NEU: Unauffälliger Stop-Button */
+        .stop-btn-minimal {
+            background: none; border: 1px solid #e2e8f0; color: #94a3b8;
+            padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+            cursor: pointer; width: 100%; margin-top: 15px; text-transform: uppercase;
+        }
+
         #timeModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: white; padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
@@ -165,7 +172,7 @@
                     <div class="status-val" id="disp-cham">---</div>
                 </div>
             </div>
-            <button id="stopActionBtn" class="btn" style="margin-top:15px; background: var(--danger); color:white;">🛑 Bestellung Stoppen</button>
+            <button id="stopActionBtn" class="stop-btn-minimal">Bestellung beenden</button>
         </div>
 
         <div id="setupCard" class="card">
@@ -353,15 +360,12 @@
         let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n🚪 Ort: ${s.gate || '---'}\n––––––––––––––––––\n`;
         
         const counts = {};
-        const displayNames = {}; // Speichert den ursprünglichen Namen (für die Anzeige)
+        const displayNames = {};
 
         oSnap.forEach(child => {
             const rawDish = child.val().name;
             const lowerDish = rawDish.toLowerCase().trim();
-            
             counts[lowerDish] = (counts[lowerDish] || 0) + 1;
-            
-            // Den Namen merken, so wie er das erste Mal geschrieben wurde (für die Optik)
             if (!displayNames[lowerDish]) {
                 displayNames[lowerDish] = rawDish;
             }
