@@ -338,8 +338,10 @@
         const newVal = document.getElementById(`inp-${key}`).value;
         if(newVal.trim()) {
             update(ref(db, `orders/${key}`), { name: newVal.trim() }).then(() => {
-                currentlyEditing = null; // Hier wird der Bearbeitungsmodus beendet, was die Liste sofort aktualisiert
+                currentlyEditing = null; // Beendet den Modus sofort nach Server-Antwort
             });
+        } else {
+            currentlyEditing = null; // Falls leer, einfach schließen
         }
     };
 
