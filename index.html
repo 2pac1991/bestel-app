@@ -88,18 +88,23 @@
             margin-bottom: 20px; display: none;
         }
         .box-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;
         }
-        .box-title {
-            font-size: 12px; font-weight: 900; color: var(--primary);
+        .box-title-container { flex-grow: 1; }
+        .box-title-main { 
+            font-size: 14px; font-weight: 900; color: var(--danger); 
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
+            display: none; 
+        }
+        .box-title-sub {
+            font-size: 11px; font-weight: 700; color: var(--primary);
             text-transform: uppercase; letter-spacing: 0.5px;
-            display: flex; align-items: center; gap: 8px; flex-grow: 1;
-            line-height: 1.4;
+            display: flex; align-items: center; gap: 8px;
         }
-        .box-title::after { content: ""; height: 2px; background: #eff6ff; flex: 1; margin-left: 8px; }
+        .box-title-sub::after { content: ""; height: 2px; background: #eff6ff; flex: 1; margin-left: 8px; }
         
         .clear-list-btn {
-            background: none; border: none; font-size: 18px; cursor: pointer; padding: 0 5px;
+            background: none; border: none; font-size: 18px; cursor: pointer; padding: 0 0 0 10px;
             filter: grayscale(1); opacity: 0.5; transition: 0.2s; display: none;
         }
 
@@ -201,7 +206,10 @@
 
         <div id="orderBox" class="order-container-box">
             <div class="box-header">
-                <div class="box-title" id="orderBoxTitle">Aktuelle Bestellungen</div>
+                <div class="box-title-container">
+                    <div class="box-title-main" id="orderBoxStatus">❌ Bestellung Beendet</div>
+                    <div class="box-title-sub" id="orderBoxDetails">Aktuelle Bestellungen</div>
+                </div>
                 <button id="clearAllBtn" class="clear-list-btn">🗑️</button>
             </div>
             <ul id="list"></ul>
@@ -252,19 +260,26 @@
         // Papierkorb nur zeigen, wenn NICHT aktiv
         document.getElementById("clearAllBtn").style.display = isGlobalActive ? "none" : "block";
         
-        const titleEl = document.getElementById("orderBoxTitle");
+        const statusEl = document.getElementById("orderBoxStatus");
+        const detailsEl = document.getElementById("orderBoxDetails");
+
         if(isGlobalActive) {
             const date = new Date(d.endTime);
             document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
             document.getElementById("disp-cham").innerText = d.chamber || "---";
-            titleEl.innerText = "Aktuelle Bestellungen";
+            
+            statusEl.style.display = "none";
+            detailsEl.innerText = "Aktuelle Bestellungen";
         } else if (d.restaurant) {
-            // Zeige Zusammenfassung wenn beendet, aber Daten noch da sind
-            titleEl.innerHTML = `${d.restaurant} | ${d.time} Uhr | ${d.chamber}`;
+            // BEENDET MODUS
+            statusEl.style.display = "block";
+            detailsEl.innerHTML = `${d.restaurant} | ${d.time} Uhr | ${d.chamber}`;
         } else {
-            titleEl.innerText = "Aktuelle Bestellungen";
+            // INITIAL MODUS
+            statusEl.style.display = "none";
+            detailsEl.innerText = "Aktuelle Bestellungen";
         }
     });
 
@@ -343,8 +358,6 @@
             const d = child.val();
             const key = child.key;
             const li = document.createElement("li");
-            
-            // Edit-Button nur zeigen wenn Bestellung läuft UND man der Besitzer ist
             const showEdit = isGlobalActive && d.owner === userId;
 
             li.innerHTML = `
