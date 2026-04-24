@@ -248,6 +248,12 @@
     let currentlyEditing = null;
     let isGlobalActive = false;
 
+    // Hilfsfunktion zum Schließen des Zeit-Modals
+    const closeModal = () => {
+        document.getElementById("modalOverlay").style.display = "none";
+        document.getElementById("timeModal").style.display = "none";
+    };
+
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
@@ -256,8 +262,6 @@
         document.getElementById("setupCard").style.display = isGlobalActive ? "none" : "block";
         document.getElementById("statusDisplay").style.display = isGlobalActive ? "block" : "none";
         document.getElementById("orderCard").style.display = isGlobalActive ? "block" : "none";
-        
-        // Papierkorb nur zeigen, wenn NICHT aktiv
         document.getElementById("clearAllBtn").style.display = isGlobalActive ? "none" : "block";
         
         const statusEl = document.getElementById("orderBoxStatus");
@@ -273,11 +277,9 @@
             statusEl.style.display = "none";
             detailsEl.innerText = "Aktuelle Bestellungen";
         } else if (d.restaurant) {
-            // BEENDET MODUS
             statusEl.style.display = "block";
             detailsEl.innerHTML = `${d.restaurant} | ${d.time} Uhr | ${d.chamber}`;
         } else {
-            // INITIAL MODUS
             statusEl.style.display = "none";
             detailsEl.innerText = "Aktuelle Bestellungen";
         }
@@ -287,6 +289,10 @@
         document.getElementById("modalOverlay").style.display = "block";
         document.getElementById("timeModal").style.display = "block";
     };
+
+    // KORREKTUR: Abbrechen-Button Event-Listener hinzugefügt
+    document.getElementById("cancelModalBtn").onclick = closeModal;
+    document.getElementById("modalOverlay").onclick = closeModal;
 
     document.getElementById("confirmStartBtn").onclick = () => {
         const t = document.getElementById("deadlineInput").value;
@@ -304,9 +310,7 @@
                 gate: document.getElementById("gate").value 
             });
         });
-        
-        document.getElementById("modalOverlay").style.display = "none";
-        document.getElementById("timeModal").style.display = "none";
+        closeModal();
     };
 
     document.getElementById("stopActionBtn").onclick = () => { 
