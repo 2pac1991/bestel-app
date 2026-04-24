@@ -207,7 +207,7 @@
         <div id="orderBox" class="order-container-box">
             <div class="box-header">
                 <div class="box-title-container">
-                    <div class="box-title-main" id="orderBoxStatus">☑️ Bestellung Beendet</div>
+                    <div class="box-title-main" id="orderBoxStatus">❌ Bestellung Beendet</div>
                     <div class="box-title-sub" id="orderBoxDetails">Aktuelle Bestellungen</div>
                 </div>
                 <button id="clearAllBtn" class="clear-list-btn">🗑️</button>
@@ -248,7 +248,6 @@
     let currentlyEditing = null;
     let isGlobalActive = false;
 
-    // Hilfsfunktion zum Schließen des Zeit-Modals
     const closeModal = () => {
         document.getElementById("modalOverlay").style.display = "none";
         document.getElementById("timeModal").style.display = "none";
@@ -290,7 +289,6 @@
         document.getElementById("timeModal").style.display = "block";
     };
 
-    // KORREKTUR: Abbrechen-Button Event-Listener hinzugefügt
     document.getElementById("cancelModalBtn").onclick = closeModal;
     document.getElementById("modalOverlay").onclick = closeModal;
 
@@ -414,7 +412,10 @@
         const sSnap = await get(ref(db, "settings"));
         const s = sSnap.val() || {};
         const oSnap = await get(ref(db, "orders"));
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n📦 Kammerl: ${s.chamber || '---'}\n🚪 Tor: ${s.gate || '---'}\n––––––––––––––––––\n`;
+        
+        // KORREKTUR: Kammerl entfernt
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n––––––––––––––––––\n`;
+        
         const counts = {};
         const displayNames = {};
         oSnap.forEach(child => {
