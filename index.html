@@ -23,11 +23,11 @@
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding-bottom: 20px; /* Padding unten statt fixen 140px für bessere Zentrierung */
+            padding-bottom: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh; /* Wichtig für die vertikale Zentrierung */
+            min-height: 100vh;
             touch-action: manipulation;
         }
 
@@ -53,22 +53,20 @@
             cursor: pointer; font-weight: 600; font-size: 13px;
         }
 
-        /* DIESER TEIL ZENTRIERT DEN INHALT */
         .container { 
             width: 100%; 
             max-width: 500px; 
             padding: 20px;
-            flex-grow: 1; /* Nimmt den restlichen Platz ein */
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Zentriert vertikal */
+            justify-content: center;
             align-items: stretch;
         }
 
-        /* Wenn die Liste da ist, soll es oben starten und nicht in der Mitte kleben */
         .container.has-content {
             justify-content: flex-start;
-            padding-bottom: 140px; /* Platz für WA-Button wenn Liste da */
+            padding-bottom: 140px;
         }
 
         #statusDisplay {
@@ -231,6 +229,17 @@
     const firebaseConfig = { apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs", databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+
+    // Name ändern Funktion repariert
+    const changeName = () => {
+        let newName = prompt("Wie heißt du?", localStorage.getItem("userName"));
+        if(newName && newName.trim()) {
+            localStorage.setItem("userName", newName.trim());
+            document.getElementById("userNameDisplay").innerText = newName.trim();
+            userName = newName.trim();
+        }
+    };
+    document.getElementById("profileBtn").onclick = changeName;
 
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
