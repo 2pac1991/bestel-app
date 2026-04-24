@@ -48,7 +48,6 @@
 
         .container { width: 100%; max-width: 500px; padding: 20px; }
 
-        /* STATUS-DISPLAY OBEN */
         #statusDisplay {
             background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
             border: 2px solid #fee2e2; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
@@ -78,17 +77,15 @@
             font-weight: 700; font-size: 16px; cursor: pointer;
         }
 
-        #startBtn { color: white; background: var(--primary); }
-        .add-btn { background: var(--success); color: white; }
+        .add-btn { background: var(--success); color: white; margin-top: 5px; }
 
         ul { padding: 0; list-style: none; width: 100%; margin: 0; }
         li {
             background: white; padding: 18px; border-radius: 18px; margin-bottom: 12px;
             border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            width: 100%; position: relative;
         }
 
-        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; display: block; margin-bottom: 2px; }
+        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; display: block; }
         .food-name { font-weight: 700; font-size: 19px; color: var(--text-main); }
 
         .edit-btn { background: #f1f5f9; color: var(--text-muted); border: none; padding: 6px 10px; border-radius: 8px; font-size: 12px; margin-top: 8px; cursor: pointer; }
@@ -165,7 +162,7 @@
 
         <div id="orderCard" class="card" style="display:none; border: 2px solid #22c55e; background: #f0fdf4;">
             <span class="label">Deine Bestellung</span>
-            <input id="orderInput" placeholder="Was möchtest du essen?">
+            <input id="orderInput" placeholder="Was möchtest du essen?" style="background: white; border: 1px solid #22c55e;">
             <button id="addOrderBtn" class="btn add-btn">Hinzufügen</button>
         </div>
 
@@ -223,6 +220,8 @@
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = d.time || "---";
             document.getElementById("disp-cham").innerText = d.chamber || "---";
+            // Fix: Sicherstellen, dass das Feld aktiv ist
+            document.getElementById("orderInput").disabled = false;
         }
     });
 
@@ -236,10 +235,8 @@
         const [h, m] = t.split(":").map(Number);
         const end = new Date(); end.setHours(h, m, 0, 0);
         if (end < new Date()) end.setDate(end.getDate() + 1);
-        
         update(ref(db, "settings"), { 
-            orderActive: true, 
-            endTime: end.getTime(), 
+            orderActive: true, endTime: end.getTime(), 
             restaurant: document.getElementById("restaurant").value, 
             time: document.getElementById("time").value, 
             chamber: document.getElementById("chamber").value,
@@ -250,9 +247,7 @@
     };
 
     document.getElementById("stopActionBtn").onclick = async () => {
-        if(prompt("Passwort zum Stoppen:") === "stop") {
-            update(ref(db, "settings"), { orderActive: false });
-        }
+        if(prompt("Passwort zum Stoppen:") === "stop") update(ref(db, "settings"), { orderActive: false });
     };
 
     document.getElementById("cancelModalBtn").onclick = () => {
@@ -264,11 +259,19 @@
         const input = document.getElementById("orderInput");
         const val = input.value.trim();
         if(!val) return;
-        push(ref(db, "orders"), { name: val, user: userName, owner: userId }).then(() => input.value = "");
+        push(ref(db, "orders"), { name: val, user: userName, owner: userId }).then(() => {
+            input.value = "";
+            input.focus();
+        });
     };
 
     document.getElementById("addOrderBtn").onclick = addOrder;
-    document.getElementById("orderInput").onkeypress = (e) => e.key === "Enter" && addOrder();
+    document.getElementById("orderInput").onkeydown = (e) => {
+        if(e.key === "Enter") {
+            e.preventDefault();
+            addOrder();
+        }
+    };
 
     onValue(ref(db, "orders"), snap => {
         const listEl = document.getElementById("list");
@@ -283,7 +286,7 @@
             li.innerHTML = `<div><span class="user-label">${d.user}</span><span class="food-name" data-food="${d.name}">${d.name}</span>${d.owner === userId ? `<button class="edit-btn" onclick="document.getElementById('c-${key}').classList.toggle('active')">Bearbeiten</button>` : ""}<div id="c-${key}" class="controls"><input id="inp-${key}" value="${d.name}"><button class="btn" style="background:var(--danger); color:white; padding:10px; margin-bottom:5px;" id="del-${key}">Löschen</button><button class="btn" style="background:var(--primary); color:white; padding:10px;" id="sav-${key}">Speichern</button></div></div>`;
             listEl.appendChild(li);
             if(d.owner === userId) {
-                document.getElementById(`del-${key}`).onclick = () => confirm("Wirklich löschen?") && remove(ref(db, `orders/${key}`));
+                document.getElementById(`del-${key}`).onclick = () => confirm("Löschen?") && remove(ref(db, `orders/${key}`));
                 document.getElementById(`sav-${key}`).onclick = () => update(ref(db, `orders/${key}`), { name: document.getElementById(`inp-${key}`).value });
             }
         });
@@ -292,10 +295,7 @@
     document.getElementById("shareWaBtn").onclick = async () => {
         const snap = await get(ref(db, "settings"));
         const s = snap.val() || {};
-        
-        // HIER: 'chamber' wird NICHT in den Text aufgenommen
         let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n🚪 Ort: ${s.gate || '---'}\n––––––––––––––––––\n`;
-        
         const counts = {};
         document.querySelectorAll(".food-name").forEach(el => {
             const dish = el.getAttribute("data-food");
@@ -305,7 +305,7 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 
-    document.getElementById("clearBtn").onclick = () => { if(prompt("Passwort zum Leeren:") === "clear") { remove(ref(db, "orders")); update(ref(db, "settings"), { orderActive: false }); } };
+    document.getElementById("clearBtn").onclick = () => { if(prompt("Passwort:") === "clear") { remove(ref(db, "orders")); update(ref(db, "settings"), { orderActive: false }); } };
 </script>
 </body>
 </html>
