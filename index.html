@@ -23,19 +23,15 @@
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding-bottom: 120px;
+            padding-bottom: 140px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
         .app-header {
-            width: 100%;
-            background: #fff;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            width: 100%; background: #fff; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid rgba(0,0,0,0.05);
             position: sticky; top: 0; z-index: 1100;
         }
@@ -52,7 +48,7 @@
 
         .container { width: 100%; max-width: 500px; padding: 20px; }
 
-        /* INFO-DISPLAY OBEN */
+        /* STATUS-DISPLAY OBEN */
         #statusDisplay {
             background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
             border: 2px solid #fee2e2; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
@@ -89,7 +85,7 @@
         li {
             background: white; padding: 18px; border-radius: 18px; margin-bottom: 12px;
             border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            width: 100%;
+            width: 100%; position: relative;
         }
 
         .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; display: block; margin-bottom: 2px; }
@@ -106,7 +102,7 @@
         }
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 1999; }
 
-        .wa-sticky { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(0deg, #f8fafc 50%, transparent); display: none; justify-content: center; z-index: 1000; }
+        .wa-sticky { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
         .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; max-width: 460px; cursor: pointer; box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); }
 
         #clearBtn { position: fixed; bottom: 100px; right: 20px; background: white; border: none; width: 45px; height: 45px; border-radius: 50%; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; z-index: 999; }
@@ -121,7 +117,7 @@
         </div>
         <button id="profileBtn">
             <span>👤</span>
-            <span id="userNameDisplay">Gast</span>
+            <span id="userNameDisplay">...</span>
         </button>
     </header>
 
@@ -157,12 +153,12 @@
             <select id="chamber"><option>Spinnereikammerl</option><option>NB-Kammerl</option></select>
             <span class="label">🚪 Tor (für WA)</span>
             <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
-            <button id="startBtn" class="btn">🟢 Bestellung Starten</button>
+            <button id="startBtn" class="btn" style="background: var(--primary); color: white;">🟢 Bestellung Starten</button>
         </div>
 
-        <div id="orderCard" class="card" style="display:none; border: 2px solid #bbf7d0; background: #f0fdf4;">
+        <div id="orderCard" class="card" style="display:none; border: 2px solid #22c55e; background: #f0fdf4;">
             <span class="label">Deine Bestellung</span>
-            <input id="order" placeholder="Was isst du?">
+            <input id="orderInput" placeholder="Was möchtest du essen?">
             <button id="addOrderBtn" class="btn add-btn">Hinzufügen</button>
         </div>
 
@@ -191,6 +187,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // --- USER ---
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
     let userName = localStorage.getItem("userName") || prompt("Wie heißt du?") || "Gast";
@@ -202,7 +199,7 @@
         if(n && n.trim() !== "") { userName = n.trim(); localStorage.setItem("userName", userName); document.getElementById("userNameDisplay").innerText = userName; }
     };
 
-    // --- STATUS & SETUP LOGIK ---
+    // --- CORE LOGIK (STATUS) ---
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
@@ -221,15 +218,10 @@
         }
     });
 
+    // --- BUTTON ACTIONS ---
     document.getElementById("startBtn").onclick = () => {
         document.getElementById("modalOverlay").style.display = "block";
         document.getElementById("timeModal").style.display = "block";
-    };
-    
-    document.getElementById("stopActionBtn").onclick = async () => {
-        if(prompt("Passwort zum Stoppen:") === "stop") {
-            update(ref(db, "settings"), { orderActive: false });
-        }
     };
 
     document.getElementById("cancelModalBtn").onclick = () => {
@@ -255,65 +247,101 @@
         document.getElementById("timeModal").style.display = "none";
     };
 
-    // --- BESTELLUNGEN ---
-    const addOrder = () => {
-        const input = document.getElementById("order");
-        if(!input.value.trim()) return;
-        push(ref(db, "orders"), { name: input.value.trim(), user: userName, owner: userId });
-        input.value = "";
+    document.getElementById("stopActionBtn").onclick = async () => {
+        if(prompt("Passwort zum Stoppen:") === "stop") {
+            update(ref(db, "settings"), { orderActive: false });
+        }
     };
+
+    // --- BESTELLUNG HINZUFÜGEN ---
+    const addOrder = () => {
+        const input = document.getElementById("orderInput");
+        const val = input.value.trim();
+        if(!val) return;
+        
+        push(ref(db, "orders"), {
+            name: val,
+            user: userName,
+            owner: userId
+        }).then(() => {
+            input.value = ""; // Input leeren nach Erfolg
+        }).catch(err => alert("Fehler: " + err));
+    };
+
     document.getElementById("addOrderBtn").onclick = addOrder;
-    document.getElementById("order").onkeypress = (e) => { if(e.key === "Enter") addOrder(); };
+    document.getElementById("orderInput").addEventListener("keypress", (e) => {
+        if(e.key === "Enter") addOrder();
+    });
 
+    // --- LISTE RENDERN ---
     onValue(ref(db, "orders"), snap => {
-        const list = document.getElementById("list"); 
-        list.innerHTML = "";
+        const listEl = document.getElementById("list");
         const waLeiste = document.getElementById("waLeiste");
-        const count = snap.numChildren();
+        listEl.innerHTML = "";
         
-        waLeiste.style.display = count > 0 ? "flex" : "none";
-        
-        if(!snap.exists()) return;
+        if(!snap.exists()) {
+            waLeiste.style.display = "none";
+            return;
+        }
 
+        waLeiste.style.display = "flex";
+        
         snap.forEach(child => {
             const d = child.val();
+            const key = child.key;
             const li = document.createElement("li");
+            
             li.innerHTML = `
-                <div class="item-content">
+                <div>
                     <span class="user-label">${d.user}</span>
                     <span class="food-name" data-food="${d.name}">${d.name}</span>
-                    ${d.owner === userId ? `<button class="edit-btn" id="eb-${child.key}">Bearbeiten</button>` : ""}
-                    <div id="c-${child.key}" class="controls">
-                        <input id="inp-${child.key}" value="${d.name}">
-                        <button class="btn" style="background:var(--danger); color:white; padding:10px; margin-bottom:5px;" id="del-${child.key}">Löschen</button>
-                        <button class="btn" style="background:var(--primary); color:white; padding:10px;" id="sav-${child.key}">Speichern</button>
+                    ${d.owner === userId ? `<button class="edit-btn" onclick="document.getElementById('c-${key}').classList.toggle('active')">Bearbeiten</button>` : ""}
+                    <div id="c-${key}" class="controls">
+                        <input id="inp-${key}" value="${d.name}">
+                        <button class="btn" style="background:var(--danger); color:white; padding:10px; margin-bottom:5px;" id="del-${key}">Löschen</button>
+                        <button class="btn" style="background:var(--primary); color:white; padding:10px;" id="sav-${key}">Speichern</button>
                     </div>
                 </div>`;
-            list.appendChild(li);
+            
+            listEl.appendChild(li);
 
+            // Listener für Edit/Löschen
             if(d.owner === userId) {
-                document.getElementById(`eb-${child.key}`).onclick = () => document.getElementById(`c-${child.key}`).classList.toggle("active");
-                document.getElementById(`del-${child.key}`).onclick = () => confirm("Wirklich löschen?") && remove(ref(db, `orders/${child.key}`));
-                document.getElementById(`sav-${child.key}`).onclick = () => update(ref(db, `orders/${child.key}`), { name: document.getElementById(`inp-${child.key}`).value });
+                document.getElementById(`del-${key}`).onclick = () => {
+                    if(confirm("Wirklich löschen?")) remove(ref(db, `orders/${key}`));
+                };
+                document.getElementById(`sav-${key}`).onclick = () => {
+                    const newVal = document.getElementById(`inp-${key}`).value;
+                    update(ref(db, `orders/${key}`), { name: newVal });
+                };
             }
         });
     });
 
+    // --- WHATSAPP & CLEAR ---
     document.getElementById("shareWaBtn").onclick = async () => {
         const snap = await get(ref(db, "settings"));
         const s = snap.val() || {};
         let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'}\n📦 Kammerl: ${s.chamber || '---'}\n🚪 Ort: ${s.gate || '---'}\n––––––––––––––––––\n`;
-        const sum = {}; 
-        document.querySelectorAll(".food-name").forEach(i => { const n = i.getAttribute("data-food"); sum[n] = (sum[n] || 0) + 1; });
-        for (const [f, q] of Object.entries(sum)) { m += `• ${q > 1 ? q + 'x ' : ''}${f}\n`; }
+        
+        const counts = {};
+        document.querySelectorAll(".food-name").forEach(el => {
+            const dish = el.getAttribute("data-food");
+            counts[dish] = (counts[dish] || 0) + 1;
+        });
+
+        for (const [dish, qty] of Object.entries(counts)) {
+            m += `• ${qty > 1 ? qty + 'x ' : ''}${dish}\n`;
+        }
+        
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 
-    document.getElementById("clearBtn").onclick = () => { 
-        if(prompt("Passwort zum Leeren:") === "clear") { 
-            remove(ref(db, "orders")); 
-            update(ref(db, "settings"), {orderActive: false}); 
-        } 
+    document.getElementById("clearBtn").onclick = () => {
+        if(prompt("Passwort zum Leeren:") === "clear") {
+            remove(ref(db, "orders"));
+            update(ref(db, "settings"), { orderActive: false });
+        }
     };
 </script>
 </body>
