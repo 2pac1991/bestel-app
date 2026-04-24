@@ -76,6 +76,10 @@
         }
         .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .status-item { background: #f8fafc; padding: 10px; border-radius: 12px; }
+        /* Cursor Pointer für Admin-Änderungen */
+        .admin-editable { cursor: pointer; position: relative; }
+        .admin-editable:active { background: #f1f5f9; }
+        
         .status-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; display: block; }
         .status-val { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .timer-highlight { grid-column: span 2; background: #fee2e2; color: #dc2626; text-align: center; border: 1px solid #fecaca; }
@@ -157,15 +161,15 @@
     <div class="container" id="mainContainer">
         <div id="statusDisplay">
             <div class="status-grid">
-                <div class="status-item timer-highlight">
+                <div class="status-item timer-highlight admin-editable" id="editDeadlineArea">
                     <span class="status-label">⌛ Bestellschluss</span>
                     <div class="status-val" id="disp-deadline">--:-- Uhr</div>
                 </div>
-                <div class="status-item">
+                <div class="status-item admin-editable" id="editResArea">
                     <span class="status-label">📍 Restaurant</span>
                     <div class="status-val" id="disp-res">---</div>
                 </div>
-                <div class="status-item">
+                <div class="status-item admin-editable" id="editTimeArea">
                     <span class="status-label">🕒 Lieferung</span>
                     <div class="status-val" id="disp-time">---</div>
                 </div>
@@ -198,7 +202,7 @@
         <div id="orderBox" class="order-container-box">
             <div class="box-header">
                 <div class="box-title-container">
-                    <div class="box-title-main" id="orderBoxStatus">☑️ Bestellung Beendet</div>
+                    <div class="box-title-main" id="orderBoxStatus">❌ Bestellung Beendet</div>
                     <div class="box-title-sub" id="orderBoxDetails">Aktuelle Bestellungen</div>
                 </div>
                 <button id="clearAllBtn" class="clear-list-btn">🗑️</button>
@@ -283,6 +287,36 @@
         }
     });
 
+    // Admin-Änderungs-Funktionen während die Bestellung läuft
+    document.getElementById("editResArea").onclick = () => {
+        if(userId !== currentAdminId) return;
+        const current = document.getElementById("disp-res").innerText;
+        const newVal = prompt("Restaurant ändern:", current);
+        if(newVal && newVal.trim() !== current) {
+            update(ref(db, "settings"), { restaurant: newVal.trim() });
+        }
+    };
+
+    document.getElementById("editTimeArea").onclick = () => {
+        if(userId !== currentAdminId) return;
+        const current = document.getElementById("disp-time").innerText.replace(" Uhr", "");
+        const newVal = prompt("Lieferzeit ändern (z.B. 12:30):", current);
+        if(newVal && newVal.trim() !== current) {
+            update(ref(db, "settings"), { time: newVal.trim() });
+        }
+    };
+
+    document.getElementById("editDeadlineArea").onclick = () => {
+        if(userId !== currentAdminId) return;
+        const newVal = prompt("Neuen Bestellschluss setzen (z.B. 11:00):");
+        if(newVal) {
+            const [h, m] = newVal.split(":").map(Number);
+            const end = new Date(); end.setHours(h, m, 0, 0);
+            if (end < new Date()) end.setDate(end.getDate() + 1);
+            update(ref(db, "settings"), { endTime: end.getTime() });
+        }
+    };
+
     document.getElementById("startBtn").onclick = () => {
         document.getElementById("modalOverlay").style.display = "block";
         document.getElementById("timeModal").style.display = "block";
@@ -310,15 +344,12 @@
         closeModal();
     };
 
-    // LOGIK: Beenden ohne Passwort für den Starter
     document.getElementById("stopActionBtn").onclick = () => { 
         if(userId === currentAdminId) {
-            // Ich bin der Starter, darf direkt beenden
             if(confirm("Bestellung wirklich beenden?")) {
                 update(ref(db, "settings"), { orderActive: false, endTime: 0 });
             }
         } else {
-            // Ich bin nicht der Starter, brauche Passwort
             if(prompt("Admin Passwort:") === "admin") {
                 update(ref(db, "settings"), { orderActive: false, endTime: 0 });
             }
