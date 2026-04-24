@@ -198,7 +198,7 @@
         <div id="orderBox" class="order-container-box">
             <div class="box-header">
                 <div class="box-title-container">
-                    <div class="box-title-main" id="orderBoxStatus">☑️ Bestellung Beendet</div>
+                    <div class="box-title-main" id="orderBoxStatus">❌ Bestellung Beendet</div>
                     <div class="box-title-sub" id="orderBoxDetails">Aktuelle Bestellungen</div>
                 </div>
                 <button id="clearAllBtn" class="clear-list-btn">🗑️</button>
@@ -230,7 +230,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Name ändern Funktion repariert
     const changeName = () => {
         let newName = prompt("Wie heißt du?", localStorage.getItem("userName"));
         if(newName && newName.trim()) {
@@ -249,6 +248,7 @@
 
     let currentlyEditing = null;
     let isGlobalActive = false;
+    let currentAdminId = null; // Speichert wer gestartet hat
 
     const closeModal = () => {
         document.getElementById("modalOverlay").style.display = "none";
@@ -259,7 +259,8 @@
         const d = snap.val() || {};
         const now = new Date().getTime();
         isGlobalActive = d.orderActive && now < d.endTime;
-        
+        currentAdminId = d.adminId; // Wer hat gestartet?
+
         document.getElementById("setupCard").style.display = isGlobalActive ? "none" : "block";
         document.getElementById("statusDisplay").style.display = isGlobalActive ? "block" : "none";
         document.getElementById("orderCard").style.display = isGlobalActive ? "block" : "none";
@@ -296,7 +297,15 @@
         const end = new Date(); end.setHours(h, m, 0, 0);
         if (end < new Date()) end.setDate(end.getDate() + 1);
         remove(ref(db, "orders")).then(() => {
-            update(ref(db, "settings"), { orderActive: true, endTime: end.getTime(), restaurant: document.getElementById("restaurant").value, time: document.getElementById("time").value, chamber: document.getElementById("chamber").value, gate: document.getElementById("gate").value });
+            update(ref(db, "settings"), { 
+                orderActive: true, 
+                endTime: end.getTime(), 
+                restaurant: document.getElementById("restaurant").value, 
+                time: document.getElementById("time").value, 
+                chamber: document.getElementById("chamber").value, 
+                gate: document.getElementById("gate").value,
+                adminId: userId // HIER: Deine ID wird als Admin gespeichert
+            });
         });
         closeModal();
     };
@@ -342,11 +351,14 @@
             const d = child.val();
             const key = child.key;
             const li = document.createElement("li");
-            const isMe = isGlobalActive && d.owner === userId;
+            
+            // NEUE LOGIK: Darf ich bearbeiten? (Eigene Bestellung ODER ich bin der Admin der Runde)
+            const canEdit = isGlobalActive && (d.owner === userId || userId === currentAdminId);
+
             li.innerHTML = `
                 <div class="order-row" id="view-${key}">
                     <div class="order-info"><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>
-                    ${isMe ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
+                    ${canEdit ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
                 </div>
                 <div class="edit-container" id="edit-${key}" style="display:none">
                     <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
