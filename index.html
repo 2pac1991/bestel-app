@@ -49,6 +49,7 @@
 
         .container { width: 100%; max-width: 500px; padding: 20px; }
 
+        /* Das Status-Display oben */
         #statusDisplay {
             background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
             border: 2px solid #fee2e2; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
@@ -66,17 +67,18 @@
             border: 1px solid #e2e8f0;
         }
 
-        /* Der Rahmen für die Anzeige der Bestellungen */
+        /* Die neue Box für alle Bestellungen untereinander */
         .order-preview-box {
             background: #fff;
-            padding: 15px;
-            border-radius: 15px;
+            padding: 18px;
+            border-radius: 18px;
             border: 2px solid var(--primary);
             margin-bottom: 20px;
             display: none;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
         }
-        .preview-label { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; display: block; }
-        .preview-text { font-size: 16px; font-weight: 700; color: var(--text-main); line-height: 1.4; }
+        .preview-label { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 10px; display: block; border-bottom: 1px solid #eff6ff; padding-bottom: 5px; }
+        .preview-content { font-size: 15px; font-weight: 600; color: var(--text-main); line-height: 1.6; }
 
         .label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block; }
 
@@ -195,7 +197,7 @@
 
         <div id="orderPreviewBox" class="order-preview-box">
             <span class="preview-label">Bestellungen:</span>
-            <div id="previewContent" class="preview-text"></div>
+            <div id="previewContent" class="preview-content"></div>
         </div>
 
         <ul id="list"></ul>
@@ -296,6 +298,7 @@
         }
 
         listEl.innerHTML = "";
+        previewContent.innerHTML = "";
         
         if(!snap.exists()) { 
             waLeiste.style.display = "none"; 
@@ -306,12 +309,16 @@
         waLeiste.style.display = "flex";
         previewBox.style.display = "block";
         
-        let items = [];
         snap.forEach(child => {
             const d = child.val();
             const key = child.key;
-            items.push(d.name);
 
+            // In die neue Box hinzufügen (Name: Essen)
+            const div = document.createElement("div");
+            div.innerText = `${d.user}: ${d.name}`;
+            previewContent.appendChild(div);
+
+            // In die Detail-Liste unten hinzufügen
             const li = document.createElement("li");
             li.id = `li-${key}`;
             const isEditing = currentlyEditing === key;
@@ -334,8 +341,6 @@
                 </div>`;
             listEl.appendChild(li);
         });
-
-        previewContent.innerText = items.join(", ");
     });
 
     window.startEdit = (key) => {
