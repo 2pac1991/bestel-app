@@ -82,38 +82,42 @@
 
         .add-btn { background: var(--success); color: white; margin-top: 5px; }
 
-        /* NEU: Zusammenfassungs-Box */
-        .summary-box {
-            background: #eff6ff; border: 2px solid var(--primary);
-            padding: 15px; border-radius: 20px; margin-bottom: 20px;
-            display: none;
+        /* Der blaue Rahmen für die Bestellungen */
+        .order-container-box {
+            background: white; border-radius: 24px; border: 2px solid var(--primary);
+            padding: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+            margin-bottom: 20px; display: none;
         }
-        .summary-title { font-size: 11px; font-weight: 900; color: var(--primary); text-transform: uppercase; margin-bottom: 10px; display: block; }
-        .summary-content { font-size: 15px; font-weight: 600; line-height: 1.4; color: #1e40af; }
+        .box-title {
+            font-size: 12px; font-weight: 900; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 15px; display: flex; align-items: center; gap: 8px;
+        }
+        .box-title::after { content: ""; height: 2px; background: #eff6ff; flex: 1; }
 
         ul { padding: 0; list-style: none; width: 100%; margin: 0; }
         li {
-            background: white; padding: 18px; border-radius: 18px; margin-bottom: 12px;
-            border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            background: white; padding: 15px 0; border-bottom: 1px solid #f1f5f9;
             width: 100%;
         }
+        li:last-child { border-bottom: none; }
 
-        .order-row { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }
+        .order-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .order-info { flex: 1; display: flex; flex-direction: column; }
         
-        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 4px; }
-        .food-name { font-weight: 700; font-size: 19px; color: var(--text-main); line-height: 1.2; }
+        .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 2px; }
+        .food-name { font-weight: 700; font-size: 17px; color: var(--text-main); line-height: 1.2; }
 
         .edit-btn { 
             background: #f1f5f9; color: var(--text-muted); border: none; 
-            padding: 8px; border-radius: 10px; font-size: 14px; cursor: pointer; margin-left: 10px;
+            padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;
         }
 
-        .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-        .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); font-size: 16px; font-family: inherit; }
+        .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 10px; background: #f8fafc; border-radius: 12px; }
+        .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); font-size: 16px; margin: 0; }
         .edit-actions { display: flex; gap: 8px; }
-        .save-btn { background: var(--primary); color: white; padding: 8px 15px; border-radius: 8px; border: none; font-weight: 700; flex: 2; }
-        .del-btn { background: var(--danger); color: white; padding: 8px 15px; border-radius: 8px; border: none; font-weight: 700; flex: 1; }
+        .save-btn { background: var(--primary); color: white; padding: 8px; border-radius: 8px; border: none; font-weight: 700; flex: 2; }
+        .del-btn { background: var(--danger); color: white; padding: 8px; border-radius: 8px; border: none; font-weight: 700; flex: 1; }
 
         #timeModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -183,12 +187,10 @@
             <button id="addOrderBtn" class="btn add-btn">+ Hinzufügen</button>
         </div>
 
-        <div id="summaryCard" class="summary-box">
-            <span class="summary-title">📦 Zusammenfassung</span>
-            <div id="summaryContent" class="summary-content"></div>
+        <div id="orderBox" class="order-container-box">
+            <div class="box-title">Aktuelle Bestellungen</div>
+            <ul id="list"></ul>
         </div>
-
-        <ul id="list"></ul>
     </div>
 
     <div id="modalOverlay"></div>
@@ -280,62 +282,48 @@
     onValue(ref(db, "orders"), snap => {
         const listEl = document.getElementById("list");
         const waLeiste = document.getElementById("waLeiste");
-        const summaryCard = document.getElementById("summaryCard");
-        const summaryContent = document.getElementById("summaryContent");
+        const orderBox = document.getElementById("orderBox");
         
         listEl.innerHTML = "";
-        summaryContent.innerHTML = "";
         
         if(!snap.exists()) { 
             waLeiste.style.display = "none"; 
-            summaryCard.style.display = "none";
+            orderBox.style.display = "none";
             return; 
         }
         
         waLeiste.style.display = "flex";
-        summaryCard.style.display = "block";
+        orderBox.style.display = "block";
         
-        const counts = {};
-
         snap.forEach(child => {
             const d = child.val();
             const key = child.key;
             
-            // Zusammenfassungs-Logik
-            counts[d.name] = (counts[d.name] || 0) + 1;
-
-            if (currentlyEditing !== key) {
-                const li = document.createElement("li");
-                li.innerHTML = `
-                    <div class="order-row" id="view-${key}">
-                        <div class="order-info">
-                            <span class="user-label">${d.user}</span>
-                            <span class="food-name">${d.name}</span>
-                        </div>
-                        ${d.owner === userId ? `<button class="edit-btn" onclick="window.startEdit('${key}')">✏️</button>` : ""}
-                    </div>
-                    <div class="edit-container" id="edit-${key}" style="display:none;">
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <div class="order-row" id="view-${key}" style="${currentlyEditing === key ? 'display:none' : 'display:flex'}">
+                    <div class="order-info">
                         <span class="user-label">${d.user}</span>
-                        <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
-                        <div class="edit-actions">
-                            <button class="del-btn" onclick="window.deleteOrder('${key}')">Löschen</button>
-                            <button class="save-btn" onclick="window.saveOrder('${key}')">Speichern</button>
-                        </div>
-                    </div>`;
-                listEl.appendChild(li);
-            }
+                        <span class="food-name" data-food="${d.name}">${d.name}</span>
+                    </div>
+                    ${d.owner === userId ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
+                </div>
+                <div class="edit-container" id="edit-${key}" style="${currentlyEditing === key ? 'display:flex' : 'display:none'}">
+                    <span class="user-label">${d.user}</span>
+                    <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
+                    <div class="edit-actions">
+                        <button class="del-btn" onclick="window.deleteOrder('${key}')">Löschen</button>
+                        <button class="save-btn" onclick="window.saveOrder('${key}')">Speichern</button>
+                    </div>
+                </div>`;
+            listEl.appendChild(li);
         });
-
-        // Zusammenfassung in die Box schreiben
-        let summaryHTML = "";
-        for (const [dish, qty] of Object.entries(counts)) {
-            summaryHTML += `• ${qty > 1 ? qty + 'x ' : ''}${dish}<br>`;
-        }
-        summaryContent.innerHTML = summaryHTML;
     });
 
     window.startEdit = (key) => {
         currentlyEditing = key;
+        document.querySelectorAll('[id^="view-"]').forEach(el => el.style.display = 'flex');
+        document.querySelectorAll('[id^="edit-"]').forEach(el => el.style.display = 'none');
         document.getElementById(`view-${key}`).style.display = 'none';
         document.getElementById(`edit-${key}`).style.display = 'flex';
         document.getElementById(`inp-${key}`).focus();
