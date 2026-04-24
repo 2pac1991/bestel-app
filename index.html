@@ -66,8 +66,8 @@
             border: 1px solid #e2e8f0;
         }
 
-        /* Das neue Bestellungs-Sammelfeld */
-        .summary-card {
+        /* Der Rahmen für die Anzeige der Bestellungen */
+        .order-preview-box {
             background: #fff;
             padding: 15px;
             border-radius: 15px;
@@ -75,8 +75,8 @@
             margin-bottom: 20px;
             display: none;
         }
-        .summary-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 5px; display: block; }
-        .summary-list { font-size: 15px; font-weight: 700; color: var(--text-main); line-height: 1.4; }
+        .preview-label { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .preview-text { font-size: 16px; font-weight: 700; color: var(--text-main); line-height: 1.4; }
 
         .label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block; }
 
@@ -117,12 +117,10 @@
             font-weight: 600; 
             cursor: pointer; 
             margin-left: 10px;
-            transition: all 0.2s;
         }
-        .edit-btn:hover { background: #e2e8f0; }
 
         .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-        .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); font-size: 16px; font-family: inherit; }
+        .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid var(--primary); font-size: 16px; }
         .edit-actions { display: flex; gap: 8px; }
         .save-btn { background: var(--primary); color: white; padding: 8px 15px; border-radius: 8px; border: none; font-weight: 700; flex: 2; }
         .del-btn { background: var(--danger); color: white; padding: 8px 15px; border-radius: 8px; border: none; font-weight: 700; flex: 1; }
@@ -195,9 +193,9 @@
             <button id="addOrderBtn" class="btn add-btn">+ Hinzufügen</button>
         </div>
 
-        <div id="summaryCard" class="summary-card">
-            <span class="summary-label">📋 Bestellungen insgesamt:</span>
-            <div id="summaryList" class="summary-list"></div>
+        <div id="orderPreviewBox" class="order-preview-box">
+            <span class="preview-label">Bestellungen:</span>
+            <div id="previewContent" class="preview-text"></div>
         </div>
 
         <ul id="list"></ul>
@@ -288,8 +286,8 @@
     onValue(ref(db, "orders"), snap => {
         const listEl = document.getElementById("list");
         const waLeiste = document.getElementById("waLeiste");
-        const summaryCard = document.getElementById("summaryCard");
-        const summaryList = document.getElementById("summaryList");
+        const previewBox = document.getElementById("orderPreviewBox");
+        const previewContent = document.getElementById("previewContent");
         
         let activeInputVal = "";
         if (currentlyEditing) {
@@ -301,25 +299,21 @@
         
         if(!snap.exists()) { 
             waLeiste.style.display = "none"; 
-            summaryCard.style.display = "none";
+            previewBox.style.display = "none";
             return; 
         }
 
         waLeiste.style.display = "flex";
-        summaryCard.style.display = "block";
+        previewBox.style.display = "block";
         
-        const counts = {};
-        
+        let items = [];
         snap.forEach(child => {
             const d = child.val();
             const key = child.key;
-            
-            // Für die Zusammenfassungs-Card zählen
-            counts[d.name] = (counts[d.name] || 0) + 1;
+            items.push(d.name);
 
             const li = document.createElement("li");
             li.id = `li-${key}`;
-            
             const isEditing = currentlyEditing === key;
 
             li.innerHTML = `
@@ -341,12 +335,7 @@
             listEl.appendChild(li);
         });
 
-        // Sammelfeld-Text erstellen
-        let s = [];
-        for (const [dish, qty] of Object.entries(counts)) {
-            s.push(`${qty > 1 ? qty + 'x ' : ''}${dish}`);
-        }
-        summaryList.innerText = s.join(", ");
+        previewContent.innerText = items.join(", ");
     });
 
     window.startEdit = (key) => {
