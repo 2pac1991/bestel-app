@@ -94,7 +94,7 @@
         #startBtn { color: white; background: var(--primary); }
         .add-btn { background: var(--success); color: white; }
 
-        ul { padding: 0; margin: 0; list-style: none; }
+        ul { padding: 0; margin: 0; list-style: none; width: 100%; }
         li {
             background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px;
             border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 3px 10px rgba(0,0,0,0.02);
@@ -110,19 +110,21 @@
         .controls.active { display: flex; }
         .control-btn { padding: 12px; border-radius: 12px; border: none; color: white; font-weight: bold; cursor: pointer; }
 
-        /* KORRIGIERTES MODAL DESIGN */
+        /* MODAL FIX */
         #timeModal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 25px; border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            z-index: 2000; width: 85%; max-width: 320px; text-align: center;
+            background: white; padding: 20px; border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            z-index: 2000; width: 90%; max-width: 320px; text-align: center;
         }
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1999; }
         
         #deadlineInput {
-            text-align: center; font-size: 28px; font-weight: 700; margin: 15px 0;
-            width: 100%; /* Verhindert das Hinausragen */
-            max-width: 100%;
+            text-align: center; font-size: 24px; font-weight: 700; 
+            margin: 10px 0 20px 0;
+            width: 100%; 
+            padding: 10px; /* Reduziertes Padding für bessere Passform */
             display: block;
+            border: 1.5px solid #f1f5f9;
         }
 
         .wa-sticky-container { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(0deg, #f8fafc 40%, transparent 100%); display: flex; justify-content: center; z-index: 1000; }
@@ -143,7 +145,7 @@
     <div class="container">
         <div id="timerDisplay">⌛ Ende der Bestellung: <span id="endTimeText">--:--</span> | <span id="timeLeft">--:--</span></div>
 
-        <button id="nameBtn" onclick="changeName()">👤 Profil lädt...</button>
+        <button id="nameBtn">👤 Profil lädt...</button>
 
         <div class="card">
             <span class="label">📍 Restaurant / Laden</span>
@@ -152,13 +154,13 @@
             <input id="time" placeholder="z. B. 17:20 Uhr">
             <span class="label">🚪 Ort</span>
             <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
-            <button id="startBtn" class="btn" onclick="toggleOrder()">Laden...</button>
+            <button id="startBtn" class="btn">Laden...</button>
         </div>
 
         <div class="card" id="orderCard" style="display:none; border: 2.5px solid rgba(34, 197, 94, 0.3); background: #f0fdf4;">
             <span class="label">Was möchtest du essen?</span>
             <input id="order" placeholder="z. B. Döner ohne Zwiebeln">
-            <button class="btn add-btn" onclick="addOrder()">+ Zur Liste hinzufügen</button>
+            <button id="addOrderBtn" class="btn add-btn">+ Zur Liste hinzufügen</button>
         </div>
 
         <ul id="list"></ul>
@@ -168,15 +170,15 @@
     <div id="timeModal">
         <span class="label">Bis wann eintragen?</span>
         <input type="time" id="deadlineInput" value="12:00">
-        <button class="btn" style="background: var(--primary); color: white; margin-top: 10px; padding: 12px;" onclick="confirmOrderStart()">Bestellung starten</button>
-        <button class="btn" style="background: #f1f5f9; color: var(--text-muted); margin-top: 8px; padding: 12px; font-size: 14px;" onclick="closeModal()">Abbrechen</button>
+        <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white; margin-top: 5px; padding: 12px;">Bestellung starten</button>
+        <button id="cancelModalBtn" class="btn" style="background: #f1f5f9; color: var(--text-muted); margin-top: 8px; padding: 10px; font-size: 14px;">Abbrechen</button>
     </div>
 
     <div class="wa-sticky-container">
-        <button class="btn wa-btn" onclick="shareWhatsApp()">Gesamtliste auf WhatsApp teilen</button>
+        <button id="shareWaBtn" class="btn wa-btn">Gesamtliste auf WhatsApp teilen</button>
     </div>
 
-    <button id="clearBtn" onclick="clearAll()">🧹</button>
+    <button id="clearBtn">🧹</button>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -194,9 +196,11 @@
     let userName = localStorage.getItem("userName") || prompt("Wie heißt du?");
     localStorage.setItem("userName", userName || "Gast");
 
-    const updateNameBtn = () => document.getElementById("nameBtn").innerText = `👤 ${userName} (Name ändern)`;
+    const nameBtn = document.getElementById("nameBtn");
+    const updateNameBtn = () => nameBtn.innerText = `👤 ${userName} (Name ändern)`;
     updateNameBtn();
-    window.changeName = () => {
+
+    nameBtn.onclick = () => {
         let n = prompt("Neuer Name:", userName);
         if(n) { userName = n; localStorage.setItem("userName", n); updateNameBtn(); }
     };
@@ -232,14 +236,15 @@
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const isActive = d.orderActive && new Date().getTime() < d.endTime;
-        document.getElementById("startBtn").innerText = isActive ? "🛑 Stoppen" : "🟢 Starten";
-        document.getElementById("startBtn").style.background = isActive ? "var(--danger)" : "var(--primary)";
+        const startBtn = document.getElementById("startBtn");
+        startBtn.innerText = isActive ? "🛑 Stoppen" : "🟢 Starten";
+        startBtn.style.background = isActive ? "var(--danger)" : "var(--primary)";
         document.getElementById("orderCard").style.display = isActive ? "block" : "none";
         ['restaurant', 'time', 'gate'].forEach(id => document.getElementById(id).disabled = isActive);
         if(isActive) runTimer(d.endTime); else document.getElementById("timerDisplay").style.display = "none";
     });
 
-    window.toggleOrder = async () => {
+    document.getElementById("startBtn").onclick = async () => {
         const snap = await get(ref(db, "settings"));
         if (snap.val()?.orderActive) {
             if(prompt("Passwort zum Stoppen:") === "stop") update(ref(db, "settings"), { orderActive: false });
@@ -249,25 +254,37 @@
         }
     };
 
-    window.closeModal = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
+    const closeModal = () => {
+        document.getElementById("modalOverlay").style.display = "none";
+        document.getElementById("timeModal").style.display = "none";
+    };
+    document.getElementById("cancelModalBtn").onclick = closeModal;
 
-    window.confirmOrderStart = () => {
+    document.getElementById("confirmStartBtn").onclick = () => {
         const t = document.getElementById("deadlineInput").value;
         if (!t) return;
         const [h, m] = t.split(":").map(Number);
         const end = new Date(); end.setHours(h, m, 0, 0);
         if (end < new Date()) end.setDate(end.getDate() + 1);
-        update(ref(db, "settings"), { orderActive: true, endTime: end.getTime(), restaurant: document.getElementById("restaurant").value, time: document.getElementById("time").value, gate: document.getElementById("gate").value });
+        update(ref(db, "settings"), { 
+            orderActive: true, 
+            endTime: end.getTime(), 
+            restaurant: document.getElementById("restaurant").value, 
+            time: document.getElementById("time").value, 
+            gate: document.getElementById("gate").value 
+        });
         closeModal();
     };
 
-    window.addOrder = async () => {
+    const addOrder = () => {
         const input = document.getElementById("order");
         const val = input.value.trim();
         if(!val) return;
         push(ref(db, "orders"), { name: val, user: userName, owner: userId });
         input.value = "";
     };
+    document.getElementById("addOrderBtn").onclick = addOrder;
+    document.getElementById("order").onkeypress = (e) => { if(e.key === "Enter") addOrder(); };
 
     onValue(ref(db, "orders"), snap => {
         const list = document.getElementById("list"); list.innerHTML = "";
@@ -279,22 +296,27 @@
                 <div class="item-content">
                     <span class="user-label">${d.user}</span>
                     <span class="food-name" data-food="${d.name}">${d.name}</span>
-                    ${d.owner === userId ? `<button class="edit-btn" onclick="toggleEdit('${child.key}')">Bearbeiten</button>` : ""}
+                    ${d.owner === userId ? `<button class="edit-btn" id="edit-btn-${child.key}">Bearbeiten</button>` : ""}
                     <div id="c-${child.key}" class="controls">
-                        <input id="edit-${child.key}" value="${d.name}">
-                        <button class="control-btn" style="background:var(--danger)" onclick="deleteOrder('${child.key}')">Löschen</button>
-                        <button class="control-btn" style="background:var(--primary); margin-top:5px" onclick="saveEdit('${child.key}')">💾 Speichern</button>
+                        <input id="inp-${child.key}" value="${d.name}">
+                        <button class="control-btn" style="background:var(--danger)" id="del-${child.key}">Löschen</button>
+                        <button class="control-btn" style="background:var(--primary); margin-top:5px" id="sav-${child.key}">💾 Speichern</button>
                     </div>
                 </div>`;
             list.appendChild(li);
+
+            if(d.owner === userId) {
+                document.getElementById(`edit-btn-${child.key}`).onclick = () => document.getElementById(`c-${child.key}`).classList.toggle("active");
+                document.getElementById(`del-${child.key}`).onclick = () => confirm("Löschen?") && remove(ref(db, `orders/${child.key}`));
+                document.getElementById(`sav-${child.key}`).onclick = () => {
+                    update(ref(db, `orders/${child.key}`), { name: document.getElementById(`inp-${child.key}`).value });
+                    document.getElementById(`c-${child.key}`).classList.remove("active");
+                };
+            }
         });
     });
 
-    window.toggleEdit = id => document.getElementById(`c-${id}`).classList.toggle("active");
-    window.saveEdit = id => { update(ref(db, `orders/${id}`), { name: document.getElementById(`edit-${id}`).value }); window.toggleEdit(id); };
-    window.deleteOrder = id => confirm("Löschen?") && remove(ref(db, `orders/${id}`));
-
-    window.shareWhatsApp = () => {
+    document.getElementById("shareWaBtn").onclick = () => {
         let m = `*🍽️ BESTELLUNG: ${document.getElementById("restaurant").value}*\n🕒 Zeit: ${document.getElementById("time").value}\n🚪 Ort: ${document.getElementById("gate").value}\n––––––––––––––––––\n`;
         const sum = {}; 
         document.querySelectorAll(".food-name").forEach(i => { 
@@ -308,8 +330,12 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 
-    window.clearAll = () => prompt("Passwort:") === "clear" && (remove(ref(db, "orders")), update(ref(db, "settings"), {orderActive: false}));
-    document.getElementById("order").addEventListener("keypress", (e) => { if(e.key === "Enter") addOrder(); });
+    document.getElementById("clearBtn").onclick = () => {
+        if(prompt("Passwort zum Leeren:") === "clear") {
+            remove(ref(db, "orders"));
+            update(ref(db, "settings"), {orderActive: false});
+        }
+    };
 </script>
 </body>
 </html>
