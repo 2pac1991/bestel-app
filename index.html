@@ -35,41 +35,54 @@
 
         .container { width: 100%; max-width: 500px; padding: 20px; }
 
+        /* HEADER ANPASSUNG */
         .app-header {
             width: 100%;
-            background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(248, 250, 252, 0) 100%);
-            padding: 30px 20px 10px 20px;
+            background: #fff;
+            padding: 20px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between; /* Verteilt Logo/Titel und Profil-Button */
             align-items: center;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1100;
         }
 
-        .header-content { display: flex; align-items: center; gap: 15px; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
 
         .header-logo {
-            width: 60px; height: 60px; border-radius: 50%;
-            background: #fff; object-fit: cover; border: 2px solid #fff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #fff; object-fit: cover;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
-            font-size: 36px; font-weight: 900; margin: 0; letter-spacing: -1.5px;
-            background: linear-gradient(135deg, #1e293b 30%, #3b82f6 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-size: 22px; font-weight: 900; margin: 0; letter-spacing: -0.5px;
+            color: var(--text-main);
         }
+
+        /* PROFIL BUTTON OBEN RECHTS */
+        #profileBtn {
+            background: #f1f5f9;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        #profileBtn:active { transform: scale(0.95); }
 
         #timerDisplay {
             background: #fee2e2; color: #dc2626; padding: 14px; border-radius: 18px;
-            font-weight: 800; text-align: center; margin-bottom: 15px;
+            font-weight: 800; text-align: center; margin: 15px 0;
             display: none; border: 1.5px solid #fecaca; font-size: 15px;
-        }
-
-        #nameBtn {
-            width: 100%; background: rgba(59, 130, 246, 0.05); color: var(--primary);
-            border: 1px solid rgba(59, 130, 246, 0.2); padding: 12px; border-radius: 14px;
-            font-weight: 600; font-size: 14px; margin-bottom: 25px; cursor: pointer;
         }
 
         .card {
@@ -78,7 +91,7 @@
             border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
-        .label { font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: block; }
+        .label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: block; }
 
         input, select {
             width: 100%; padding: 14px; margin: 4px 0 20px 0; border-radius: 14px;
@@ -131,16 +144,18 @@
 <body>
 
     <header class="app-header">
-        <div class="header-content">
+        <div class="header-left">
             <img src="logo.png" alt="Logo" class="header-logo">
             <h1>Bestell-Liste</h1>
         </div>
+        <button id="profileBtn">
+            <span>👤</span>
+            <span id="userNameDisplay">...</span>
+        </button>
     </header>
 
     <div class="container">
         <div id="timerDisplay">⌛ Ende der Bestellung: <span id="endTimeText">--:--</span></div>
-
-        <button id="nameBtn">👤 Profil lädt...</button>
 
         <div class="card">
             <span class="label">📍 Restaurant / Laden</span>
@@ -191,24 +206,24 @@
     let userName = localStorage.getItem("userName") || prompt("Wie heißt du?");
     localStorage.setItem("userName", userName || "Gast");
 
-    const nameBtn = document.getElementById("nameBtn");
-    const updateNameBtn = () => nameBtn.innerText = `👤 ${userName} (Name ändern)`;
-    updateNameBtn();
+    const profileBtn = document.getElementById("profileBtn");
+    const userNameDisplay = document.getElementById("userNameDisplay");
+    
+    const updateNameUI = () => userNameDisplay.innerText = userName;
+    updateNameUI();
 
-    nameBtn.onclick = () => {
+    profileBtn.onclick = () => {
         let n = prompt("Neuer Name:", userName);
-        if(n) { userName = n; localStorage.setItem("userName", n); updateNameBtn(); }
+        if(n) { userName = n; localStorage.setItem("userName", n); updateNameUI(); }
     };
 
     function showEndTime(endTime) {
         const display = document.getElementById("timerDisplay");
         const spanEndTime = document.getElementById("endTimeText");
-        
         const dateObj = new Date(endTime);
         const hours = dateObj.getHours().toString().padStart(2, '0');
         const mins = dateObj.getMinutes().toString().padStart(2, '0');
         
-        // Prüfen, ob die Zeit bereits abgelaufen ist
         if (new Date().getTime() > endTime) {
             display.innerHTML = "🚫 Bestellzeit beendet!";
             document.getElementById("orderCard").style.display = "none";
@@ -306,21 +321,4 @@
         const sum = {}; 
         document.querySelectorAll(".food-name").forEach(i => { 
             const n = i.getAttribute("data-food"); 
-            sum[n] = (sum[n] || 0) + 1; 
-        });
-        for (const [f, q] of Object.entries(sum)) {
-            const qtyStr = q > 1 ? `*x${q}* ` : "";
-            m += `• ${qtyStr}${f}\n`; 
-        }
-        window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
-    };
-
-    document.getElementById("clearBtn").onclick = () => {
-        if(prompt("Passwort zum Leeren:") === "clear") {
-            remove(ref(db, "orders"));
-            update(ref(db, "settings"), {orderActive: false});
-        }
-    };
-</script>
-</body>
-</html>
+            sum[n] = (sum[n] || 0) +
