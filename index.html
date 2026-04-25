@@ -122,22 +122,6 @@
         li { background: white; padding: 15px 0; border-bottom: 1px solid #f1f5f9; width: 100%; }
         li:last-child { border-bottom: none; }
 
-        .summary-box {
-            background: #f1f5f9;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            font-size: 13px;
-        }
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 700;
-            padding: 2px 0;
-            border-bottom: 1px dashed #cbd5e1;
-        }
-        .summary-item:last-child { border-bottom: none; }
-
         .order-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .order-info { flex: 1; display: flex; flex-direction: column; }
         .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 2px; }
@@ -222,7 +206,6 @@
                 </div>
                 <button id="clearAllBtn" class="clear-list-btn">🗑️</button>
             </div>
-            <div id="summary" class="summary-box"></div>
             <ul id="list"></ul>
         </div>
     </div>
@@ -296,6 +279,7 @@
             document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
             document.getElementById("disp-cham").innerText = d.chamber || "---";
             statusEl.style.display = "none";
+            // Basis-Text setzen (wird durch onValue(orders) mit Count ergänzt)
             detailsEl.innerText = "Aktuelle Bestellungen";
         } else if (d.restaurant) {
             statusEl.style.display = "block";
@@ -303,6 +287,7 @@
         }
     });
 
+    // Admin-Änderungs-Funktionen während die Bestellung läuft
     document.getElementById("editResArea").onclick = () => {
         if(userId !== currentAdminId) return;
         const current = document.getElementById("disp-res").innerText;
@@ -388,14 +373,12 @@
     onValue(ref(db, "orders"), snap => {
         if (currentlyEditing !== null) return;
         const listEl = document.getElementById("list");
-        const summaryEl = document.getElementById("summary");
         const waLeiste = document.getElementById("waLeiste");
         const orderBox = document.getElementById("orderBox");
         const container = document.getElementById("mainContainer");
+        const detailsEl = document.getElementById("orderBoxDetails");
         
         listEl.innerHTML = "";
-        summaryEl.innerHTML = "";
-
         if(!snap.exists()) { 
             waLeiste.style.display = "none"; 
             orderBox.style.display = "none";
@@ -407,18 +390,11 @@
         waLeiste.style.display = "flex";
         orderBox.style.display = "block";
         
-        const counts = {};
-        const displayNames = {};
-
+        let count = 0;
         snap.forEach(child => {
+            count++;
             const d = child.val();
             const key = child.key;
-
-            // Zähler-Logik
-            const lowerDish = d.name.toLowerCase().trim();
-            counts[lowerDish] = (counts[lowerDish] || 0) + 1;
-            if(!displayNames[lowerDish]) displayNames[lowerDish] = d.name;
-
             const li = document.createElement("li");
             const canEdit = isGlobalActive && (d.owner === userId || userId === currentAdminId);
 
@@ -437,12 +413,10 @@
             listEl.appendChild(li);
         });
 
-        // Zusammenfassung anzeigen
-        let summaryHtml = '<div style="font-weight:800; margin-bottom:5px; color:var(--primary); font-size:11px; text-transform:uppercase;">Gesamtübersicht:</div>';
-        for (const [lowerDish, qty] of Object.entries(counts)) {
-            summaryHtml += `<div class="summary-item"><span>${displayNames[lowerDish]}</span><span>${qty}x</span></div>`;
+        // Update Counter in der Überschrift
+        if(isGlobalActive) {
+            detailsEl.innerText = `Aktuelle Bestellungen (x${count})`;
         }
-        summaryEl.innerHTML = summaryHtml;
     });
 
     window.startEdit = (key) => {
