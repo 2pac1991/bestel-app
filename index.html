@@ -451,9 +451,10 @@
         const s = sSnap.val() || {};
         const oSnap = await get(ref(db, "orders"));
         
-        const totalMeals = oSnap.size; // Gesamtzahl aller Mahlzeiten
+        const totalMeals = oSnap.size;
         
-        let m = `*Mahlzeiten: ${totalMeals}*\n\n*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n📦 Kammerl: ${s.chamber || '---'}\n––––––––––––––––––\n`;
+        // Nachricht ohne Kammerl, dafür mit Mahlzeiten (xAnzahl)
+        let m = `*Mahlzeiten: x${totalMeals}*\n\n*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n––––––––––––––––––\n`;
         const counts = {};
         const displayNames = {};
         oSnap.forEach(child => {
