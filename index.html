@@ -454,17 +454,13 @@
         const totalMeals = oSnap.size;
         
         let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${totalMeals}\n––––––––––––––––––\n`;
-        const counts = {};
-        const displayNames = {};
+        
+        // Liste einzeln ausgeben (ohne Zusammenrechnen)
         oSnap.forEach(child => {
-            const rawDish = child.val().name;
-            const lowerDish = rawDish.toLowerCase().trim();
-            counts[lowerDish] = (counts[lowerDish] || 0) + 1;
-            if (!displayNames[lowerDish]) displayNames[lowerDish] = rawDish;
+            const d = child.val();
+            m += `• ${d.name}\n`;
         });
-        for (const [lowerDish, qty] of Object.entries(counts)) {
-            m += `• ${qty > 1 ? qty + 'x ' : ''}${displayNames[lowerDish]}\n`;
-        }
+        
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
     };
 </script>
