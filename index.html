@@ -48,7 +48,7 @@
         .stop-btn-minimal { background: none; border: 1px solid #e2e8f0; color: #94a3b8; padding: 8px; border-radius: 10px; font-size: 11px; margin-top: 15px; cursor: pointer; width: 100%; }
         #timeModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 2000; width: 85%; max-width: 320px; text-align: center; }
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
-        .wa-sticky { position: fixed; bottom: 0; width: 100%; max-width: 500px; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
+        .waLeiste { position: fixed; bottom: 0; width: 100%; max-width: 500px; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
         .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
     </style>
 </head>
@@ -97,7 +97,7 @@
 
         <div id="orderCard" class="card" style="display:none;">
             <span class="label">Deine Bestellung</span>
-            <input id="orderInput" placeholder="z.B. Mafiosi scharf">
+            <input id="orderInput" placeholder="Was willst du essen?">
             <button id="addOrderBtn" class="btn add-btn">+ Hinzufügen</button>
         </div>
 
@@ -113,7 +113,7 @@
         <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white;">Bestätigen</button>
     </div>
 
-    <div id="waLeiste" class="wa-sticky">
+    <div id="waLeiste" class="waLeiste">
         <button id="shareWaBtn" class="wa-btn">Auf WhatsApp teilen (KI)</button>
     </div>
 
@@ -198,7 +198,7 @@
     window.saveOrder = (key) => { update(ref(db, `orders/${key}`), { name: document.getElementById(`inp-${key}`).value }).then(() => location.reload()); };
     window.deleteOrder = (key) => { remove(ref(db, `orders/${key}`)).then(() => location.reload()); };
 
-    // WHATSAPP KI LOGIK (SIMPEL & STRENG)
+    // WHATSAPP KI LOGIK (MINIMALER PROMPT)
     document.getElementById("shareWaBtn").onclick = async () => {
         let apiKey = localStorage.getItem("openai_api_key");
         if (!apiKey) {
@@ -220,7 +220,10 @@
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
                 body: JSON.stringify({
                     model: "gpt-4o-mini",
-                    messages: [{ role: "system", content: "Fasse die Liste simpel zusammen. Korrigiere Tippfehler. Fasse identische Texte zusammen. Ändere keine Namen (wenn einer nur 'Mafiosi' schreibt, lass es so). Format: 'Anzahl x Name'. Gib NUR die Liste aus." }, { role: "user", content: rawList }],
+                    messages: [
+                        { role: "system", content: "Füge die Bestellung zusammen. Gruppiere identische Einträge und gib das Ergebnis als Liste 'Anzahl x Name' aus. Gib NUR die Liste aus." },
+                        { role: "user", content: rawList }
+                    ],
                     temperature: 0
                 })
             });
