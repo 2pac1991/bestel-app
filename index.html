@@ -252,6 +252,7 @@
     let currentlyEditing = null;
     let isGlobalActive = false;
     let currentAdminId = null;
+    let currentSettings = {};
 
     const closeModal = () => {
         document.getElementById("modalOverlay").style.display = "none";
@@ -260,6 +261,7 @@
 
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
+        currentSettings = d;
         const now = new Date().getTime();
         isGlobalActive = d.orderActive && now < d.endTime;
         currentAdminId = d.adminId;
@@ -279,15 +281,13 @@
             document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
             document.getElementById("disp-cham").innerText = d.chamber || "---";
             statusEl.style.display = "none";
-            // Basis-Text setzen (wird durch onValue(orders) mit Count ergänzt)
-            detailsEl.innerText = "Aktuelle Bestellungen";
         } else if (d.restaurant) {
             statusEl.style.display = "block";
+            // Initialer Text ohne Count (wird durch onValue(orders) überschrieben)
             detailsEl.innerHTML = `${d.restaurant} | ${d.time} Uhr | ${d.chamber}`;
         }
     });
 
-    // Admin-Änderungs-Funktionen während die Bestellung läuft
     document.getElementById("editResArea").onclick = () => {
         if(userId !== currentAdminId) return;
         const current = document.getElementById("disp-res").innerText;
@@ -413,9 +413,11 @@
             listEl.appendChild(li);
         });
 
-        // Update Counter in der Überschrift
+        // Update Titel je nach Status
         if(isGlobalActive) {
             detailsEl.innerText = `Aktuelle Bestellungen (x${count})`;
+        } else if (currentSettings.restaurant) {
+            detailsEl.innerHTML = `${currentSettings.restaurant} (x${count}) | ${currentSettings.time} Uhr | ${currentSettings.chamber}`;
         }
     });
 
