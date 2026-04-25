@@ -233,31 +233,37 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const changeName = () => {
-        let newName = prompt("Wie heißt du?", localStorage.getItem("userName"));
-        if(newName && newName.trim()) {
-            localStorage.setItem("userName", newName.trim());
-            document.getElementById("userNameDisplay").innerText = newName.trim();
-            userName = newName.trim();
-        }
-    };
-    document.getElementById("profileBtn").onclick = changeName;
-
+    // Identität & User Handling
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
-    let userName = localStorage.getItem("userName") || prompt("Wie heißt du?") || "Gast";
-    localStorage.setItem("userName", userName);
+    
+    let userName = localStorage.getItem("userName");
+    if (!userName) {
+        userName = prompt("Wie heißt du?") || "Gast";
+        localStorage.setItem("userName", userName);
+    }
     document.getElementById("userNameDisplay").innerText = userName;
 
+    document.getElementById("profileBtn").onclick = () => {
+        let newName = prompt("Wie heißt du?", userName);
+        if(newName && newName.trim()) {
+            userName = newName.trim();
+            localStorage.setItem("userName", userName);
+            document.getElementById("userNameDisplay").innerText = userName;
+        }
+    };
+
+    // States & Variablen
     let currentlyEditing = null;
-    let isGlobalActive = false;
     let currentAdminId = null;
+    let isGlobalActive = false;
 
     const closeModal = () => {
         document.getElementById("modalOverlay").style.display = "none";
         document.getElementById("timeModal").style.display = "none";
     };
 
+    // Echtzeit-Überwachung der Einstellungen
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
@@ -283,26 +289,23 @@
         }
     });
 
+    // Admin-Edit Funktionen (Statusleiste)
+    const checkAdmin = () => userId === currentAdminId || prompt("Admin Passwort:") === "admin";
+
     document.getElementById("editResArea").onclick = () => {
-        if(userId !== currentAdminId) return;
-        const current = document.getElementById("disp-res").innerText;
-        const newVal = prompt("Restaurant ändern:", current);
-        if(newVal && newVal.trim() !== current) {
-            update(ref(db, "settings"), { restaurant: newVal.trim() });
-        }
+        if(!checkAdmin()) return;
+        const newVal = prompt("Restaurant ändern:");
+        if(newVal) update(ref(db, "settings"), { restaurant: newVal.trim() });
     };
 
     document.getElementById("editTimeArea").onclick = () => {
-        if(userId !== currentAdminId) return;
-        const current = document.getElementById("disp-time").innerText.replace(" Uhr", "");
-        const newVal = prompt("Lieferzeit ändern (z.B. 12:30):", current);
-        if(newVal && newVal.trim() !== current) {
-            update(ref(db, "settings"), { time: newVal.trim() });
-        }
+        if(!checkAdmin()) return;
+        const newVal = prompt("Lieferzeit ändern (z.B. 12:30):");
+        if(newVal) update(ref(db, "settings"), { time: newVal.trim() });
     };
 
     document.getElementById("editDeadlineArea").onclick = () => {
-        if(userId !== currentAdminId) return;
+        if(!checkAdmin()) return;
         const newVal = prompt("Neuen Bestellschluss setzen (z.B. 11:00):");
         if(newVal) {
             const [h, m] = newVal.split(":").map(Number);
@@ -312,19 +315,18 @@
         }
     };
 
+    // Bestell-Aktionen
     document.getElementById("startBtn").onclick = () => {
         document.getElementById("modalOverlay").style.display = "block";
         document.getElementById("timeModal").style.display = "block";
     };
-
-    document.getElementById("cancelModalBtn").onclick = closeModal;
-    document.getElementById("modalOverlay").onclick = closeModal;
 
     document.getElementById("confirmStartBtn").onclick = () => {
         const t = document.getElementById("deadlineInput").value;
         const [h, m] = t.split(":").map(Number);
         const end = new Date(); end.setHours(h, m, 0, 0);
         if (end < new Date()) end.setDate(end.getDate() + 1);
+
         remove(ref(db, "orders")).then(() => {
             update(ref(db, "settings"), { 
                 orderActive: true, 
@@ -340,20 +342,20 @@
     };
 
     document.getElementById("stopActionBtn").onclick = () => { 
-        if(userId === currentAdminId) {
-            if(confirm("Bestellung wirklich beenden?")) {
-                update(ref(db, "settings"), { orderActive: false, endTime: 0 });
-            }
-        } else {
-            if(prompt("Admin Passwort:") === "admin") {
-                update(ref(db, "settings"), { orderActive: false, endTime: 0 });
-            }
+        if(checkAdmin() && confirm("Bestellung wirklich beenden?")) {
+            update(ref(db, "settings"), { orderActive: false, endTime: 0 });
         }
     };
     
     document.getElementById("clearAllBtn").onclick = () => {
-        if(prompt("Admin Passwort:") === "admin") { remove(ref(db, "orders")); remove(ref(db, "settings")); }
+        if(prompt("Admin Passwort:") === "admin") { 
+            remove(ref(db, "orders")); 
+            remove(ref(db, "settings")); 
+        }
     };
+
+    document.getElementById("cancelModalBtn").onclick = closeModal;
+    document.getElementById("modalOverlay").onclick = closeModal;
 
     const addOrder = () => {
         const input = document.getElementById("orderInput");
@@ -363,10 +365,10 @@
     };
 
     document.getElementById("addOrderBtn").onclick = addOrder;
-    document.getElementById("orderInput").addEventListener("keypress", (e) => { if(e.key === "Enter") addOrder(); });
+    document.getElementById("orderInput").onkeypress = (e) => { if(e.key === "Enter") addOrder(); };
 
+    // Listen-Update & Anzeige
     onValue(ref(db, "orders"), snap => {
-        if (currentlyEditing !== null) return;
         const listEl = document.getElementById("list");
         const waLeiste = document.getElementById("waLeiste");
         const orderBox = document.getElementById("orderBox");
@@ -374,8 +376,8 @@
         const detailsEl = document.getElementById("orderBoxDetails");
         const statusTitleEl = document.getElementById("orderBoxStatus");
         
-        listEl.innerHTML = "";
         if(!snap.exists()) { 
+            listEl.innerHTML = "";
             waLeiste.style.display = "none"; 
             orderBox.style.display = "none";
             container.classList.remove("has-content");
@@ -398,28 +400,33 @@
             }
         });
         
-        snap.forEach(child => {
-            const d = child.val();
-            const key = child.key;
-            const li = document.createElement("li");
-            const canEdit = isGlobalActive && (d.owner === userId || userId === currentAdminId);
+        // Nur updaten, wenn nicht gerade editiert wird, um Fokus-Verlust zu vermeiden
+        if (currentlyEditing === null) {
+            listEl.innerHTML = "";
+            snap.forEach(child => {
+                const d = child.val();
+                const key = child.key;
+                const canEdit = isGlobalActive && (d.owner === userId || userId === currentAdminId);
 
-            li.innerHTML = `
-                <div class="order-row" id="view-${key}">
-                    <div class="order-info"><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>
-                    ${canEdit ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
-                </div>
-                <div class="edit-container" id="edit-${key}" style="display:none">
-                    <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
-                    <div class="edit-actions">
-                        <button class="del-btn" onclick="window.deleteOrder('${key}')">Löschen</button>
-                        <button class="save-btn" onclick="window.saveOrder('${key}')">Speichern</button>
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <div class="order-row" id="view-${key}">
+                        <div class="order-info"><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>
+                        ${canEdit ? `<button class="edit-btn" onclick="startEdit('${key}')">Ändern</button>` : ""}
                     </div>
-                </div>`;
-            listEl.appendChild(li);
-        });
+                    <div class="edit-container" id="edit-${key}" style="display:none">
+                        <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
+                        <div class="edit-actions">
+                            <button class="del-btn" onclick="deleteOrder('${key}')">Löschen</button>
+                            <button class="save-btn" onclick="saveOrder('${key}')">Speichern</button>
+                        </div>
+                    </div>`;
+                listEl.appendChild(li);
+            });
+        }
     });
 
+    // Globale Window Funktionen für OnClick in HTML Strings
     window.startEdit = (key) => {
         currentlyEditing = key;
         document.getElementById(`view-${key}`).style.display = 'none';
@@ -428,12 +435,11 @@
     };
 
     window.saveOrder = (key) => {
-        const newVal = document.getElementById(`inp-${key}`).value;
-        if(newVal.trim()) {
-            update(ref(db, `orders/${key}`), { name: newVal.trim() }).then(() => {
+        const newVal = document.getElementById(`inp-${key}`).value.trim();
+        if(newVal) {
+            update(ref(db, `orders/${key}`), { name: newVal }).then(() => {
                 currentlyEditing = null;
-                location.reload(); 
-            });
+            }).catch(e => alert("Fehler beim Speichern"));
         }
     };
 
@@ -441,26 +447,23 @@
         if(confirm("Löschen?")) {
             remove(ref(db, `orders/${key}`)).then(() => {
                 currentlyEditing = null;
-                location.reload();
             });
         }
     };
 
+    // WhatsApp Export
     document.getElementById("shareWaBtn").onclick = async () => {
-        const sSnap = await get(ref(db, "settings"));
+        const [sSnap, oSnap] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
         const s = sSnap.val() || {};
-        const oSnap = await get(ref(db, "orders"));
-        
         const totalMeals = oSnap.size;
         
         let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${totalMeals}\n––––––––––––––––––\n`;
         
         oSnap.forEach(child => {
-            const d = child.val();
-            m += `• ${d.name}\n`;
+            m += `• ${child.val().name}\n`;
         });
         
-        window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
+        window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
     };
 </script>
 </body>
