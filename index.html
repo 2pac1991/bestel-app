@@ -453,8 +453,7 @@
         
         const totalMeals = oSnap.size;
         
-        // Nachricht ohne Kammerl, dafür mit Mahlzeiten (xAnzahl)
-        let m = `*Mahlzeiten: x${totalMeals}*\n\n*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n––––––––––––––––––\n`;
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${totalMeals}\n––––––––––––––––––\n`;
         const counts = {};
         const displayNames = {};
         oSnap.forEach(child => {
