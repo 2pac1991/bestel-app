@@ -450,7 +450,10 @@
         const sSnap = await get(ref(db, "settings"));
         const s = sSnap.val() || {};
         const oSnap = await get(ref(db, "orders"));
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n📦 Kammerl: ${s.chamber || '---'}\n––––––––––––––––––\n`;
+        
+        const totalMeals = oSnap.size; // Gesamtzahl aller Mahlzeiten
+        
+        let m = `*Mahlzeiten: ${totalMeals}*\n\n*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n📦 Kammerl: ${s.chamber || '---'}\n––––––––––––––––––\n`;
         const counts = {};
         const displayNames = {};
         oSnap.forEach(child => {
