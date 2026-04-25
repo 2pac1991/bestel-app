@@ -68,7 +68,8 @@
         }
         .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .status-item { background: #f8fafc; padding: 10px; border-radius: 12px; }
-        .admin-editable { cursor: pointer; }
+        .admin-editable { cursor: pointer; transition: background 0.2s; }
+        .admin-editable:active { background: #f1f5f9; }
         .status-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; display: block; }
         .status-val { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .timer-highlight { grid-column: span 2; background: #fee2e2; color: #dc2626; text-align: center; border: 1px solid #fecaca; }
@@ -113,11 +114,11 @@
 
         .stop-btn-minimal { background: none; border: 1px solid #e2e8f0; color: #94a3b8; padding: 8px; border-radius: 10px; font-size: 11px; margin-top: 15px; cursor: pointer; width: 100%; }
 
-        #timeModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 2000; width: 85%; max-width: 320px; text-align: center; }
-        #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
+        #timeModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 2000; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; backdrop-filter: blur(2px); }
 
         .wa-sticky { position: fixed; bottom: 0; width: 100%; max-width: 500px; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
-        .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+        .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
     </style>
 </head>
 <body>
@@ -125,7 +126,7 @@
     <header class="app-header">
         <div class="header-left">
             <img src="logo.png" alt="Logo" class="header-logo">
-            <h1>Bestell-Liste</h1>
+            <h1>Bestell-Liste KI</h1>
         </div>
         <button id="profileBtn">👤 <span id="userNameDisplay">...</span></button>
     </header>
@@ -163,9 +164,9 @@
             <button id="startBtn" class="btn" style="background: var(--primary); color: white;">🟢 Starten</button>
         </div>
 
-        <div id="orderCard" class="card" style="display:none;">
+        <div id="orderCard" class="card" style="display:none; border: 2px solid var(--success);">
             <span class="label">Deine Bestellung</span>
-            <input id="orderInput" placeholder="z.B. Pizza Salami">
+            <input id="orderInput" placeholder="z.B. Pizza Salami scharf">
             <button id="addOrderBtn" class="btn add-btn">+ Hinzufügen</button>
         </div>
 
@@ -176,13 +177,13 @@
 
     <div id="modalOverlay"></div>
     <div id="timeModal">
-        <span class="label">Einsendeschluss</span>
+        <span class="label">Einsendeschluss festlegen</span>
         <input type="time" id="deadlineInput" value="10:00">
         <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white;">Bestätigen</button>
     </div>
 
     <div id="waLeiste" class="wa-sticky">
-        <button id="shareWaBtn" class="wa-btn">Auf WhatsApp teilen (mit KI)</button>
+        <button id="shareWaBtn" class="wa-btn">Auf WhatsApp teilen (KI)</button>
     </div>
 
 <script type="module">
@@ -222,6 +223,7 @@
         }
     });
 
+    // ADMIN-ÄNDERUNGEN (Laufende Bestellung)
     document.getElementById("editResArea").onclick = () => {
         if(userId !== currentAdminId) return;
         const newVal = prompt("Restaurant ändern:", document.getElementById("disp-res").innerText);
@@ -230,7 +232,7 @@
 
     document.getElementById("editTimeArea").onclick = () => {
         if(userId !== currentAdminId) return;
-        const newVal = prompt("Lieferzeit ändern:", document.getElementById("disp-time").innerText.replace(" Uhr", ""));
+        const newVal = prompt("Lieferzeit ändern (HH:MM):", document.getElementById("disp-time").innerText.replace(" Uhr", ""));
         if(newVal) update(ref(db, "settings"), { time: newVal });
     };
 
@@ -321,7 +323,7 @@
     window.saveOrder = (key) => { update(ref(db, `orders/${key}`), { name: document.getElementById(`inp-${key}`).value }).then(() => { currentlyEditing = null; location.reload(); }); };
     window.deleteOrder = (key) => { if(confirm("Löschen?")) remove(ref(db, `orders/${key}`)).then(() => { currentlyEditing = null; location.reload(); }); };
 
-    // WHATSAPP KI LOGIK (MIT SICHEREM API-KEY HANDLING)
+    // WHATSAPP KI LOGIK (PRÄZISE GRUPPIERUNG)
     document.getElementById("shareWaBtn").onclick = async () => {
         let apiKey = localStorage.getItem("openai_api_key");
         if (!apiKey) {
@@ -331,7 +333,7 @@
         }
 
         const btn = document.getElementById("shareWaBtn");
-        btn.innerText = "⏳ KI sortiert Wünsche...";
+        btn.innerText = "⏳ KI sortiert präzise...";
         btn.style.background = "#6366f1";
 
         try {
@@ -346,8 +348,14 @@
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
                 body: JSON.stringify({
                     model: "gpt-4o-mini",
-                    messages: [{ role: "system", content: "Fasse die Essensliste zusammen. Korrigiere Tippfehler. Behalte Sonderwünsche unbedingt bei. Format: 'Anzahl x Gericht (Wunsch)'. NUR die Liste ausgeben." }, { role: "user", content: rawList }],
-                    temperature: 0.3
+                    messages: [{ 
+                        role: "system", 
+                        content: "Du bist eine Maschine zur Listen-Aggregierung. Deine Aufgabe: \n1. Korrigiere Tippfehler.\n2. Gruppiere identische Artikel (gleicher Name UND exakt gleicher Sonderwunsch).\n3. Behalte JEDEN Sonderwunsch (z.B. 'knusprig', 'ohne Zwiebel') unbedingt bei.\n4. Ausgabeformat: 'Anzahl x Name (Sonderwunsch)'. Wenn kein Wunsch da ist, lass die Klammer weg.\n5. Gib NUR die Liste aus. Keine Markdown-Symbole, keine Einleitung, keine Kommentare." 
+                    }, { 
+                        role: "user", 
+                        content: `Bestellungen:\n${rawList}` 
+                    }],
+                    temperature: 0
                 })
             });
 
@@ -359,9 +367,9 @@
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
         } catch (e) {
             alert("Fehler: " + e.message);
-            localStorage.removeItem("openai_api_key");
+            if(e.message.includes("api_key") || e.message.includes("401")) localStorage.removeItem("openai_api_key");
         } finally {
-            btn.innerText = "Auf WhatsApp teilen (mit KI)";
+            btn.innerText = "Auf WhatsApp teilen (KI)";
             btn.style.background = "var(--whatsapp)";
         }
     };
