@@ -270,7 +270,6 @@
         document.getElementById("clearAllBtn").style.display = isGlobalActive ? "none" : "block";
         
         const statusEl = document.getElementById("orderBoxStatus");
-        const detailsEl = document.getElementById("orderBoxDetails");
 
         if(isGlobalActive) {
             const date = new Date(d.endTime);
@@ -279,10 +278,8 @@
             document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
             document.getElementById("disp-cham").innerText = d.chamber || "---";
             statusEl.style.display = "none";
-            // Der Zähler wird unten in der onValue(ref(db, "orders")) Logik gesetzt
         } else if (d.restaurant) {
             statusEl.style.display = "block";
-            // Der Zähler wird unten in der onValue(ref(db, "orders")) Logik gesetzt
         }
     });
 
@@ -388,16 +385,15 @@
         waLeiste.style.display = "flex";
         orderBox.style.display = "block";
 
-        // Zähler berechnen
         const totalCount = snap.size;
 
-        // Header Text mit Zähler aktualisieren
         get(ref(db, "settings")).then(sSnap => {
             const s = sSnap.val() || {};
             if(isGlobalActive) {
                 detailsEl.innerText = `Aktuelle Bestellungen (${totalCount})`;
             } else {
-                detailsEl.innerHTML = `${s.restaurant} | ${s.time} Uhr | Ges: ${totalCount}`;
+                // Anzeige aller Infos wenn beendet
+                detailsEl.innerHTML = `${s.restaurant} | ${s.time} Uhr | ${s.chamber} | Ges: ${totalCount}`;
             }
         });
         
@@ -453,7 +449,7 @@
         const sSnap = await get(ref(db, "settings"));
         const s = sSnap.val() || {};
         const oSnap = await get(ref(db, "orders"));
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n––––––––––––––––––\n`;
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n📦 Kammerl: ${s.chamber || '---'}\n––––––––––––––––––\n`;
         const counts = {};
         const displayNames = {};
         oSnap.forEach(child => {
