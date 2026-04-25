@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bestell-Liste Pro</title>
+    <title>Bestell-Liste🍔</title>
     <style>
         :root {
             --primary: #3b82f6;
@@ -233,37 +233,27 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Identität & User Handling
+    // User Identifizierung
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
-    
-    let userName = localStorage.getItem("userName");
-    if (!userName) {
-        userName = prompt("Wie heißt du?") || "Gast";
-        localStorage.setItem("userName", userName);
-    }
+    let userName = localStorage.getItem("userName") || "Gast";
     document.getElementById("userNameDisplay").innerText = userName;
 
+    // Profil ändern
     document.getElementById("profileBtn").onclick = () => {
-        let newName = prompt("Wie heißt du?", userName);
-        if(newName && newName.trim()) {
-            userName = newName.trim();
+        let n = prompt("Wie heißt du?", userName);
+        if(n && n.trim()) {
+            userName = n.trim();
             localStorage.setItem("userName", userName);
             document.getElementById("userNameDisplay").innerText = userName;
         }
     };
 
-    // States & Variablen
     let currentlyEditing = null;
     let currentAdminId = null;
     let isGlobalActive = false;
 
-    const closeModal = () => {
-        document.getElementById("modalOverlay").style.display = "none";
-        document.getElementById("timeModal").style.display = "none";
-    };
-
-    // Echtzeit-Überwachung der Einstellungen
+    // Einstellungen synchronisieren
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
@@ -274,8 +264,6 @@
         document.getElementById("statusDisplay").style.display = isGlobalActive ? "block" : "none";
         document.getElementById("orderCard").style.display = isGlobalActive ? "block" : "none";
         document.getElementById("clearAllBtn").style.display = isGlobalActive ? "none" : "block";
-        
-        const statusEl = document.getElementById("orderBoxStatus");
 
         if(isGlobalActive) {
             const date = new Date(d.endTime);
@@ -283,131 +271,73 @@
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
             document.getElementById("disp-cham").innerText = d.chamber || "---";
-            statusEl.style.display = "none";
-        } else if (d.restaurant) {
-            statusEl.style.display = "block";
         }
     });
 
-    // Admin-Edit Funktionen (Statusleiste)
-    const checkAdmin = () => userId === currentAdminId || prompt("Admin Passwort:") === "admin";
+    // Admin Funktionen
+    const isAdmin = () => userId === currentAdminId || prompt("Passwort:") === "admin";
 
-    document.getElementById("editResArea").onclick = () => {
-        if(!checkAdmin()) return;
-        const newVal = prompt("Restaurant ändern:");
-        if(newVal) update(ref(db, "settings"), { restaurant: newVal.trim() });
-    };
+    document.getElementById("editResArea").onclick = () => { if(isAdmin()) { let v = prompt("Restaurant:"); if(v) update(ref(db, "settings"), {restaurant: v}); }};
+    document.getElementById("editTimeArea").onclick = () => { if(isAdmin()) { let v = prompt("Zeit:"); if(v) update(ref(db, "settings"), {time: v}); }};
+    document.getElementById("editDeadlineArea").onclick = () => { if(isAdmin()) { let v = prompt("Schluss (HH:MM):"); if(v) { 
+        const [h,m] = v.split(":").map(Number); const e = new Date(); e.setHours(h,m,0,0); if(e < new Date()) e.setDate(e.getDate()+1);
+        update(ref(db, "settings"), {endTime: e.getTime()});
+    }}};
 
-    document.getElementById("editTimeArea").onclick = () => {
-        if(!checkAdmin()) return;
-        const newVal = prompt("Lieferzeit ändern (z.B. 12:30):");
-        if(newVal) update(ref(db, "settings"), { time: newVal.trim() });
-    };
-
-    document.getElementById("editDeadlineArea").onclick = () => {
-        if(!checkAdmin()) return;
-        const newVal = prompt("Neuen Bestellschluss setzen (z.B. 11:00):");
-        if(newVal) {
-            const [h, m] = newVal.split(":").map(Number);
-            const end = new Date(); end.setHours(h, m, 0, 0);
-            if (end < new Date()) end.setDate(end.getDate() + 1);
-            update(ref(db, "settings"), { endTime: end.getTime() });
-        }
-    };
-
-    // Bestell-Aktionen
-    document.getElementById("startBtn").onclick = () => {
-        document.getElementById("modalOverlay").style.display = "block";
-        document.getElementById("timeModal").style.display = "block";
-    };
+    // Modal & Start/Stop
+    const closeModal = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
+    document.getElementById("startBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "block"; document.getElementById("timeModal").style.display = "block"; };
+    document.getElementById("cancelModalBtn").onclick = closeModal;
 
     document.getElementById("confirmStartBtn").onclick = () => {
         const t = document.getElementById("deadlineInput").value;
-        const [h, m] = t.split(":").map(Number);
-        const end = new Date(); end.setHours(h, m, 0, 0);
-        if (end < new Date()) end.setDate(end.getDate() + 1);
-
+        const [h,m] = t.split(":").map(Number);
+        const e = new Date(); e.setHours(h,m,0,0); if(e < new Date()) e.setDate(e.getDate()+1);
         remove(ref(db, "orders")).then(() => {
-            update(ref(db, "settings"), { 
-                orderActive: true, 
-                endTime: end.getTime(), 
-                restaurant: document.getElementById("restaurant").value, 
-                time: document.getElementById("time").value, 
-                chamber: document.getElementById("chamber").value, 
-                gate: document.getElementById("gate").value,
-                adminId: userId 
+            update(ref(db, "settings"), {
+                orderActive: true, endTime: e.getTime(), adminId: userId,
+                restaurant: document.getElementById("restaurant").value,
+                time: document.getElementById("time").value,
+                chamber: document.getElementById("chamber").value,
+                gate: document.getElementById("gate").value
             });
         });
         closeModal();
     };
 
-    document.getElementById("stopActionBtn").onclick = () => { 
-        if(checkAdmin() && confirm("Bestellung wirklich beenden?")) {
-            update(ref(db, "settings"), { orderActive: false, endTime: 0 });
-        }
+    document.getElementById("stopActionBtn").onclick = () => { if(isAdmin() && confirm("Beenden?")) update(ref(db, "settings"), {orderActive: false, endTime: 0}); };
+    document.getElementById("clearAllBtn").onclick = () => { if(prompt("Passwort:") === "admin") { remove(ref(db, "orders")); remove(ref(db, "settings")); }};
+
+    // Bestellung hinzufügen
+    const add = () => {
+        const inp = document.getElementById("orderInput");
+        if(inp.value.trim()) { push(ref(db, "orders"), {name: inp.value.trim(), user: userName, owner: userId}); inp.value = ""; }
     };
-    
-    document.getElementById("clearAllBtn").onclick = () => {
-        if(prompt("Admin Passwort:") === "admin") { 
-            remove(ref(db, "orders")); 
-            remove(ref(db, "settings")); 
-        }
-    };
+    document.getElementById("addOrderBtn").onclick = add;
+    document.getElementById("orderInput").onkeypress = (e) => { if(e.key === "Enter") add(); };
 
-    document.getElementById("cancelModalBtn").onclick = closeModal;
-    document.getElementById("modalOverlay").onclick = closeModal;
-
-    const addOrder = () => {
-        const input = document.getElementById("orderInput");
-        const val = input.value.trim();
-        if(!val) return;
-        push(ref(db, "orders"), { name: val, user: userName, owner: userId }).then(() => { input.value = ""; });
-    };
-
-    document.getElementById("addOrderBtn").onclick = addOrder;
-    document.getElementById("orderInput").onkeypress = (e) => { if(e.key === "Enter") addOrder(); };
-
-    // Listen-Update & Anzeige
+    // Liste anzeigen
     onValue(ref(db, "orders"), snap => {
         const listEl = document.getElementById("list");
-        const waLeiste = document.getElementById("waLeiste");
-        const orderBox = document.getElementById("orderBox");
-        const container = document.getElementById("mainContainer");
-        const detailsEl = document.getElementById("orderBoxDetails");
-        const statusTitleEl = document.getElementById("orderBoxStatus");
-        
         if(!snap.exists()) { 
-            listEl.innerHTML = "";
-            waLeiste.style.display = "none"; 
-            orderBox.style.display = "none";
-            container.classList.remove("has-content");
+            listEl.innerHTML = ""; 
+            document.getElementById("orderBox").style.display = "none"; 
+            document.getElementById("waLeiste").style.display = "none";
+            document.getElementById("mainContainer").classList.remove("has-content");
             return; 
         }
-        
-        container.classList.add("has-content");
-        waLeiste.style.display = "flex";
-        orderBox.style.display = "block";
 
-        const totalCount = snap.size;
+        document.getElementById("orderBox").style.display = "block";
+        document.getElementById("waLeiste").style.display = "flex";
+        document.getElementById("mainContainer").classList.add("has-content");
+        document.getElementById("orderBoxDetails").innerText = `Aktuelle Bestellungen (${snap.size})`;
 
-        get(ref(db, "settings")).then(sSnap => {
-            const s = sSnap.val() || {};
-            if(isGlobalActive) {
-                detailsEl.innerText = `Aktuelle Bestellungen (${totalCount})`;
-            } else {
-                statusTitleEl.innerText = `☑️ Bestellung Beendet (x${totalCount})`;
-                detailsEl.innerHTML = `${s.restaurant} | ${s.time} Uhr | ${s.chamber}`;
-            }
-        });
-        
-        // Nur updaten, wenn nicht gerade editiert wird, um Fokus-Verlust zu vermeiden
-        if (currentlyEditing === null) {
+        if(currentlyEditing === null) {
             listEl.innerHTML = "";
             snap.forEach(child => {
                 const d = child.val();
                 const key = child.key;
                 const canEdit = isGlobalActive && (d.owner === userId || userId === currentAdminId);
-
                 const li = document.createElement("li");
                 li.innerHTML = `
                     <div class="order-row" id="view-${key}">
@@ -415,7 +345,7 @@
                         ${canEdit ? `<button class="edit-btn" onclick="startEdit('${key}')">Ändern</button>` : ""}
                     </div>
                     <div class="edit-container" id="edit-${key}" style="display:none">
-                        <input class="edit-input" id="inp-${key}" value="${d.name}" autocomplete="off">
+                        <input class="edit-input" id="inp-${key}" value="${d.name}">
                         <div class="edit-actions">
                             <button class="del-btn" onclick="deleteOrder('${key}')">Löschen</button>
                             <button class="save-btn" onclick="saveOrder('${key}')">Speichern</button>
@@ -426,43 +356,32 @@
         }
     });
 
-    // Globale Window Funktionen für OnClick in HTML Strings
+    // Window Funktionen für Edit
     window.startEdit = (key) => {
         currentlyEditing = key;
-        document.getElementById(`view-${key}`).style.display = 'none';
-        document.getElementById(`edit-${key}`).style.display = 'flex';
+        document.getElementById(`view-${key}`).style.display = "none";
+        document.getElementById(`edit-${key}`).style.display = "flex";
         document.getElementById(`inp-${key}`).focus();
     };
 
     window.saveOrder = (key) => {
-        const newVal = document.getElementById(`inp-${key}`).value.trim();
-        if(newVal) {
-            update(ref(db, `orders/${key}`), { name: newVal }).then(() => {
-                currentlyEditing = null;
-            }).catch(e => alert("Fehler beim Speichern"));
+        const val = document.getElementById(`inp-${key}`).value.trim();
+        if(val) {
+            currentlyEditing = null; // WICHTIG: Vor dem Update zurücksetzen
+            update(ref(db, `orders/${key}`), {name: val}).catch(() => currentlyEditing = key);
         }
     };
 
     window.deleteOrder = (key) => {
-        if(confirm("Löschen?")) {
-            remove(ref(db, `orders/${key}`)).then(() => {
-                currentlyEditing = null;
-            });
-        }
+        if(confirm("Löschen?")) { currentlyEditing = null; remove(ref(db, `orders/${key}`)); }
     };
 
-    // WhatsApp Export
+    // WhatsApp
     document.getElementById("shareWaBtn").onclick = async () => {
-        const [sSnap, oSnap] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
-        const s = sSnap.val() || {};
-        const totalMeals = oSnap.size;
-        
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${totalMeals}\n––––––––––––––––––\n`;
-        
-        oSnap.forEach(child => {
-            m += `• ${child.val().name}\n`;
-        });
-        
+        const [sS, oS] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
+        const s = sS.val() || {};
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🥡 Mahlzeiten: x${oS.size}\n––––––––––––––––––\n`;
+        oS.forEach(c => { m += `• ${c.val().name}\n`; });
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
     };
 </script>
