@@ -393,7 +393,7 @@
             if(isGlobalActive) {
                 detailsEl.innerText = `Aktuelle Bestellungen (${totalCount})`;
             } else {
-                statusTitleEl.innerText = `❌ Bestellung Beendet (${totalCount})`;
+                statusTitleEl.innerText = `☑️ Bestellung Beendet (${totalCount})`;
                 detailsEl.innerHTML = `${s.restaurant} | ${s.time} Uhr | ${s.chamber}`;
             }
         });
@@ -455,7 +455,6 @@
         
         let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${totalMeals}\n––––––––––––––––––\n`;
         
-        // Liste einzeln ausgeben (ohne Zusammenrechnen)
         oSnap.forEach(child => {
             const d = child.val();
             m += `• ${d.name}\n`;
