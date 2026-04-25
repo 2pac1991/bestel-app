@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bestell-Liste Pro KI</title>
+    <title>Bestell-Liste Einfach KI</title>
     <style>
         :root {
             --primary: #3b82f6;
@@ -15,110 +15,41 @@
             --text-muted: #64748b;
             --whatsapp: #25D366;
         }
-
         * { box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            touch-action: manipulation;
-        }
-
-        .app-header {
-            width: 100%; 
-            max-width: 500px;
-            background: #fff; padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            position: sticky; top: 0; z-index: 1100;
-            border-radius: 0 0 20px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        }
-
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding-bottom: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; touch-action: manipulation; }
+        .app-header { width: 100%; max-width: 500px; background: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1100; border-radius: 0 0 20px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .header-left { display: flex; align-items: center; gap: 10px; }
         .header-logo { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
         h1 { font-size: 20px; font-weight: 800; margin: 0; }
-
-        #profileBtn {
-            background: #f1f5f9; border: 1.5px solid #e2e8f0; padding: 8px 14px;
-            border-radius: 12px; display: flex; align-items: center; gap: 8px;
-            cursor: pointer; font-weight: 600; font-size: 13px;
-        }
-
-        .container { 
-            width: 100%; 
-            max-width: 500px; 
-            padding: 20px;
-            flex-grow: 1;
-        }
-
-        .container.has-content { padding-bottom: 140px; }
-
-        #statusDisplay {
-            background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
-            border: 2px solid #fee2e2; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
-            display: none;
-        }
+        #profileBtn { background: #f1f5f9; border: 1.5px solid #e2e8f0; padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .container { width: 100%; max-width: 500px; padding: 20px; flex-grow: 1; }
+        #statusDisplay { background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px; border: 2px solid #fee2e2; display: none; }
         .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .status-item { background: #f8fafc; padding: 10px; border-radius: 12px; }
-        .admin-editable { cursor: pointer; transition: background 0.2s; }
-        .admin-editable:active { background: #f1f5f9; }
         .status-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; display: block; }
         .status-val { font-size: 14px; font-weight: 700; color: var(--text-main); }
         .timer-highlight { grid-column: span 2; background: #fee2e2; color: #dc2626; text-align: center; border: 1px solid #fecaca; }
-
-        .card {
-            background: var(--card-bg); padding: 20px; border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-        }
-
+        .card { background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); margin-bottom: 20px; border: 1px solid #e2e8f0; }
         .label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block; }
-
-        input, select {
-            width: 100%; padding: 12px; margin: 4px 0 15px 0; border-radius: 12px;
-            border: 2px solid #f1f5f9; background: #f8fafc; font-size: 16px;
-        }
-
-        .btn {
-            width: 100%; padding: 15px; border-radius: 15px; border: none;
-            font-weight: 700; font-size: 16px; cursor: pointer;
-        }
-
+        input, select { width: 100%; padding: 12px; margin: 4px 0 15px 0; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; border-radius: 15px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; }
         .add-btn { background: var(--success); color: white; margin-top: 5px; }
-
-        .order-container-box {
-            background: white; border-radius: 24px; border: 2px solid var(--primary);
-            padding: 20px; margin-bottom: 20px; display: none;
-        }
-
+        .order-container-box { background: white; border-radius: 24px; border: 2px solid var(--primary); padding: 20px; margin-bottom: 20px; display: none; }
         ul { padding: 0; list-style: none; margin: 0; }
         li { padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
-
         .order-row { display: flex; justify-content: space-between; align-items: center; }
         .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
         .food-name { font-weight: 700; font-size: 17px; display: block; }
-
         .edit-btn { background: #f1f5f9; border: none; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; }
         .edit-container { display: flex; flex-direction: column; gap: 8px; background: #f8fafc; padding: 10px; border-radius: 12px; }
         .edit-actions { display: flex; gap: 8px; }
         .save-btn { background: var(--primary); color: white; flex: 2; padding: 8px; border-radius: 8px; border: none; font-weight: 700; }
         .del-btn { background: var(--danger); color: white; flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: 700; }
-
         .stop-btn-minimal { background: none; border: 1px solid #e2e8f0; color: #94a3b8; padding: 8px; border-radius: 10px; font-size: 11px; margin-top: 15px; cursor: pointer; width: 100%; }
-
-        #timeModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 2000; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; backdrop-filter: blur(2px); }
-
+        #timeModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 2000; width: 85%; max-width: 320px; text-align: center; }
+        #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; }
         .wa-sticky { position: fixed; bottom: 0; width: 100%; max-width: 500px; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: none; justify-content: center; z-index: 1000; }
-        .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
+        .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -126,7 +57,7 @@
     <header class="app-header">
         <div class="header-left">
             <img src="logo.png" alt="Logo" class="header-logo">
-            <h1>Bestell-Liste KI</h1>
+            <h1>Bestell-Liste</h1>
         </div>
         <button id="profileBtn">👤 <span id="userNameDisplay">...</span></button>
     </header>
@@ -134,20 +65,20 @@
     <div class="container" id="mainContainer">
         <div id="statusDisplay">
             <div class="status-grid">
-                <div class="status-item timer-highlight admin-editable" id="editDeadlineArea">
+                <div class="status-item timer-highlight" id="editDeadlineArea">
                     <span class="status-label">⌛ Bestellschluss</span>
                     <div class="status-val" id="disp-deadline">--:-- Uhr</div>
                 </div>
-                <div class="status-item admin-editable" id="editResArea">
+                <div class="status-item" id="editResArea">
                     <span class="status-label">📍 Restaurant</span>
                     <div class="status-val" id="disp-res">---</div>
                 </div>
-                <div class="status-item admin-editable" id="editTimeArea">
+                <div class="status-item" id="editTimeArea">
                     <span class="status-label">🕒 Lieferung</span>
                     <div class="status-val" id="disp-time">---</div>
                 </div>
                 <div class="status-item" style="grid-column: span 2;">
-                    <span class="status-label">📦 Kammerl </span>
+                    <span class="status-label">📦 Kammerl</span>
                     <div class="status-val" id="disp-cham">---</div>
                 </div>
             </div>
@@ -156,7 +87,7 @@
 
         <div id="setupCard" class="card">
             <span class="label">📍 Restaurant</span>
-            <input id="restaurant" placeholder="z. B. Baron">
+            <input id="restaurant" placeholder="Name">
             <span class="label">🕒 Lieferung um</span>
             <input id="time" type="time" value="11:30">
             <span class="label">🍴 Kammerl</span>
@@ -164,9 +95,9 @@
             <button id="startBtn" class="btn" style="background: var(--primary); color: white;">🟢 Starten</button>
         </div>
 
-        <div id="orderCard" class="card" style="display:none; border: 2px solid var(--success);">
+        <div id="orderCard" class="card" style="display:none;">
             <span class="label">Deine Bestellung</span>
-            <input id="orderInput" placeholder="z.B. Pizza Salami scharf">
+            <input id="orderInput" placeholder="z.B. Mafiosi scharf">
             <button id="addOrderBtn" class="btn add-btn">+ Hinzufügen</button>
         </div>
 
@@ -177,7 +108,7 @@
 
     <div id="modalOverlay"></div>
     <div id="timeModal">
-        <span class="label">Einsendeschluss festlegen</span>
+        <span class="label">Bestellschluss</span>
         <input type="time" id="deadlineInput" value="10:00">
         <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white;">Bestätigen</button>
     </div>
@@ -196,7 +127,7 @@
 
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
-    let userName = localStorage.getItem("userName") || prompt("Wie heißt du?") || "Gast";
+    let userName = localStorage.getItem("userName") || prompt("Name?") || "Gast";
     localStorage.setItem("userName", userName);
     document.getElementById("userNameDisplay").innerText = userName;
 
@@ -209,11 +140,9 @@
         const now = new Date().getTime();
         isGlobalActive = d.orderActive && now < d.endTime;
         currentAdminId = d.adminId;
-
         document.getElementById("setupCard").style.display = isGlobalActive ? "none" : "block";
         document.getElementById("statusDisplay").style.display = isGlobalActive ? "block" : "none";
         document.getElementById("orderCard").style.display = isGlobalActive ? "block" : "none";
-
         if(isGlobalActive) {
             const date = new Date(d.endTime);
             document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
@@ -222,29 +151,6 @@
             document.getElementById("disp-cham").innerText = d.chamber || "---";
         }
     });
-
-    // ADMIN-ÄNDERUNGEN (Laufende Bestellung)
-    document.getElementById("editResArea").onclick = () => {
-        if(userId !== currentAdminId) return;
-        const newVal = prompt("Restaurant ändern:", document.getElementById("disp-res").innerText);
-        if(newVal) update(ref(db, "settings"), { restaurant: newVal });
-    };
-
-    document.getElementById("editTimeArea").onclick = () => {
-        if(userId !== currentAdminId) return;
-        const newVal = prompt("Lieferzeit ändern (HH:MM):", document.getElementById("disp-time").innerText.replace(" Uhr", ""));
-        if(newVal) update(ref(db, "settings"), { time: newVal });
-    };
-
-    document.getElementById("editDeadlineArea").onclick = () => {
-        if(userId !== currentAdminId) return;
-        const newVal = prompt("Bestellschluss ändern (HH:MM):");
-        if(newVal) {
-            const [h, m] = newVal.split(":").map(Number);
-            const end = new Date(); end.setHours(h, m, 0, 0);
-            update(ref(db, "settings"), { endTime: end.getTime() });
-        }
-    };
 
     document.getElementById("startBtn").onclick = () => {
         document.getElementById("modalOverlay").style.display = "block";
@@ -257,85 +163,51 @@
         const end = new Date(); end.setHours(h, m, 0, 0);
         if (end < new Date()) end.setDate(end.getDate() + 1);
         remove(ref(db, "orders")).then(() => {
-            update(ref(db, "settings"), { 
-                orderActive: true, 
-                endTime: end.getTime(), 
-                restaurant: document.getElementById("restaurant").value, 
-                time: document.getElementById("time").value, 
-                chamber: document.getElementById("chamber").value, 
-                adminId: userId 
-            });
+            update(ref(db, "settings"), { orderActive: true, endTime: end.getTime(), restaurant: document.getElementById("restaurant").value, time: document.getElementById("time").value, chamber: document.getElementById("chamber").value, adminId: userId });
         });
         document.getElementById("modalOverlay").style.display = "none";
         document.getElementById("timeModal").style.display = "none";
     };
 
     document.getElementById("stopActionBtn").onclick = () => { 
-        if(userId === currentAdminId) {
-            if(confirm("Bestellung beenden?")) update(ref(db, "settings"), { orderActive: false, endTime: 0 });
-        } else {
-            if(prompt("Admin Passwort:") === "admin") update(ref(db, "settings"), { orderActive: false, endTime: 0 });
-        }
+        if(userId === currentAdminId || prompt("Passwort:") === "admin") update(ref(db, "settings"), { orderActive: false, endTime: 0 });
     };
 
-    const addOrder = () => {
+    document.getElementById("addOrderBtn").onclick = () => {
         const val = document.getElementById("orderInput").value.trim();
         if(!val) return;
         push(ref(db, "orders"), { name: val, user: userName, owner: userId });
         document.getElementById("orderInput").value = "";
     };
-    document.getElementById("addOrderBtn").onclick = addOrder;
 
     onValue(ref(db, "orders"), snap => {
         if (currentlyEditing) return;
         const listEl = document.getElementById("list");
         listEl.innerHTML = "";
-        if(!snap.exists()) {
-            document.getElementById("waLeiste").style.display = "none";
-            document.getElementById("orderBox").style.display = "none";
-            return;
-        }
-        document.getElementById("waLeiste").style.display = "flex";
-        document.getElementById("orderBox").style.display = "block";
-
+        if(!snap.exists()) { document.getElementById("waLeiste").style.display = "none"; document.getElementById("orderBox").style.display = "none"; return; }
+        document.getElementById("waLeiste").style.display = "flex"; document.getElementById("orderBox").style.display = "block";
         snap.forEach(child => {
-            const d = child.val();
-            const key = child.key;
-            const canEdit = isGlobalActive && (d.owner === userId || userId === currentAdminId);
+            const d = child.val(); const key = child.key;
             const li = document.createElement("li");
-            li.innerHTML = `
-                <div class="order-row" id="view-${key}">
-                    <div><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>
-                    ${canEdit ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}
-                </div>
-                <div class="edit-container" id="edit-${key}" style="display:none">
-                    <input id="inp-${key}" value="${d.name}">
-                    <div class="edit-actions">
-                        <button class="del-btn" onclick="window.deleteOrder('${key}')">Löschen</button>
-                        <button class="save-btn" onclick="window.saveOrder('${key}')">Speichern</button>
-                    </div>
-                </div>`;
+            li.innerHTML = `<div class="order-row" id="view-${key}"><div><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>${(d.owner === userId || userId === currentAdminId) ? `<button class="edit-btn" onclick="window.startEdit('${key}')">Ändern</button>` : ""}</div><div class="edit-container" id="edit-${key}" style="display:none"><input id="inp-${key}" value="${d.name}"><div class="edit-actions"><button class="del-btn" onclick="window.deleteOrder('${key}')">Löschen</button><button class="save-btn" onclick="window.saveOrder('${key}')">Speichern</button></div></div>`;
             listEl.appendChild(li);
         });
     });
 
     window.startEdit = (key) => { currentlyEditing = key; document.getElementById(`view-${key}`).style.display='none'; document.getElementById(`edit-${key}`).style.display='flex'; };
-    window.saveOrder = (key) => { update(ref(db, `orders/${key}`), { name: document.getElementById(`inp-${key}`).value }).then(() => { currentlyEditing = null; location.reload(); }); };
-    window.deleteOrder = (key) => { if(confirm("Löschen?")) remove(ref(db, `orders/${key}`)).then(() => { currentlyEditing = null; location.reload(); }); };
+    window.saveOrder = (key) => { update(ref(db, `orders/${key}`), { name: document.getElementById(`inp-${key}`).value }).then(() => location.reload()); };
+    window.deleteOrder = (key) => { remove(ref(db, `orders/${key}`)).then(() => location.reload()); };
 
-    // WHATSAPP KI LOGIK (PRÄZISE GRUPPIERUNG)
+    // WHATSAPP KI LOGIK (SIMPEL & STRENG)
     document.getElementById("shareWaBtn").onclick = async () => {
         let apiKey = localStorage.getItem("openai_api_key");
         if (!apiKey) {
-            apiKey = prompt("Bitte gib deinen OpenAI API Key ein:");
+            apiKey = prompt("Bitte OpenAI API Key eingeben:");
             if (apiKey) localStorage.setItem("openai_api_key", apiKey);
             else return;
         }
-
         const btn = document.getElementById("shareWaBtn");
-        btn.innerText = "⏳ KI sortiert präzise...";
-        btn.style.background = "#6366f1";
-
+        btn.innerText = "⏳ KI rechnet...";
         try {
             const sSnap = await get(ref(db, "settings"));
             const s = sSnap.val() || {};
@@ -348,30 +220,16 @@
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
                 body: JSON.stringify({
                     model: "gpt-4o-mini",
-                    messages: [{ 
-                        role: "system", 
-                        content: "Du bist eine Maschine zur Listen-Aggregierung. Deine Aufgabe: \n1. Korrigiere Tippfehler.\n2. Gruppiere identische Artikel (gleicher Name UND exakt gleicher Sonderwunsch).\n3. Behalte JEDEN Sonderwunsch (z.B. 'knusprig', 'ohne Zwiebel') unbedingt bei.\n4. Ausgabeformat: 'Anzahl x Name (Sonderwunsch)'. Wenn kein Wunsch da ist, lass die Klammer weg.\n5. Gib NUR die Liste aus. Keine Markdown-Symbole, keine Einleitung, keine Kommentare." 
-                    }, { 
-                        role: "user", 
-                        content: `Bestellungen:\n${rawList}` 
-                    }],
+                    messages: [{ role: "system", content: "Fasse die Liste simpel zusammen. Korrigiere Tippfehler. Fasse identische Texte zusammen. Ändere keine Namen (wenn einer nur 'Mafiosi' schreibt, lass es so). Format: 'Anzahl x Name'. Gib NUR die Liste aus." }, { role: "user", content: rawList }],
                     temperature: 0
                 })
             });
-
             const data = await response.json();
-            if(data.error) throw new Error(data.error.message);
-
             const cleanList = data.choices[0].message.content.trim();
             let msg = `*🍽️ BESTELLUNG: ${s.restaurant}*\n🕒 Zeit: ${s.time} Uhr\n📦 Abholung: ${s.chamber}\n––––––––––––––––––\n${cleanList}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-        } catch (e) {
-            alert("Fehler: " + e.message);
-            if(e.message.includes("api_key") || e.message.includes("401")) localStorage.removeItem("openai_api_key");
-        } finally {
-            btn.innerText = "Auf WhatsApp teilen (KI)";
-            btn.style.background = "var(--whatsapp)";
-        }
+        } catch (e) { alert("Fehler: " + e.message); }
+        finally { btn.innerText = "Auf WhatsApp teilen (KI)"; }
     };
 </script>
 </body>
