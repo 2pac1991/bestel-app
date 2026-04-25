@@ -372,6 +372,7 @@
         const orderBox = document.getElementById("orderBox");
         const container = document.getElementById("mainContainer");
         const detailsEl = document.getElementById("orderBoxDetails");
+        const statusTitleEl = document.getElementById("orderBoxStatus");
         
         listEl.innerHTML = "";
         if(!snap.exists()) { 
@@ -392,8 +393,8 @@
             if(isGlobalActive) {
                 detailsEl.innerText = `Aktuelle Bestellungen (${totalCount})`;
             } else {
-                // Anzeige aller Infos wenn beendet
-                detailsEl.innerHTML = `${s.restaurant} | ${s.time} Uhr | ${s.chamber} | Ges: ${totalCount}`;
+                statusTitleEl.innerText = `❌ Bestellung Beendet (${totalCount})`;
+                detailsEl.innerHTML = `${s.restaurant} | ${s.time} Uhr | ${s.chamber}`;
             }
         });
         
