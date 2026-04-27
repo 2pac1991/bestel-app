@@ -250,13 +250,19 @@
     let userName = localStorage.getItem("userName") || "Gast";
     document.getElementById("userNameDisplay").innerText = userName;
 
-    document.getElementById("profileBtn").onclick = () => {
-        let n = prompt("Wie heißt du?", userName);
-        if(n && n.trim()) {
-            userName = n.trim();
+    const setUserName = (newName) => {
+        if(newName && newName.trim() && newName.trim() !== "Gast") {
+            userName = newName.trim();
             localStorage.setItem("userName", userName);
             document.getElementById("userNameDisplay").innerText = userName;
+            return true;
         }
+        return false;
+    };
+
+    document.getElementById("profileBtn").onclick = () => {
+        let n = prompt("Wie heißt du?", userName);
+        setUserName(n);
     };
 
     let currentlyEditing = null;
@@ -334,7 +340,14 @@
 
     const add = () => {
         const inp = document.getElementById("orderInput");
-        if(inp.value.trim()) { push(ref(db, "orders"), {name: inp.value.trim(), user: userName, owner: userId}); inp.value = ""; }
+        if(inp.value.trim()) {
+            if(userName === "Gast") {
+                let n = prompt("Bitte gib deinen Namen für die Bestellung ein:");
+                if(!setUserName(n)) return; 
+            }
+            push(ref(db, "orders"), {name: inp.value.trim(), user: userName, owner: userId}); 
+            inp.value = ""; 
+        }
     };
     document.getElementById("addOrderBtn").onclick = add;
     document.getElementById("orderInput").onkeypress = (e) => { if(e.key === "Enter") add(); };
