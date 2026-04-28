@@ -58,10 +58,14 @@
             max-width: 500px; 
             padding: 20px;
             flex-grow: 1;
+            /* Zentrierung für Seite 1 */
+            display: flex;
+            flex-direction: column;
         }
 
-        .view-section { display: none; }
-        .active-view { display: block; }
+        .view-section { width: 100%; }
+        #view-setup.active-view { display: flex; flex-direction: column; justify-content: center; flex-grow: 1; }
+        #view-live.active-view, #view-summary.active-view { display: block; }
 
         #statusDisplay, .summary-card {
             background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
@@ -94,6 +98,12 @@
             border: 2px solid #f1f5f9; background: #f8fafc; font-size: 16px;
         }
 
+        /* Spezial-Styling für Time-Input aus deinem ersten Skript */
+        input[type="time"] {
+            -webkit-appearance: none;
+            min-height: 45px;
+        }
+
         .btn {
             width: 100%; padding: 15px; border-radius: 15px; border: none;
             font-weight: 700; font-size: 16px; cursor: pointer;
@@ -120,9 +130,6 @@
 
         #timeModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); z-index: 2000; width: 85%; max-width: 320px; }
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 1999; }
-        
-        /* Fix für Zeit-Input im Modal */
-        #deadlineInput { width: 100%; max-width: 100%; }
 
         .wa-sticky { position: fixed; bottom: 0; width: 100%; max-width: 500px; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: flex; justify-content: center; z-index: 1000; }
         .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
@@ -216,7 +223,7 @@
     <div id="modalOverlay"></div>
     <div id="timeModal">
         <span class="label">Einsendeschluss festlegen</span>
-        <input type="time" id="deadlineInput" value="15:30">
+        <input type="time" id="deadlineInput" value="15:30" style="width: 100%; box-sizing: border-box;">
         <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white; margin-top: 10px;">Starten</button>
         <button id="cancelModalBtn" class="btn" style="background: #f1f5f9; color: #64748b; margin-top: 8px;">Abbrechen</button>
     </div>
@@ -391,11 +398,11 @@
     };
     window.deleteOrder = (key) => { if(confirm("Löschen?")) remove(ref(db, `orders/${key}`)); };
 
-    // SHARE LOGIC (Wieder exakt wie im ersten Skript)
+    // SHARE LOGIC (Tor wurde zur Nachricht hinzugefügt)
     document.getElementById("shareWaBtn").onclick = async () => {
         const [sS, oS] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
         const s = sS.val() || {};
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🥡 Mahlzeiten: x${oS.size}\n––––––––––––––––––\n`;
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🥡 Ort: ${s.chamber} | ${s.gate}\n––––––––––––––––––\n`;
         oS.forEach(c => { m += `• ${c.val().name}\n`; });
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
     };
