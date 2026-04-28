@@ -400,11 +400,11 @@
     };
     window.deleteOrder = (key) => { if(confirm("Löschen?")) remove(ref(db, `orders/${key}`)); };
 
-    // WhatsApp Logik exakt nach deiner Vorgabe
+    // WhatsApp Logik exakt nach deiner Vorgabe inklusive Tor-Anzeige
     document.getElementById("shareWaBtn").onclick = async () => {
         const [sS, oS] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
         const s = sS.val() || {};
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🥡 Mahlzeiten: x${oS.size}\n––––––––––––––––––\n`;
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${oS.size}\n––––––––––––––––––\n`;
         oS.forEach(c => { m += `• ${c.val().name}\n`; });
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
     };
