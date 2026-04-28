@@ -58,14 +58,22 @@
             max-width: 500px; 
             padding: 20px;
             flex-grow: 1;
-            /* Zentrierung für Seite 1 */
             display: flex;
             flex-direction: column;
         }
 
-        .view-section { width: 100%; }
-        #view-setup.active-view { display: flex; flex-direction: column; justify-content: center; flex-grow: 1; }
-        #view-live.active-view, #view-summary.active-view { display: block; }
+        /* View-Logik: Nur die aktive View anzeigen */
+        .view-section { display: none; width: 100%; }
+        
+        #view-setup.active-view { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            flex-grow: 1; 
+        }
+        #view-live.active-view, #view-summary.active-view { 
+            display: block; 
+        }
 
         #statusDisplay, .summary-card {
             background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
@@ -98,11 +106,7 @@
             border: 2px solid #f1f5f9; background: #f8fafc; font-size: 16px;
         }
 
-        /* Spezial-Styling für Time-Input aus deinem ersten Skript */
-        input[type="time"] {
-            -webkit-appearance: none;
-            min-height: 45px;
-        }
+        input[type="time"] { -webkit-appearance: none; min-height: 45px; }
 
         .btn {
             width: 100%; padding: 15px; border-radius: 15px; border: none;
@@ -223,7 +227,7 @@
     <div id="modalOverlay"></div>
     <div id="timeModal">
         <span class="label">Einsendeschluss festlegen</span>
-        <input type="time" id="deadlineInput" value="15:30" style="width: 100%; box-sizing: border-box;">
+        <input type="time" id="deadlineInput" value="15:30">
         <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white; margin-top: 10px;">Starten</button>
         <button id="cancelModalBtn" class="btn" style="background: #f1f5f9; color: #64748b; margin-top: 8px;">Abbrechen</button>
     </div>
@@ -269,7 +273,6 @@
         setUserName(n);
     };
 
-    let currentlyEditing = null;
     let currentAdminId = null;
     let isGlobalActive = false;
 
@@ -388,17 +391,15 @@
     });
 
     window.startEdit = (key) => {
-        currentlyEditing = key;
         document.getElementById(`view-${key}`).style.display = "none";
         document.getElementById(`edit-${key}`).style.display = "flex";
     };
     window.saveOrder = (key) => {
         const val = document.getElementById(`inp-${key}`).value.trim();
-        if(val) update(ref(db, `orders/${key}`), {name: val}).then(() => currentlyEditing = null);
+        if(val) update(ref(db, `orders/${key}`), {name: val});
     };
     window.deleteOrder = (key) => { if(confirm("Löschen?")) remove(ref(db, `orders/${key}`)); };
 
-    // SHARE LOGIC (Tor wurde zur Nachricht hinzugefügt)
     document.getElementById("shareWaBtn").onclick = async () => {
         const [sS, oS] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
         const s = sS.val() || {};
