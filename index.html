@@ -358,7 +358,8 @@
         if(snap.exists() && snap.size > 0) {
             orderBox.style.display = "block";
             document.getElementById("orderBoxDetails").innerText = `Aktuelle Bestellungen (${snap.size})`;
-            sumTitle.innerText = `Gesamtliste für den Lieferanten (x${snap.size})`;
+            // HIER GEÄNDERT: Das x vor der Zahl wurde entfernt
+            sumTitle.innerText = `Gesamtliste für den Lieferanten (${snap.size})`;
             
             snap.forEach(child => {
                 const d = child.val();
@@ -386,7 +387,7 @@
             });
         } else {
             orderBox.style.display = "none";
-            sumTitle.innerText = `Gesamtliste für den Lieferanten (x0)`;
+            sumTitle.innerText = `Gesamtliste für den Lieferanten (0)`;
         }
     });
 
@@ -400,7 +401,6 @@
     };
     window.deleteOrder = (key) => { if(confirm("Löschen?")) remove(ref(db, `orders/${key}`)); };
 
-    // WhatsApp Logik exakt nach deiner Vorgabe inklusive Tor-Anzeige
     document.getElementById("shareWaBtn").onclick = async () => {
         const [sS, oS] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
         const s = sS.val() || {};
