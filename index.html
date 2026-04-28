@@ -58,24 +58,30 @@
             max-width: 500px; 
             padding: 20px;
             flex-grow: 1;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* Views */
-        .view-section { display: none; width: 100%; }
-        .view-section.active { display: block; }
+        /* View-Logic CSS */
+        .view-section { display: none; }
+        .active-view { display: block; }
 
-        /* Status & Info Boxes */
-        #statusDisplay, .summary-info {
+        /* Status Display Styling (Original) */
+        #statusDisplay, .summary-card {
             background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
-            border: 2px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 2px solid #fee2e2; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
         }
         .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .status-item { background: #f8fafc; padding: 10px; border-radius: 12px; }
+        .admin-editable { cursor: pointer; }
         .status-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; display: block; }
         .status-val { font-size: 14px; font-weight: 700; color: var(--text-main); }
-        .timer-highlight { grid-column: span 2; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; text-align: center; }
+        .timer-highlight { grid-column: span 2; background: #fee2e2; color: #dc2626; text-align: center; border: 1px solid #fecaca; }
+
+        .share-link-btn {
+            background: #e8f5e9; color: var(--whatsapp); border: 1px dashed var(--whatsapp);
+            padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800;
+            width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer; margin-bottom: 10px;
+        }
 
         .card {
             background: var(--card-bg); padding: 20px; border-radius: 20px;
@@ -94,37 +100,38 @@
             width: 100%; padding: 15px; border-radius: 15px; border: none;
             font-weight: 700; font-size: 16px; cursor: pointer;
         }
-        .add-btn { background: var(--success); color: white; }
-        .stop-btn-minimal { background: #fee2e2; color: #dc2626; border: none; padding: 10px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; margin-top: 10px;}
+        .add-btn { background: var(--success); color: white; margin-top: 5px; }
 
-        /* Order Box Styling */
+        /* Order List Styling (Original) */
         .order-container-box {
             background: white; border-radius: 24px; border: 2px solid var(--primary);
             padding: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
         }
-        .box-title-sub { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .box-title-sub { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 15px;}
         .box-title-sub::after { content: ""; height: 2px; background: #eff6ff; flex: 1; }
 
-        ul { padding: 0; list-style: none; margin: 0; }
-        li { padding: 12px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        ul { padding: 0; list-style: none; width: 100%; margin: 0; }
+        li { background: white; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .order-row { display: flex; justify-content: space-between; align-items: center; }
         .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
-        .food-name { font-weight: 700; font-size: 16px; display: block; }
+        .food-name { font-weight: 700; font-size: 17px; color: var(--text-main); display: block;}
 
-        /* Modal */
+        /* Edit Controls (Original) */
+        .edit-btn { background: #f1f5f9; color: var(--text-muted); border: none; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .edit-container { display: none; flex-direction: column; gap: 8px; background: #f8fafc; padding: 10px; border-radius: 12px; }
+        .save-btn { background: var(--primary); color: white; padding: 8px; border-radius: 8px; border: none; flex: 2; font-weight: 700;}
+        .del-btn { background: var(--danger); color: white; padding: 8px; border-radius: 8px; border: none; flex: 1; font-weight: 700;}
+
+        /* Modals */
         #timeModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); z-index: 2000; width: 85%; max-width: 320px; }
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 1999; }
 
-        /* WhatsApp Sticky */
+        /* Sticky WhatsApp (Original) */
         .wa-sticky { position: fixed; bottom: 0; width: 100%; max-width: 500px; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: flex; justify-content: center; z-index: 1000; }
         .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .wa-btn svg { width: 22px; height: 22px; fill: white; }
-
-        .share-link-btn {
-            background: #e8f5e9; color: var(--whatsapp); border: 1px dashed var(--whatsapp);
-            padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800;
-            width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
-            cursor: pointer; margin-top: 10px;
-        }
+        
+        .stop-btn-minimal { background: none; border: 1px solid #e2e8f0; color: #94a3b8; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 600; cursor: pointer; width: 100%; text-transform: uppercase; margin-top: 10px;}
     </style>
 </head>
 <body>
@@ -142,7 +149,7 @@
 
     <div class="container">
         
-        <section id="setupView" class="view-section">
+        <div id="view-setup" class="view-section active-view">
             <div class="card">
                 <span class="label">📍 Restaurant</span>
                 <input id="restaurant" placeholder="z. B. Baron" autocomplete="off">
@@ -154,20 +161,30 @@
                 <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
                 <button id="startBtn" class="btn" style="background: var(--primary); color: white;">🟢 Bestellung Starten</button>
             </div>
-            <button id="clearAllBtn" style="width:100%; background:none; border:none; color:var(--text-muted); font-size:10px; cursor:pointer; margin-top:20px;">System zurücksetzen (Admin)</button>
-        </section>
+            <button id="clearAllBtn" style="width:100%; background:none; border:none; color:var(--text-muted); opacity:0.3; font-size:10px; cursor:pointer;">System Reset (Admin)</button>
+        </div>
 
-        <section id="liveView" class="view-section">
+        <div id="view-live" class="view-section">
             <div id="statusDisplay">
                 <div class="status-grid">
-                    <div class="status-item timer-highlight">
+                    <div class="status-item timer-highlight admin-editable" id="editDeadlineArea">
                         <span class="status-label">⌛ Bestellschluss</span>
                         <div class="status-val" id="disp-deadline">--:-- Uhr</div>
                     </div>
-                    <div class="status-item"><span class="status-label">📍 Restaurant</span><div class="status-val" id="disp-res">---</div></div>
-                    <div class="status-item"><span class="status-label">🕒 Lieferung</span><div class="status-val" id="disp-time">---</div></div>
+                    <div class="status-item admin-editable" id="editResArea">
+                        <span class="status-label">📍 Restaurant</span>
+                        <div class="status-val" id="disp-res">---</div>
+                    </div>
+                    <div class="status-item admin-editable" id="editTimeArea">
+                        <span class="status-label">🕒 Lieferung</span>
+                        <div class="status-val" id="disp-time">---</div>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">📦 Kammerl</span>
+                        <div class="status-val" id="disp-cham-live">---</div>
+                    </div>
                 </div>
-                <button id="shareLinkBtn" class="share-link-btn">🟢 Link per WhatsApp teilen</button>
+                <button id="shareLinkBtn" class="share-link-btn">🟢 Bestelllink per WhatsApp teilen</button>
                 <button id="stopActionBtn" class="stop-btn-minimal">Bestellung beenden</button>
             </div>
 
@@ -179,24 +196,24 @@
 
             <div class="order-container-box">
                 <div class="box-title-sub" id="orderBoxDetails">Aktuelle Bestellungen</div>
-                <ul id="liveList"></ul>
+                <ul id="list-live"></ul>
             </div>
-        </section>
+        </div>
 
-        <section id="summaryView" class="view-section">
-            <div class="summary-info" style="border-left: 5px solid var(--success);">
-                <span class="label" style="color: var(--success);">Abgeschlossene Bestellung</span>
-                <h2 id="sum-res" style="margin: 5px 0 0 0;">Restaurant</h2>
-                <p id="sum-details" style="font-size: 14px; color: var(--text-muted); margin: 5px 0 0 0;">Zeit | Kammerl</p>
+        <div id="view-summary" class="view-section">
+            <div class="summary-card" style="border-color: var(--success);">
+                <span class="label" style="color: var(--success);">Bestellung abgeschlossen</span>
+                <div style="font-size: 20px; font-weight: 800;" id="sum-res">Restaurant</div>
+                <div style="font-size: 14px; color: var(--text-muted);" id="sum-meta">Zeit | Kammerl</div>
             </div>
 
-            <div class="order-container-box" style="border-color: #e2e8f0;">
-                <div class="box-title-sub">Gesamtliste</div>
-                <ul id="summaryList"></ul>
+            <div class="order-container-box">
+                <div class="box-title-sub">Gesamtliste für den Lieferanten</div>
+                <ul id="list-summary"></ul>
             </div>
-            
-            <button id="resetAppBtn" class="btn" style="margin-top: 20px; background: #f1f5f9; color: var(--text-muted); font-size: 13px;">Neue Liste erstellen</button>
-        </section>
+
+            <button id="restartBtn" class="btn" style="margin-top: 20px; background: #f1f5f9; color: var(--text-muted);">Neue Liste starten</button>
+        </div>
 
     </div>
 
@@ -208,10 +225,10 @@
         <button id="cancelModalBtn" class="btn" style="background: #f1f5f9; color: #64748b; margin-top: 8px;">Abbrechen</button>
     </div>
 
-    <div id="waLeiste" class="wa-sticky" style="display:none;">
+    <div id="waLeiste" class="wa-sticky" style="display:none">
         <button id="shareWaBtn" class="wa-btn">
             <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.445 0 .081 5.363.079 11.971c0 2.112.551 4.176 1.596 5.979L0 24l6.15-1.613a11.826 11.826 0 005.897 1.568h.005c6.604 0 11.967-5.363 11.97-11.971a11.811 11.811 0 00-3.505-8.469z"/></svg>
-            Bestellung auf WhatsApp teilen
+            Auf WhatsApp teilen
         </button>
     </div>
 
@@ -228,6 +245,13 @@
     let userName = localStorage.getItem("userName") || "Gast";
     document.getElementById("userNameDisplay").innerText = userName;
 
+    // View Switcher Utility
+    const switchView = (id) => {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active-view'));
+        document.getElementById(`view-${id}`).classList.add('active-view');
+        document.getElementById('waLeiste').style.display = (id === 'summary') ? 'flex' : 'none';
+    };
+
     const setUserName = (newName) => {
         if(newName && newName.trim() && newName.trim() !== "Gast") {
             userName = newName.trim();
@@ -243,46 +267,52 @@
         setUserName(n);
     };
 
+    let currentlyEditing = null;
     let currentAdminId = null;
+    let isGlobalActive = false;
 
-    // View Management
-    const showView = (viewId) => {
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        document.getElementById("waLeiste").style.display = (viewId === 'summaryView') ? "flex" : "none";
-    };
-
+    // Listen to Settings & Status
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
+        isGlobalActive = d.orderActive && now < d.endTime;
         currentAdminId = d.adminId;
 
-        if (!d.orderActive && !d.summaryMode) {
-            showView('setupView');
-        } else if (d.orderActive) {
-            showView('liveView');
+        if (isGlobalActive) {
+            switchView('live');
             const date = new Date(d.endTime);
             document.getElementById("disp-deadline").innerText = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0') + " Uhr";
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
+            document.getElementById("disp-cham-live").innerText = d.chamber || "---";
         } else if (d.summaryMode) {
-            showView('summaryView');
+            switchView('summary');
             document.getElementById("sum-res").innerText = d.restaurant || "---";
-            document.getElementById("sum-details").innerText = `${d.time} Uhr | ${d.chamber} | ${d.gate}`;
+            document.getElementById("sum-meta").innerText = `${d.time} Uhr | ${d.chamber} | ${d.gate}`;
+        } else {
+            switchView('setup');
         }
     });
 
-    // START Prozess
-    document.getElementById("startBtn").onclick = () => {
-        document.getElementById("modalOverlay").style.display = "block";
-        document.getElementById("timeModal").style.display = "block";
-    };
+    // ORIGINAL ADMIN FUNCTIONS
+    const isAdmin = () => userId === currentAdminId || prompt("Passwort:") === "admin";
+    document.getElementById("editResArea").onclick = () => { if(isAdmin()) { let v = prompt("Restaurant:"); if(v) update(ref(db, "settings"), {restaurant: v}); }};
+    document.getElementById("editTimeArea").onclick = () => { if(isAdmin()) { let v = prompt("Zeit:"); if(v) update(ref(db, "settings"), {time: v}); }};
+    document.getElementById("editDeadlineArea").onclick = () => { if(isAdmin()) { let v = prompt("Schluss (HH:MM):"); if(v) { 
+        const [h,m] = v.split(":").map(Number); const e = new Date(); e.setHours(h,m,0,0); if(e < new Date()) e.setDate(e.getDate()+1);
+        update(ref(db, "settings"), {endTime: e.getTime()});
+    }}};
 
+    // PROCESS CONTROLS
+    document.getElementById("startBtn").onclick = () => { 
+        document.getElementById("modalOverlay").style.display = "block"; 
+        document.getElementById("timeModal").style.display = "block"; 
+    };
+    
     document.getElementById("confirmStartBtn").onclick = () => {
         const t = document.getElementById("deadlineInput").value;
         const [h,m] = t.split(":").map(Number);
         const e = new Date(); e.setHours(h,m,0,0); if(e < new Date()) e.setDate(e.getDate()+1);
-        
         remove(ref(db, "orders")).then(() => {
             update(ref(db, "settings"), {
                 orderActive: true, summaryMode: false, endTime: e.getTime(), adminId: userId,
@@ -292,61 +322,91 @@
                 gate: document.getElementById("gate").value
             });
         });
-        closeModal();
+        document.getElementById("modalOverlay").style.display = "none"; 
+        document.getElementById("timeModal").style.display = "none";
     };
 
-    // BEENDEN Prozess
-    document.getElementById("stopActionBtn").onclick = () => {
-        if(userId === currentAdminId || prompt("Passwort:") === "admin") {
-            update(ref(db, "settings"), { orderActive: false, summaryMode: true });
+    document.getElementById("stopActionBtn").onclick = () => { 
+        if(isAdmin() && confirm("Bestellung für alle beenden?")) {
+            update(ref(db, "settings"), {orderActive: false, summaryMode: true}); 
         }
     };
 
-    // NEU STARTEN (Reset)
-    document.getElementById("resetAppBtn").onclick = () => {
-        if(confirm("Sicher? Die aktuelle Liste wird gelöscht.")) {
+    document.getElementById("restartBtn").onclick = () => {
+        if(isAdmin() && confirm("Sicher? Liste wird für alle gelöscht.")) {
             remove(ref(db, "orders"));
-            update(ref(db, "settings"), { orderActive: false, summaryMode: false });
+            remove(ref(db, "settings"));
         }
     };
 
-    // Bestellungen laden
+    // ORDERING LOGIC (Original)
+    const add = () => {
+        const inp = document.getElementById("orderInput");
+        if(inp.value.trim()) {
+            if(userName === "Gast") {
+                let n = prompt("Bitte gib deinen Namen für die Bestellung ein:");
+                if(!setUserName(n)) return; 
+            }
+            push(ref(db, "orders"), {name: inp.value.trim(), user: userName, owner: userId}); 
+            inp.value = ""; 
+        }
+    };
+    document.getElementById("addOrderBtn").onclick = add;
+    document.getElementById("orderInput").onkeypress = (e) => { if(e.key === "Enter") add(); };
+
+    // LIST RENDERING (Original)
     onValue(ref(db, "orders"), snap => {
-        const liveList = document.getElementById("liveList");
-        const summaryList = document.getElementById("summaryList");
-        liveList.innerHTML = "";
-        summaryList.innerHTML = "";
+        const listLive = document.getElementById("list-live");
+        const listSum = document.getElementById("list-summary");
+        listLive.innerHTML = "";
+        listSum.innerHTML = "";
 
         if(snap.exists()) {
             document.getElementById("orderBoxDetails").innerText = `Aktuelle Bestellungen (${snap.size})`;
             snap.forEach(child => {
                 const d = child.val();
-                const li = `<li><div><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div></li>`;
-                liveList.innerHTML += li;
-                summaryList.innerHTML += li;
+                const key = child.key;
+                const canEdit = isGlobalActive && (d.owner === userId || userId === currentAdminId);
+                
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <div class="order-row" id="view-${key}">
+                        <div class="order-info"><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>
+                        ${canEdit ? `<button class="edit-btn" onclick="startEdit('${key}')">Ändern</button>` : ""}
+                    </div>
+                    <div class="edit-container" id="edit-${key}">
+                        <input class="edit-input" id="inp-${key}" value="${d.name}" style="margin-bottom:8px">
+                        <div style="display:flex; gap:8px">
+                            <button class="del-btn" onclick="deleteOrder('${key}')">Löschen</button>
+                            <button class="save-btn" onclick="saveOrder('${key}')">Speichern</button>
+                        </div>
+                    </div>`;
+                listLive.appendChild(li);
+                
+                const liSum = document.createElement("li");
+                liSum.innerHTML = `<div class="order-info"><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>`;
+                listSum.appendChild(liSum);
             });
         }
     });
 
-    // Bestellung hinzufügen
-    const add = () => {
-        const inp = document.getElementById("orderInput");
-        if(inp.value.trim()) {
-            if(userName === "Gast") {
-                let n = prompt("Name für Bestellung:");
-                if(!setUserName(n)) return;
-            }
-            push(ref(db, "orders"), {name: inp.value.trim(), user: userName, owner: userId});
-            inp.value = "";
-        }
+    // EDITING HELPERS (Original)
+    window.startEdit = (key) => {
+        currentlyEditing = key;
+        document.getElementById(`view-${key}`).style.display = "none";
+        document.getElementById(`edit-${key}`).style.display = "flex";
     };
-    document.getElementById("addOrderBtn").onclick = add;
+    window.saveOrder = (key) => {
+        const val = document.getElementById(`inp-${key}`).value.trim();
+        if(val) update(ref(db, `orders/${key}`), {name: val}).then(() => currentlyEditing = null);
+    };
+    window.deleteOrder = (key) => { if(confirm("Löschen?")) remove(ref(db, `orders/${key}`)); };
 
-    // WhatsApp Share
+    // SHARE LOGIC (Original)
     document.getElementById("shareWaBtn").onclick = async () => {
         const [sS, oS] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
         const s = sS.val() || {};
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n📦 Ort: ${s.chamber}\n––––––––––––––––––\n`;
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🥡 Ort: ${s.chamber}\n––––––––––––––––––\n`;
         oS.forEach(c => { m += `• ${c.val().name} (${c.val().user})\n`; });
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
     };
@@ -354,12 +414,13 @@
     document.getElementById("shareLinkBtn").onclick = async () => {
         const sSnap = await get(ref(db, "settings"));
         const s = sSnap.val() || {};
-        let message = `*🍕 BITTE HIER EINTRAGEN:*\n${window.location.href}\n\n📍 *Restaurant:* ${s.restaurant}\n⌛ *Schluss:* ${new Date(s.endTime).getHours()}:${new Date(s.endTime).getMinutes()} Uhr`;
+        const deadline = new Date(s.endTime);
+        const timeStr = deadline.getHours().toString().padStart(2, '0') + ":" + deadline.getMinutes().toString().padStart(2, '0');
+        let message = `*🍕 BITTE HIER EINTRAGEN:*\n${window.location.href}\n\n📍 *Restaurant:* ${s.restaurant}\n⌛ *Schluss:* ${timeStr} Uhr`;
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
-    const closeModal = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
-    document.getElementById("cancelModalBtn").onclick = closeModal;
+    document.getElementById("cancelModalBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
     document.getElementById("clearAllBtn").onclick = () => { if(prompt("Passwort:") === "admin") { remove(ref(db, "orders")); remove(ref(db, "settings")); }};
 </script>
 </body>
