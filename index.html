@@ -62,7 +62,6 @@
             flex-direction: column;
         }
 
-        /* View-Logik: Nur die aktive View anzeigen */
         .view-section { display: none; width: 100%; }
         
         #view-setup.active-view { 
@@ -117,6 +116,7 @@
         .order-container-box {
             background: white; border-radius: 24px; border: 2px solid var(--primary);
             padding: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+            display: none; /* Initial versteckt */
         }
         .box-title-sub { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 15px;}
         .box-title-sub::after { content: ""; height: 2px; background: #eff6ff; flex: 1; }
@@ -201,7 +201,7 @@
                 <button id="addOrderBtn" class="btn add-btn">+ Hinzufügen</button>
             </div>
 
-            <div class="order-container-box">
+            <div id="orderBoxContainer" class="order-container-box">
                 <div class="box-title-sub" id="orderBoxDetails">Aktuelle Bestellungen</div>
                 <ul id="list-live"></ul>
             </div>
@@ -214,7 +214,7 @@
                 <div style="font-size: 14px; color: var(--text-muted);" id="sum-meta">Zeit | Kammerl</div>
             </div>
 
-            <div class="order-container-box">
+            <div class="order-container-box" style="display: block;">
                 <div class="box-title-sub">Gesamtliste für den Lieferanten</div>
                 <ul id="list-summary"></ul>
             </div>
@@ -299,13 +299,7 @@
     });
 
     const isAdmin = () => userId === currentAdminId || prompt("Passwort:") === "admin";
-    document.getElementById("editResArea").onclick = () => { if(isAdmin()) { let v = prompt("Restaurant:"); if(v) update(ref(db, "settings"), {restaurant: v}); }};
-    document.getElementById("editTimeArea").onclick = () => { if(isAdmin()) { let v = prompt("Zeit:"); if(v) update(ref(db, "settings"), {time: v}); }};
-    document.getElementById("editDeadlineArea").onclick = () => { if(isAdmin()) { let v = prompt("Schluss (HH:MM):"); if(v) { 
-        const [h,m] = v.split(":").map(Number); const e = new Date(); e.setHours(h,m,0,0); if(e < new Date()) e.setDate(e.getDate()+1);
-        update(ref(db, "settings"), {endTime: e.getTime()});
-    }}};
-
+    
     document.getElementById("startBtn").onclick = () => { 
         document.getElementById("modalOverlay").style.display = "block"; 
         document.getElementById("timeModal").style.display = "block"; 
@@ -358,10 +352,12 @@
     onValue(ref(db, "orders"), snap => {
         const listLive = document.getElementById("list-live");
         const listSum = document.getElementById("list-summary");
+        const orderBox = document.getElementById("orderBoxContainer");
         listLive.innerHTML = "";
         listSum.innerHTML = "";
 
-        if(snap.exists()) {
+        if(snap.exists() && snap.size > 0) {
+            orderBox.style.display = "block"; // Einblenden wenn Daten da sind
             document.getElementById("orderBoxDetails").innerText = `Aktuelle Bestellungen (${snap.size})`;
             snap.forEach(child => {
                 const d = child.val();
@@ -387,6 +383,8 @@
                 liSum.innerHTML = `<div class="order-info"><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>`;
                 listSum.appendChild(liSum);
             });
+        } else {
+            orderBox.style.display = "none"; // Ausblenden wenn leer
         }
     });
 
