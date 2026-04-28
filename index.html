@@ -60,11 +60,9 @@
             flex-grow: 1;
         }
 
-        /* View-Logic CSS */
         .view-section { display: none; }
         .active-view { display: block; }
 
-        /* Status Display Styling (Original) */
         #statusDisplay, .summary-card {
             background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px;
             border: 2px solid #fee2e2; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
@@ -102,7 +100,6 @@
         }
         .add-btn { background: var(--success); color: white; margin-top: 5px; }
 
-        /* Order List Styling (Original) */
         .order-container-box {
             background: white; border-radius: 24px; border: 2px solid var(--primary);
             padding: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
@@ -116,17 +113,17 @@
         .user-label { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
         .food-name { font-weight: 700; font-size: 17px; color: var(--text-main); display: block;}
 
-        /* Edit Controls (Original) */
         .edit-btn { background: #f1f5f9; color: var(--text-muted); border: none; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
         .edit-container { display: none; flex-direction: column; gap: 8px; background: #f8fafc; padding: 10px; border-radius: 12px; }
         .save-btn { background: var(--primary); color: white; padding: 8px; border-radius: 8px; border: none; flex: 2; font-weight: 700;}
         .del-btn { background: var(--danger); color: white; padding: 8px; border-radius: 8px; border: none; flex: 1; font-weight: 700;}
 
-        /* Modals */
         #timeModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); z-index: 2000; width: 85%; max-width: 320px; }
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 1999; }
+        
+        /* Fix für Zeit-Input im Modal */
+        #deadlineInput { width: 100%; max-width: 100%; }
 
-        /* Sticky WhatsApp (Original) */
         .wa-sticky { position: fixed; bottom: 0; width: 100%; max-width: 500px; padding: 20px; background: linear-gradient(0deg, #f8fafc 80%, transparent); display: flex; justify-content: center; z-index: 1000; }
         .wa-btn { background: var(--whatsapp); color: white; border: none; border-radius: 15px; font-weight: 700; padding: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .wa-btn svg { width: 22px; height: 22px; fill: white; }
@@ -161,7 +158,6 @@
                 <select id="gate"><option>Nord-Tor</option><option>Haupt-Tor</option></select>
                 <button id="startBtn" class="btn" style="background: var(--primary); color: white;">🟢 Bestellung Starten</button>
             </div>
-            <button id="clearAllBtn" style="width:100%; background:none; border:none; color:var(--text-muted); opacity:0.3; font-size:10px; cursor:pointer;">System Reset (Admin)</button>
         </div>
 
         <div id="view-live" class="view-section">
@@ -221,7 +217,7 @@
     <div id="timeModal">
         <span class="label">Einsendeschluss festlegen</span>
         <input type="time" id="deadlineInput" value="15:30">
-        <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white;">Starten</button>
+        <button id="confirmStartBtn" class="btn" style="background: var(--primary); color: white; margin-top: 10px;">Starten</button>
         <button id="cancelModalBtn" class="btn" style="background: #f1f5f9; color: #64748b; margin-top: 8px;">Abbrechen</button>
     </div>
 
@@ -245,7 +241,6 @@
     let userName = localStorage.getItem("userName") || "Gast";
     document.getElementById("userNameDisplay").innerText = userName;
 
-    // View Switcher Utility
     const switchView = (id) => {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active-view'));
         document.getElementById(`view-${id}`).classList.add('active-view');
@@ -271,7 +266,6 @@
     let currentAdminId = null;
     let isGlobalActive = false;
 
-    // Listen to Settings & Status
     onValue(ref(db, "settings"), snap => {
         const d = snap.val() || {};
         const now = new Date().getTime();
@@ -294,7 +288,6 @@
         }
     });
 
-    // ORIGINAL ADMIN FUNCTIONS
     const isAdmin = () => userId === currentAdminId || prompt("Passwort:") === "admin";
     document.getElementById("editResArea").onclick = () => { if(isAdmin()) { let v = prompt("Restaurant:"); if(v) update(ref(db, "settings"), {restaurant: v}); }};
     document.getElementById("editTimeArea").onclick = () => { if(isAdmin()) { let v = prompt("Zeit:"); if(v) update(ref(db, "settings"), {time: v}); }};
@@ -303,7 +296,6 @@
         update(ref(db, "settings"), {endTime: e.getTime()});
     }}};
 
-    // PROCESS CONTROLS
     document.getElementById("startBtn").onclick = () => { 
         document.getElementById("modalOverlay").style.display = "block"; 
         document.getElementById("timeModal").style.display = "block"; 
@@ -339,7 +331,6 @@
         }
     };
 
-    // ORDERING LOGIC (Original)
     const add = () => {
         const inp = document.getElementById("orderInput");
         if(inp.value.trim()) {
@@ -354,7 +345,6 @@
     document.getElementById("addOrderBtn").onclick = add;
     document.getElementById("orderInput").onkeypress = (e) => { if(e.key === "Enter") add(); };
 
-    // LIST RENDERING (Original)
     onValue(ref(db, "orders"), snap => {
         const listLive = document.getElementById("list-live");
         const listSum = document.getElementById("list-summary");
@@ -390,7 +380,6 @@
         }
     });
 
-    // EDITING HELPERS (Original)
     window.startEdit = (key) => {
         currentlyEditing = key;
         document.getElementById(`view-${key}`).style.display = "none";
@@ -402,12 +391,12 @@
     };
     window.deleteOrder = (key) => { if(confirm("Löschen?")) remove(ref(db, `orders/${key}`)); };
 
-    // SHARE LOGIC (Original)
+    // SHARE LOGIC (Wieder exakt wie im ersten Skript)
     document.getElementById("shareWaBtn").onclick = async () => {
         const [sS, oS] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
         const s = sS.val() || {};
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🥡 Ort: ${s.chamber}\n––––––––––––––––––\n`;
-        oS.forEach(c => { m += `• ${c.val().name} (${c.val().user})\n`; });
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🥡 Mahlzeiten: x${oS.size}\n––––––––––––––––––\n`;
+        oS.forEach(c => { m += `• ${c.val().name}\n`; });
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
     };
 
@@ -416,12 +405,11 @@
         const s = sSnap.val() || {};
         const deadline = new Date(s.endTime);
         const timeStr = deadline.getHours().toString().padStart(2, '0') + ":" + deadline.getMinutes().toString().padStart(2, '0');
-        let message = `*🍕 BITTE HIER EINTRAGEN:*\n${window.location.href}\n\n📍 *Restaurant:* ${s.restaurant}\n⌛ *Schluss:* ${timeStr} Uhr`;
+        let message = `*🍕 BITTE HIER EINTRAGEN:*\n${window.location.href}\n\n📍 *Restaurant:* ${s.restaurant || '---'}\n🕒 *Lieferung:* ${s.time || '---'} Uhr\n⌛ *Bestellschluss:* ${timeStr} Uhr\n📦 *Ort:* ${s.chamber || '---'}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
     document.getElementById("cancelModalBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
-    document.getElementById("clearAllBtn").onclick = () => { if(prompt("Passwort:") === "admin") { remove(ref(db, "orders")); remove(ref(db, "settings")); }};
 </script>
 </body>
 </html>
