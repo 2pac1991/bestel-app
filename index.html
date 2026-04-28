@@ -116,7 +116,7 @@
         .order-container-box {
             background: white; border-radius: 24px; border: 2px solid var(--primary);
             padding: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
-            display: none; /* Initial versteckt */
+            display: none; 
         }
         .box-title-sub { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 15px;}
         .box-title-sub::after { content: ""; height: 2px; background: #eff6ff; flex: 1; }
@@ -156,7 +156,6 @@
     </header>
 
     <div class="container">
-        
         <div id="view-setup" class="view-section active-view">
             <div class="card">
                 <span class="label">📍 Restaurant</span>
@@ -215,13 +214,12 @@
             </div>
 
             <div class="order-container-box" style="display: block;">
-                <div class="box-title-sub">Gesamtliste für den Lieferanten</div>
+                <div class="box-title-sub" id="sumBoxTitle">Gesamtliste für den Lieferanten</div>
                 <ul id="list-summary"></ul>
             </div>
 
             <button id="restartBtn" class="btn" style="margin-top: 20px; background: #f1f5f9; color: var(--text-muted);">Neue Liste starten</button>
         </div>
-
     </div>
 
     <div id="modalOverlay"></div>
@@ -353,12 +351,15 @@
         const listLive = document.getElementById("list-live");
         const listSum = document.getElementById("list-summary");
         const orderBox = document.getElementById("orderBoxContainer");
+        const sumTitle = document.getElementById("sumBoxTitle");
         listLive.innerHTML = "";
         listSum.innerHTML = "";
 
         if(snap.exists() && snap.size > 0) {
-            orderBox.style.display = "block"; // Einblenden wenn Daten da sind
+            orderBox.style.display = "block";
             document.getElementById("orderBoxDetails").innerText = `Aktuelle Bestellungen (${snap.size})`;
+            sumTitle.innerText = `Gesamtliste für den Lieferanten (x${snap.size})`;
+            
             snap.forEach(child => {
                 const d = child.val();
                 const key = child.key;
@@ -384,7 +385,8 @@
                 listSum.appendChild(liSum);
             });
         } else {
-            orderBox.style.display = "none"; // Ausblenden wenn leer
+            orderBox.style.display = "none";
+            sumTitle.innerText = `Gesamtliste für den Lieferanten (x0)`;
         }
     });
 
