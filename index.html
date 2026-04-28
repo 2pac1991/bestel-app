@@ -23,7 +23,7 @@
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding-bottom: 20px;
+            padding-bottom: 100px; /* Erhöht, damit nichts vom WhatsApp-Button verdeckt wird */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -140,6 +140,8 @@
         .wa-btn svg { width: 22px; height: 22px; fill: white; }
         
         .stop-btn-minimal { background: none; border: 1px solid #e2e8f0; color: #94a3b8; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 600; cursor: pointer; width: 100%; text-transform: uppercase; margin-top: 10px;}
+
+        #restartBtn { margin-top: 30px; margin-bottom: 40px; background: #f1f5f9; color: var(--text-muted); }
     </style>
 </head>
 <body>
@@ -218,7 +220,7 @@
                 <ul id="list-summary"></ul>
             </div>
 
-            <button id="restartBtn" class="btn" style="margin-top: 20px; background: #f1f5f9; color: var(--text-muted);">Neue Liste starten</button>
+            <button id="restartBtn" class="btn">Neue Liste starten</button>
         </div>
     </div>
 
@@ -358,7 +360,6 @@
         if(snap.exists() && snap.size > 0) {
             orderBox.style.display = "block";
             document.getElementById("orderBoxDetails").innerText = `Aktuelle Bestellungen (${snap.size})`;
-            // HIER GEÄNDERT: Das x vor der Zahl wurde entfernt
             sumTitle.innerText = `Gesamtliste für den Lieferanten (${snap.size})`;
             
             snap.forEach(child => {
