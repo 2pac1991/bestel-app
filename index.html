@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bestell-Liste 🍔</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Essen-Liste">
+    <link rel="apple-touch-icon" href="icon.png">
+
     <style>
         :root {
             --primary: #3b82f6;
@@ -23,7 +31,7 @@
             background: var(--bg);
             color: var(--text-main);
             margin: 0;
-            padding-bottom: 100px; /* Erhöht, damit nichts vom WhatsApp-Button verdeckt wird */
+            padding-bottom: 100px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -240,9 +248,15 @@
     </div>
 
 <script type="module">
+    // SERVICE WORKER REGISTRIERUNG
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
+    // FIREBASE LOGIK WIE GEHABT
     const firebaseConfig = { apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs", databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
