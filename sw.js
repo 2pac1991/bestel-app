@@ -1,4 +1,13 @@
-self.addEventListener('fetch', function(event) {
-  // Dieser Code sorgt dafür, dass die App installierbar wird.
-  // Er kann später für Offline-Funktionen erweitert werden.
+// Installiert den Service Worker und aktiviert ihn sofort
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    console.log('Service Worker ist bereit!');
+});
+
+// Der "Leere" Fetch-Event ist notwendig für die PWA-Erkennung
+self.addEventListener('fetch', (event) => {
+    // Hier könnte man später Bilder oder Scripte zwischenspeichern (Caching)
 });
