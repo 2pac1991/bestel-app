@@ -250,13 +250,12 @@
 <script type="module">
     // SERVICE WORKER REGISTRIERUNG
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
+        navigator.serviceWorker.register('sw.js').catch(err => console.log("SW error:", err));
     }
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
-    // FIREBASE LOGIK WIE GEHABT
     const firebaseConfig = { apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs", databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
@@ -268,7 +267,8 @@
 
     const switchView = (id) => {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active-view'));
-        document.getElementById(`view-${id}`).classList.add('active-view');
+        const targetView = document.getElementById(`view-${id}`);
+        if(targetView) targetView.classList.add('active-view');
         document.getElementById('waLeiste').style.display = (id === 'summary') ? 'flex' : 'none';
     };
 
@@ -306,13 +306,16 @@
         } else if (d.summaryMode) {
             switchView('summary');
             document.getElementById("sum-res").innerText = d.restaurant || "---";
-            document.getElementById("sum-meta").innerText = `${d.time} Uhr | ${d.chamber} | ${d.gate}`;
+            document.getElementById("sum-meta").innerText = `${d.time || '---'} Uhr | ${d.chamber || '---'} | ${d.gate || '---'}`;
         } else {
             switchView('setup');
         }
     });
 
-    const isAdmin = () => userId === currentAdminId || prompt("Passwort:") === "admin";
+    const isAdmin = () => {
+        if (userId === currentAdminId) return true;
+        return prompt("Passwort:") === "admin";
+    };
     
     document.getElementById("startBtn").onclick = () => { 
         document.getElementById("modalOverlay").style.display = "block"; 
@@ -368,6 +371,18 @@
         const listSum = document.getElementById("list-summary");
         const orderBox = document.getElementById("orderBoxContainer");
         const sumTitle = document.getElementById("sumBoxTitle");
+
+        // UI-Zustand retten: Editiert dieser Nutzer gerade?
+        let activeEditKey = null;
+        let activeEditValue = "";
+        document.querySelectorAll(".edit-container").forEach(el => {
+            if(el.style.display === "flex") {
+                activeEditKey = el.id.replace("edit-", "");
+                const inp = document.getElementById(`inp-${activeEditKey}`);
+                if(inp) activeEditValue = inp.value;
+            }
+        });
+
         listLive.innerHTML = "";
         listSum.innerHTML = "";
 
@@ -400,6 +415,18 @@
                 liSum.innerHTML = `<div class="order-info"><span class="user-label">${d.user}</span><span class="food-name">${d.name}</span></div>`;
                 listSum.appendChild(liSum);
             });
+
+            // UI-Zustand wiederherstellen
+            if(activeEditKey && document.getElementById(`view-${activeEditKey}`)) {
+                document.getElementById(`view-${activeEditKey}`).style.display = "none";
+                const editBox = document.getElementById(`edit-${activeEditKey}`);
+                const editInp = document.getElementById(`inp-${activeEditKey}`);
+                if(editBox && editInp) {
+                    editBox.style.display = "flex";
+                    editInp.value = activeEditValue;
+                    editInp.focus();
+                }
+            }
         } else {
             orderBox.style.display = "none";
             sumTitle.innerText = `Gesamtliste für den Lieferanten (0)`;
@@ -419,16 +446,18 @@
     document.getElementById("shareWaBtn").onclick = async () => {
         const [sS, oS] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
         const s = sS.val() || {};
-        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${oS.size}\n––––––––––––––––––\n`;
-        oS.forEach(c => { m += `• ${c.val().name}\n`; });
+        let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${oS.exists() ? oS.size : 0}\n––––––––––––––––––\n`;
+        if(oS.exists()) {
+            oS.forEach(c => { m += `• ${c.val().name} (${c.val().user})\n`; });
+        }
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
     };
 
     document.getElementById("shareLinkBtn").onclick = async () => {
         const sSnap = await get(ref(db, "settings"));
         const s = sSnap.val() || {};
-        const deadline = new Date(s.endTime);
-        const timeStr = deadline.getHours().toString().padStart(2, '0') + ":" + deadline.getMinutes().toString().padStart(2, '0');
+        const deadline = new Date(s.endTime || 0);
+        const timeStr = s.endTime ? (deadline.getHours().toString().padStart(2, '0') + ":" + deadline.getMinutes().toString().padStart(2, '0')) : "--:--";
         let message = `*🍕 BITTE HIER EINTRAGEN:*\n${window.location.href}\n\n📍 *Restaurant:* ${s.restaurant || '---'}\n🕒 *Lieferung:* ${s.time || '---'} Uhr\n⌛ *Bestellschluss:* ${timeStr} Uhr\n📦 *Ort:* ${s.chamber || '---'}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
