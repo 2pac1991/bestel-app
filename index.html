@@ -70,6 +70,7 @@
             flex-direction: column;
         }
 
+        /* GEÄNDERT: Standardmäßig ausgeblendet, um Aufblubbern beim Laden zu verhindern */
         .view-section { display: none; width: 100%; }
         
         #view-setup.active-view { 
@@ -194,7 +195,7 @@
     </header>
 
     <div class="container">
-        <div id="view-setup" class="view-section active-view">
+        <div id="view-setup" class="view-section">
             <div class="card">
                 <span class="label">📍 Restaurant</span>
                 <input id="restaurant" placeholder="z. B. Baron" autocomplete="off">
@@ -346,11 +347,17 @@
     };
     
     document.getElementById("startBtn").onclick = () => { 
+        // GEÄNDERT: Zusätzlicher Sicherheits-Check. Wenn bereits im Hintergrund geladen wurde, dass eine Liste aktiv ist, bricht die Funktion sofort ab!
+        if (isGlobalActive) return;
+
         document.getElementById("modalOverlay").style.display = "block"; 
         document.getElementById("timeModal").style.display = "block"; 
     };
     
     document.getElementById("confirmStartBtn").onclick = () => {
+        // GEÄNDERT: Zusätzliche Absicherung
+        if (isGlobalActive) return;
+
         const t = document.getElementById("deadlineInput").value;
         const [h,m] = t.split(":").map(Number);
         const e = new Date(); e.setHours(h,m,0,0); if(e < new Date()) e.setDate(e.getDate()+1);
@@ -394,7 +401,6 @@
     document.getElementById("addOrderBtn").onclick = add;
     document.getElementById("orderInput").onkeypress = (e) => { if(e.key === "Enter") add(); };
 
-    // Globale Funktion zum Löschen einzelner Einträge (wird direkt vom Button getriggert)
     window.deleteOrder = (key) => {
         if(confirm("Möchtest du diese Bestellung wirklich löschen?")) {
             remove(ref(db, `orders/${key}`));
@@ -418,7 +424,6 @@
             snap.forEach(child => {
                 const d = child.val();
                 const key = child.key;
-                // Erlaubt das Löschen, wenn die Bestellung aktiv ist UND man der Eigentümer oder Admin ist
                 const canDelete = isGlobalActive && (d.owner === userId || userId === currentAdminId);
                 
                 const li = document.createElement("li");
@@ -436,12 +441,10 @@
                 liSum.dataset.key = key;
                 liSum.dataset.paid = d.paid ? "true" : "false";
                 
-                // Falls bezahlt: Klassen & Badge anhängen
                 if(d.paid) {
                     liSum.className = "paid-item";
                 }
                 
-                // Styling und Cursor, wenn der aktuelle User der Listen-Ersteller ist
                 if(userId === currentAdminId) {
                     liSum.classList.add("summary-admin-clickable");
                 }
@@ -462,7 +465,6 @@
         }
     });
 
-    // SICHERER KLICK-LISTENER DIREKT AUF DER ZUSAMMENFASSUNGSLISTE
     document.getElementById("list-summary").addEventListener("click", (e) => {
         const li = e.target.closest("li");
         if (!li) return;
@@ -470,7 +472,6 @@
         const key = li.dataset.key;
         const currentPaid = li.dataset.paid === "true";
         
-        // Prüft, ob der klickende User der Ersteller ist (oder das Passwort eingibt)
         if (isAdmin()) {
             update(ref(db, `orders/${key}`), { paid: !currentPaid });
         }
