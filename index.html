@@ -148,26 +148,26 @@
 
         #restartBtn { margin-top: 30px; margin-bottom: 40px; background: #f1f5f9; color: var(--text-muted); }
 
-        /* NEUE STYLES FÜR DEN BEZAHLT-STATUS */
+        /* DESIGN FÜR DEN GOLDENEN BEZAHLT-STATUS */
         .summary-admin-clickable {
             cursor: pointer;
             transition: background 0.2s ease, transform 0.1s ease;
         }
         .summary-admin-clickable:active {
-            transform: scale(0.99);
+            transform: scale(0.98);
         }
         .paid-item {
             background: linear-gradient(135deg, #fffdf0 0%, #fff9db 100%) !important;
             border-left: 5px solid #eab308;
-            padding-left: 10px !important;
+            padding-left: 12px !important;
         }
         .paid-badge {
             position: absolute;
-            top: 10px;
+            top: 12px;
             right: 15px;
             background: #eab308;
             color: #ffffff;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 900;
             padding: 3px 8px;
             border-radius: 20px;
@@ -176,7 +176,7 @@
             display: flex;
             align-items: center;
             gap: 3px;
-            box-shadow: 0 2px 5px rgba(234, 179, 8, 0.2);
+            box-shadow: 0 2px 6px rgba(234, 179, 8, 0.3);
         }
     </style>
 </head>
@@ -401,13 +401,6 @@
         }
     };
 
-    // Globale Funktion zum Umschalten des Bezahlstatus (wird vom Admin angetippt)
-    window.togglePaidStatus = (key, currentStatus) => {
-        if (userId === currentAdminId) {
-            update(ref(db, `orders/${key}`), { paid: !currentStatus });
-        }
-    };
-
     onValue(ref(db, "orders"), snap => {
         const listLive = document.getElementById("list-live");
         const listSum = document.getElementById("list-summary");
@@ -440,28 +433,46 @@
                 listLive.appendChild(li);
                 
                 const liSum = document.createElement("li");
-                // Wenn bezahlt, kriegt die Liste das goldene Design und das Abzeichen
+                liSum.dataset.key = key;
+                liSum.dataset.paid = d.paid ? "true" : "false";
+                
+                // Falls bezahlt: Klassen & Badge anhängen
                 if(d.paid) {
                     liSum.className = "paid-item";
                 }
-                // Wenn der aktuelle User der Admin ist, fügen wir Klick-Klassen und das Event hinzu
+                
+                // Styling und Cursor, wenn der aktuelle User der Listen-Ersteller ist
                 if(userId === currentAdminId) {
                     liSum.classList.add("summary-admin-clickable");
-                    liSum.setAttribute("onclick", `togglePaidStatus('${key}', ${!!d.paid})`);
                 }
                 
                 liSum.innerHTML = `
-                    <div class="order-info">
-                        <span class="user-label">${d.user}</span>
-                        <span class="food-name">${d.name}</span>
-                    </div>
-                    ${d.paid ? `<span class="paid-badge">🏆 Bezahlt</span>` : ""}
-                `;
+                    <div class="order-row">
+                        <div class="order-info">
+                            <span class="user-label">${d.user}</span>
+                            <span class="food-name">${d.name}</span>
+                        </div>
+                        ${d.paid ? `<span class="paid-badge">🏆 Bezahlt</span>` : ""}
+                    </div>`;
                 listSum.appendChild(liSum);
             });
         } else {
             orderBox.style.display = "none";
             sumTitle.innerText = `Gesamtliste für den Lieferanten (0)`;
+        }
+    });
+
+    // SICHERER KLICK-LISTENER DIREKT AUF DER ZUSAMMENFASSUNGSLISTE
+    document.getElementById("list-summary").addEventListener("click", (e) => {
+        const li = e.target.closest("li");
+        if (!li) return;
+        
+        const key = li.dataset.key;
+        const currentPaid = li.dataset.paid === "true";
+        
+        // Prüft, ob der klickende User der Ersteller ist (oder das Passwort eingibt)
+        if (isAdmin()) {
+            update(ref(db, `orders/${key}`), { paid: !currentPaid });
         }
     });
 
