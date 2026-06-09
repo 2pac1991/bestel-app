@@ -1,3 +1,6 @@
+Hier ist der komplette, aktualisierte Code. Ich habe die Logik so angepasst, dass du das **„Bezahlt“-Feature** ab sofort **sowohl in der laufenden (Live) Bestellung als auch in der Zusammenfassung** nutzen kannst.
+Wenn du als Admin eingeloggt bist (oder das Passwort eingibst), kannst du einfach auf die jeweilige Bestellung in der Live-Liste klicken, um sie als bezahlt zu markieren. Sie erhält dann sofort das goldene Design und das Abzeichen.
+```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -70,7 +73,6 @@
             flex-direction: column;
         }
 
-        /* GEÄNDERT: Standardmäßig ausgeblendet, um Aufblubbern beim Laden zu verhindern */
         .view-section { display: none; width: 100%; }
         
         #view-setup.active-view { 
@@ -179,6 +181,27 @@
             gap: 3px;
             box-shadow: 0 2px 6px rgba(234, 179, 8, 0.3);
         }
+        /* Zusatz für die Löschbutton-Ausrichtung bei Bezahlt-Status in der Live-Liste */
+        .paid-badge-live {
+            position: static;
+            background: #eab308;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            margin-left: 8px;
+            box-shadow: 0 2px 6px rgba(234, 179, 8, 0.3);
+        }
+        .order-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>
@@ -277,7 +300,6 @@
     </div>
 
 <script type="module">
-    // SERVICE WORKER REGISTRIERUNG
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(err => console.log("SW error:", err));
     }
@@ -347,17 +369,13 @@
     };
     
     document.getElementById("startBtn").onclick = () => { 
-        // GEÄNDERT: Zusätzlicher Sicherheits-Check. Wenn bereits im Hintergrund geladen wurde, dass eine Liste aktiv ist, bricht die Funktion sofort ab!
         if (isGlobalActive) return;
-
         document.getElementById("modalOverlay").style.display = "block"; 
         document.getElementById("timeModal").style.display = "block"; 
     };
     
     document.getElementById("confirmStartBtn").onclick = () => {
-        // GEÄNDERT: Zusätzliche Absicherung
         if (isGlobalActive) return;
-
         const t = document.getElementById("deadlineInput").value;
         const [h,m] = t.split(":").map(Number);
         const e = new Date(); e.setHours(h,m,0,0); if(e < new Date()) e.setDate(e.getDate()+1);
@@ -394,14 +412,15 @@
                 let n = prompt("Bitte gib deinen Namen für die Bestellung ein:");
                 if(!setUserName(n)) return; 
             }
-            push(ref(db, "orders"), {name: inp.value.trim(), user: userName, owner: userId}); 
+            push(ref(db, "orders"), {name: inp.value.trim(), user: userName, owner: userId, paid: false}); 
             inp.value = ""; 
         }
     };
     document.getElementById("addOrderBtn").onclick = add;
     document.getElementById("orderInput").onkeypress = (e) => { if(e.key === "Enter") add(); };
 
-    window.deleteOrder = (key) => {
+    window.deleteOrder = (key, event) => {
+        if(event) event.stopPropagation(); // Verhindert das Trigger des Bezahlt-Status beim Löschen
         if(confirm("Möchtest du diese Bestellung wirklich löschen?")) {
             remove(ref(db, `orders/${key}`));
         }
@@ -426,17 +445,31 @@
                 const key = child.key;
                 const canDelete = isGlobalActive && (d.owner === userId || userId === currentAdminId);
                 
+                // LIVE LISTE GENERIEREN
                 const li = document.createElement("li");
+                li.dataset.key = key;
+                li.dataset.paid = d.paid ? "true" : "false";
+                
+                if(d.paid) {
+                    li.className = "paid-item";
+                }
+                if(userId === currentAdminId) {
+                    li.classList.add("summary-admin-clickable");
+                }
+
                 li.innerHTML = `
                     <div class="order-row">
                         <div class="order-info">
-                            <span class="user-label">${d.user}</span>
+                            <span class="user-label">${d.user} ${d.paid ? `<span class="paid-badge-live">🏆 Bezahlt</span>` : ""}</span>
                             <span class="food-name">${d.name}</span>
                         </div>
-                        ${canDelete ? `<button class="del-btn-inline" onclick="deleteOrder('${key}')">Löschen</button>` : ""}
+                        <div class="order-actions">
+                            ${canDelete ? `<button class="del-btn-inline" onclick="deleteOrder('${key}', event)">Löschen</button>` : ""}
+                        </div>
                     </div>`;
                 listLive.appendChild(li);
                 
+                // ZUSAMMENFASSUNG LISTE GENERIEREN
                 const liSum = document.createElement("li");
                 liSum.dataset.key = key;
                 liSum.dataset.paid = d.paid ? "true" : "false";
@@ -444,7 +477,6 @@
                 if(d.paid) {
                     liSum.className = "paid-item";
                 }
-                
                 if(userId === currentAdminId) {
                     liSum.classList.add("summary-admin-clickable");
                 }
@@ -465,6 +497,21 @@
         }
     });
 
+    // Event-Listener für Live-Liste (Bezahlt toggeln)
+    document.getElementById("list-live").addEventListener("click", (e) => {
+        if (e.target.classList.contains('del-btn-inline')) return; // Nicht triggern wenn Löschen geklickt wird
+        const li = e.target.closest("li");
+        if (!li) return;
+        
+        const key = li.dataset.key;
+        const currentPaid = li.dataset.paid === "true";
+        
+        if (isAdmin()) {
+            update(ref(db, `orders/${key}`), { paid: !currentPaid });
+        }
+    });
+
+    // Event-Listener für Zusammenfassung (Bezahlt toggeln)
     document.getElementById("list-summary").addEventListener("click", (e) => {
         const li = e.target.closest("li");
         if (!li) return;
@@ -482,7 +529,7 @@
         const s = sS.val() || {};
         let m = `*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${oS.exists() ? oS.size : 0}\n––––––––––––––––––\n`;
         if(oS.exists()) {
-            oS.forEach(c => { m += `• ${c.val().name} (${c.val().user})\n`; });
+            oS.forEach(c => { m += `• ${c.val().name} (${c.val().user})${c.val().paid ? ' ✅ (Bezahlt)' : ''}\n`; });
         }
         window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
     };
@@ -500,3 +547,5 @@
 </script>
 </body>
 </html>
+
+```
