@@ -349,7 +349,7 @@
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
             document.getElementById("disp-cham-live").innerText = d.chamber || "---";
-        } else if (d.summaryMode) {
+        } else if (d.summaryMode || (d.orderActive && now >= d.endTime)) {
             switchView('summary');
             document.getElementById("sum-res").innerText = d.restaurant || "---";
             document.getElementById("sum-meta").innerText = `${d.time || '---'} Uhr | ${d.chamber || '---'} | ${d.gate || '---'}`;
@@ -435,7 +435,6 @@
             document.getElementById("orderBoxDetails").innerText = `Aktuelle Bestellungen (${snap.size})`;
             sumTitle.innerText = `Gesamtliste für den Lieferanten (${snap.size})`;
             
-            // Bestellungen in ein Array laden und sortieren (Bezahlt [true] nach oben, unbezahlt [false] nach unten)
             const sortedOrders = [];
             snap.forEach(child => {
                 sortedOrders.push({ key: child.key, ...child.val() });
@@ -498,7 +497,6 @@
         }
     });
 
-    // Hilfsfunktion für das Umschalten des Bezahlstatus mit Sicherheitsabfrage beim Entfernen
     const togglePaidStatus = (li) => {
         if (!li) return;
         const key = li.dataset.key;
@@ -515,14 +513,12 @@
         }
     };
 
-    // Event-Listener für Live-Liste (Bezahlt toggeln)
     document.getElementById("list-live").addEventListener("click", (e) => {
         if (e.target.classList.contains('del-btn-inline')) return; 
         const li = e.target.closest("li");
         togglePaidStatus(li);
     });
 
-    // Event-Listener für Zusammenfassung (Bezahlt toggeln)
     document.getElementById("list-summary").addEventListener("click", (e) => {
         const li = e.target.closest("li");
         togglePaidStatus(li);
