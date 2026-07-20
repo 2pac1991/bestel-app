@@ -55,10 +55,20 @@
         .header-logo { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
         h1 { font-size: 20px; font-weight: 800; margin: 0; }
 
-        #profileBtn {
+        .header-actions-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #profileBtn, #debtTriggerBtn {
             background: #f1f5f9; border: 1.5px solid #e2e8f0; padding: 8px 14px;
             border-radius: 12px; display: flex; align-items: center; gap: 8px;
             cursor: pointer; font-weight: 600; font-size: 13px;
+        }
+        #debtTriggerBtn {
+            background: #fefce8;
+            border-color: #fef08a;
         }
 
         .container { 
@@ -198,10 +208,40 @@
             gap: 8px;
         }
 
-        /* SCHULDSCHEIN STYLES */
-        .debts-section {
-            margin-top: 25px;
-            margin-bottom: 25px;
+        /* SCHULDSCHEIN POPUP STYLES */
+        #debtModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            z-index: 2050;
+            width: 90%;
+            max-width: 440px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .debt-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .debt-modal-close {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .debt-input-grid {
             display: grid;
@@ -217,10 +257,16 @@
             <img src="logo.png" alt="Logo" class="header-logo">
             <h1>Bestell-Liste 🍔</h1>
         </div>
-        <button id="profileBtn">
-            <span>👤</span>
-            <span id="userNameDisplay">...</span>
-        </button>
+        <div class="header-actions-right">
+            <button id="debtTriggerBtn">
+                <span>💰</span>
+                <span>Schulden</span>
+            </button>
+            <button id="profileBtn">
+                <span>👤</span>
+                <span id="userNameDisplay">...</span>
+            </button>
+        </div>
     </header>
 
     <div class="container">
@@ -288,32 +334,38 @@
 
             <button id="restartBtn" class="btn">Neue Liste starten</button>
         </div>
-
-        <!-- SCHULDSCHEIN BEREICH -->
-        <div class="debts-section">
-            <div class="card" style="border: 2px solid #eab308; background: #fefce8;">
-                <span class="label" style="color: #ca8a04;">💰 Schuldschein (Admin Only Eintrag)</span>
-                <div class="debt-input-grid">
-                    <div>
-                        <span class="label">Wer schuldet?</span>
-                        <input id="debtUser" type="text" placeholder="Name" autocomplete="off">
-                    </div>
-                    <div>
-                        <span class="label">Wieviel?</span>
-                        <input id="debtAmount" type="text" placeholder="z.B. 12,50€" autocomplete="off">
-                    </div>
-                </div>
-                <button id="addDebtBtn" class="btn" style="background: #eab308; color: white; margin-top: 5px;">Schulden eintragen</button>
-            </div>
-
-            <div class="order-container-box" id="debtBoxContainer" style="display: block; border-color: #eab308; box-shadow: 0 10px 25px rgba(234, 179, 8, 0.1);">
-                <div class="box-title-sub" style="color: #ca8a04; min-height: 15px;">Offene Schulden</div>
-                <ul id="list-debts"></ul>
-            </div>
-        </div>
     </div>
 
     <div id="modalOverlay"></div>
+    
+    <!-- SCHULDSCHEIN POPUP MODAL -->
+    <div id="debtModal">
+        <div class="debt-modal-header">
+            <h2 style="margin:0; font-size:18px; font-weight:800;">💰 Schuldschein</h2>
+            <button class="debt-modal-close" id="closeDebtModalBtn">✕</button>
+        </div>
+        
+        <div class="card" style="border: 2px solid #eab308; background: #fefce8; padding: 15px; margin-bottom: 15px;">
+            <span class="label" style="color: #ca8a04;">Eintragen (Admin erforderlich)</span>
+            <div class="debt-input-grid">
+                <div>
+                    <span class="label">Wer?</span>
+                    <input id="debtUser" type="text" placeholder="Name" autocomplete="off" style="margin-bottom:0;">
+                </div>
+                <div>
+                    <span class="label">Wieviel?</span>
+                    <input id="debtAmount" type="text" placeholder="z.B. 10€" autocomplete="off" style="margin-bottom:0;">
+                </div>
+            </div>
+            <button id="addDebtBtn" class="btn" style="background: #eab308; color: white; margin-top: 12px; padding: 10px; font-size: 14px; border-radius: 10px;">Schulden eintragen</button>
+        </div>
+
+        <div class="order-container-box" id="debtBoxContainer" style="display: block; border-color: #eab308; padding: 15px;">
+            <div class="box-title-sub" style="color: #ca8a04; margin-bottom: 10px;">Offene Schulden</div>
+            <ul id="list-debts"></ul>
+        </div>
+    </div>
+
     <div id="timeModal">
         <span class="label">Einsendeschluss festlegen</span>
         <input type="time" id="deadlineInput" value="15:30">
@@ -397,7 +449,6 @@
         return prompt("Passwort:") === "admin";
     };
 
-    // Explizite Passwortprüfung für Schuldenaktionen
     const checkDebtPassword = () => {
         return prompt("Passwort für Schuldensystem erforderlich:") === "admin";
     };
@@ -584,7 +635,27 @@
 
     document.getElementById("cancelModalBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
 
-    // --- LOGIK FÜR DEN SCHULDSCHEIN ---
+    // --- POPUP SCHULDSCHEIN LOGIK ---
+    const openDebtModal = () => {
+        document.getElementById("modalOverlay").style.display = "block";
+        document.getElementById("debtModal").style.display = "block";
+    };
+
+    const closeDebtModal = () => {
+        document.getElementById("debtModal").style.display = "none";
+        // Nur schließen, wenn nicht zeitgleich das Zeitmodal offen ist
+        if(document.getElementById("timeModal").style.display !== "block") {
+            document.getElementById("modalOverlay").style.display = "none";
+        }
+    };
+
+    document.getElementById("debtTriggerBtn").onclick = openDebtModal;
+    document.getElementById("closeDebtModalBtn").onclick = closeDebtModal;
+    document.getElementById("modalOverlay").onclick = () => {
+        closeDebtModal();
+        document.getElementById("cancelModalBtn").click();
+    };
+
     document.getElementById("addDebtBtn").onclick = () => {
         const userInp = document.getElementById("debtUser");
         const amountInp = document.getElementById("debtAmount");
