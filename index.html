@@ -86,7 +86,6 @@
             align-items: center;
         }
 
-        /* Stylische, luftige Buttons im Header */
         #profileBtn, #debtTriggerBtn {
             background: #f8fafc; 
             border: 1px solid #e2e8f0; 
@@ -113,11 +112,10 @@
             background: #eff6ff;
         }
 
-        /* Verhindert Zusammenquetschen auf kleinen Displays */
         @media (max-width: 380px) {
             #profileBtn span:last-child, 
             #debtTriggerBtn span:last-child {
-                display: none; /* Versteckt den Text, lässt nur das Icon da */
+                display: none;
             }
             #profileBtn, #debtTriggerBtn {
                 padding: 9px 12px;
@@ -284,6 +282,27 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            gap: 10px;
+        }
+        .debt-modal-right-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .debt-login-btn {
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .debt-login-btn.logged-in {
+            background: #dcfce7;
+            border-color: #bbf7d0;
+            color: #166534;
         }
         .debt-modal-close {
             background: #f1f5f9;
@@ -297,18 +316,33 @@
             align-items: center;
             justify-content: center;
         }
+        
+        /* Blendet Steuerungs-Bereiche standardmäßig aus */
+        .debt-admin-only {
+            display: none;
+        }
+        /* Zeigt Steuerungselemente, wenn der Body die Klasse "debt-admin-mode" hat */
+        body.debt-admin-mode .debt-admin-only {
+            display: block;
+        }
+        body.debt-admin-mode .debt-admin-only-flex {
+            display: flex !important;
+        }
+
         .debt-input-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
         .debt-clickable-row {
-            cursor: pointer;
             border-radius: 8px;
             padding: 4px;
             transition: background 0.2s;
         }
-        .debt-clickable-row:hover {
+        body.debt-admin-mode .debt-clickable-row {
+            cursor: pointer;
+        }
+        body.debt-admin-mode .debt-clickable-row:hover {
             background: #f1f5f9;
         }
         .debt-amount-badge {
@@ -417,11 +451,15 @@
     <div id="debtModal">
         <div class="debt-modal-header">
             <h2 style="margin:0; font-size:18px; font-weight:800;">💰 Schuldschein</h2>
-            <button class="debt-modal-close" id="closeDebtModalBtn">✕</button>
+            <div class="debt-modal-right-actions">
+                <button class="debt-login-btn" id="debtLoginBtn">🔑 Login</button>
+                <button class="debt-modal-close" id="closeDebtModalBtn">✕</button>
+            </div>
         </div>
         
-        <div class="card" style="border: 2px solid #eab308; background: #fefce8; padding: 15px; margin-bottom: 15px;">
-            <span class="label" style="color: #ca8a04;">Eintragen (Admin erforderlich)</span>
+        <!-- Eingabe-Card: Wird nur angezeigt, wenn man eingeloggt ist -->
+        <div class="card debt-admin-only" style="border: 2px solid #eab308; background: #fefce8; padding: 15px; margin-bottom: 15px;">
+            <span class="label" style="color: #ca8a04;">Eintragen (Admin-Modus aktiv)</span>
             <div class="debt-input-grid">
                 <div>
                     <span class="label">Wer?</span>
@@ -471,6 +509,8 @@
     localStorage.setItem("userId", userId);
     let userName = localStorage.getItem("userName") || "Gast";
     document.getElementById("userNameDisplay").innerText = userName;
+
+    let isDebtAdmin = false; // Lokaler Anmeldeteststatus für das Schulden-Popup
 
     const formatAmount = (val) => {
         let clean = val.trim();
@@ -532,11 +572,6 @@
         return prompt("Passwort:") === "admin";
     };
 
-    const checkDebtPassword = () => {
-        const pw = prompt("Passwort für Schuldensystem erforderlich:");
-        return pw === "admin";
-    };
-    
     document.getElementById("startBtn").onclick = () => { 
         if (isGlobalActive) return;
         document.getElementById("modalOverlay").style.display = "block"; 
@@ -721,7 +756,33 @@
         document.getElementById("timeModal").style.display = "none"; 
     };
 
-    // --- POPUP SCHULDSCHEIN LOGIK ---
+    // --- POPUP SCHULDSCHEIN LOGIK MIT ZENTRALEM LOGIN ---
+    
+    // Login Button Event
+    document.getElementById("debtLoginBtn").onclick = () => {
+        if (!isDebtAdmin) {
+            const pw = prompt("Admin-Passwort für Schuldenverwaltung eingeben:");
+            if (pw === "admin") {
+                isDebtAdmin = true;
+                document.body.classList.add("debt-admin-mode");
+                const btn = document.getElementById("debtLoginBtn");
+                btn.innerText = "🔓 Admin";
+                btn.classList.add("logged-in");
+            } else if (pw !== null) {
+                alert("Falsches Passwort!");
+            }
+        } else {
+            // Logout bei erneutem Klick
+            isDebtAdmin = false;
+            document.body.classList.remove("debt-admin-mode");
+            const btn = document.getElementById("debtLoginBtn");
+            btn.innerText = "🔑 Login";
+            btn.classList.remove("logged-in");
+            // Render triggern um Lösch-Buttons neu aufzubauen
+            triggerDebtRender();
+        }
+    };
+
     const openDebtModal = () => {
         document.getElementById("modalOverlay").style.display = "block";
         document.getElementById("debtModal").style.display = "block";
@@ -745,68 +806,65 @@
         }
     };
 
+    // Eintragen ohne Einzelabfrage
     document.getElementById("addDebtBtn").onclick = () => {
+        if(!isDebtAdmin) return;
+        
         const userInp = document.getElementById("debtUser");
         const amountInp = document.getElementById("debtAmount");
-        
         const nameVal = userInp.value.trim();
         let amountVal = amountInp.value.trim();
 
         if(nameVal && amountVal) {
-            if(checkDebtPassword()) {
-                amountVal = formatAmount(amountVal);
-                push(ref(db, "debts"), {
-                    user: nameVal,
-                    amount: amountVal
-                }).then(() => {
-                    userInp.value = "";
-                    amountInp.value = "";
-                }).catch(err => alert("Fehler beim Speichern: " + err));
-            } else {
-                alert("Falsches Passwort! Eintrag verweigert.");
-            }
+            amountVal = formatAmount(amountVal);
+            push(ref(db, "debts"), {
+                user: nameVal,
+                amount: amountVal
+            }).then(() => {
+                userInp.value = "";
+                amountInp.value = "";
+            }).catch(err => alert("Fehler beim Speichern: " + err));
         } else {
             alert("Bitte fülle beide Felder aus.");
         }
     };
 
+    // Löschen und Bearbeiten ohne Einzelabfrage (Prüfung über isDebtAdmin)
     document.getElementById("list-debts").onclick = (e) => {
         const btn = e.target.closest(".del-btn-inline");
         const clickArea = e.target.closest(".debt-clickable-row");
         
         if(btn) {
             e.stopPropagation();
+            if(!isDebtAdmin) return; // Schutz falls manipuliert
             const li = btn.closest("li");
             const key = li.dataset.key;
             if(confirm("Schuldenbegleichung bestätigen und Eintrag löschen?")) {
-                if(checkDebtPassword()) {
-                    remove(ref(db, `debts/${key}`));
-                } else {
-                    alert("Falsches Passwort! Löschen verweigert.");
-                }
+                remove(ref(db, `debts/${key}`));
             }
             return;
         }
 
-        if(clickArea) {
+        if(clickArea && isDebtAdmin) {
             const li = clickArea.closest("li");
             const key = li.dataset.key;
             const currentName = clickArea.dataset.user;
             const currentAmount = clickArea.dataset.amount;
 
-            if(checkDebtPassword()) {
-                let newAmount = prompt(`Neuen Betrag für ${currentName} festlegen (Bisher: ${currentAmount}):`, currentAmount);
-                if(newAmount !== null && newAmount.trim() !== "") {
-                    newAmount = formatAmount(newAmount);
-                    update(ref(db, `debts/${key}`), { amount: newAmount });
-                }
-            } else {
-                alert("Falsches Passwort! Bearbeiten abgebrochen.");
+            let newAmount = prompt(`Neuen Betrag für ${currentName} festlegen (Bisher: ${currentAmount}):`, currentAmount);
+            if(newAmount !== null && newAmount.trim() !== "") {
+                newAmount = formatAmount(newAmount);
+                update(ref(db, `debts/${key}`), { amount: newAmount });
             }
         }
     };
 
-    onValue(ref(db, "debts"), snap => {
+    let latestDebtsSnap = null;
+    const triggerDebtRender = () => {
+        if(latestDebtsSnap) renderDebts(latestDebtsSnap);
+    };
+
+    const renderDebts = (snap) => {
         const listDebts = document.getElementById("list-debts");
         listDebts.innerHTML = "";
         
@@ -820,12 +878,12 @@
                 li.innerHTML = `
                     <div class="order-row">
                         <div class="order-info debt-clickable-row" data-user="${d.user}" data-amount="${d.amount}" style="flex-grow: 1; display: flex; flex-direction: column;">
-                            <span class="user-label" style="color: #ca8a04;">Kreide bei (Klick zum Ändern)</span>
+                            <span class="user-label" style="color: #ca8a04;">Kreide bei ${isDebtAdmin ? '(Klick zum Ändern)' : ''}</span>
                             <span class="food-name">${d.user}</span>
                         </div>
                         <div class="order-actions" style="display: flex; align-items: center; gap: 10px;">
                             <span class="debt-amount-badge">${d.amount}</span>
-                            <button class="del-btn-inline" style="background: var(--success); padding: 8px 12px;">✓</button>
+                            <button class="del-btn-inline debt-admin-only-flex" style="background: var(--success); padding: 8px 12px; display: none; justify-content: center; align-items: center;">✓</button>
                         </div>
                     </div>`;
                 listDebts.appendChild(li);
@@ -833,6 +891,11 @@
         } else {
             listDebts.innerHTML = '<li style="color: var(--text-muted); text-align: center; font-size: 13px;">Keine offenen Schulden! 🎉</li>';
         }
+    };
+
+    onValue(ref(db, "debts"), snap => {
+        latestDebtsSnap = snap;
+        renderDebts(snap);
     });
 </script>
 </body>
