@@ -633,7 +633,10 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
-    document.getElementById("cancelModalBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
+    document.getElementById("cancelModalBtn").onclick = () => { 
+        document.getElementById("modalOverlay").style.display = "none"; 
+        document.getElementById("timeModal").style.display = "none"; 
+    };
 
     // --- POPUP SCHULDSCHEIN LOGIK ---
     const openDebtModal = () => {
@@ -643,7 +646,6 @@
 
     const closeDebtModal = () => {
         document.getElementById("debtModal").style.display = "none";
-        // Nur schließen, wenn nicht zeitgleich das Zeitmodal offen ist
         if(document.getElementById("timeModal").style.display !== "block") {
             document.getElementById("modalOverlay").style.display = "none";
         }
@@ -651,9 +653,14 @@
 
     document.getElementById("debtTriggerBtn").onclick = openDebtModal;
     document.getElementById("closeDebtModalBtn").onclick = closeDebtModal;
+    
+    // Klick auf den grauen Hintergrund schließt das Fenster nur, wenn nicht das Zeit-Modal offen ist
     document.getElementById("modalOverlay").onclick = () => {
-        closeDebtModal();
-        document.getElementById("cancelModalBtn").click();
+        if(document.getElementById("timeModal").style.display === "block") {
+            document.getElementById("cancelModalBtn").click();
+        } else {
+            closeDebtModal();
+        }
     };
 
     document.getElementById("addDebtBtn").onclick = () => {
