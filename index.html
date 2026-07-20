@@ -317,11 +317,9 @@
             justify-content: center;
         }
         
-        /* Blendet Steuerungs-Bereiche standardmäßig aus */
         .debt-admin-only {
             display: none;
         }
-        /* Zeigt Steuerungselemente, wenn der Body die Klasse "debt-admin-mode" hat */
         body.debt-admin-mode .debt-admin-only {
             display: block;
         }
@@ -356,6 +354,29 @@
             display: inline-block;
             min-width: 60px;
             text-align: center;
+        }
+        
+        /* Gesamt-Kreide Box Style unten im Popup */
+        .debt-total-summary-box {
+            background: #fee2e2;
+            border: 2px solid #fecaca;
+            border-radius: 16px;
+            padding: 12px 18px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .debt-total-summary-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: #991b1b;
+            text-transform: uppercase;
+        }
+        .debt-total-summary-val {
+            font-size: 18px;
+            font-weight: 900;
+            color: #dc2626;
         }
     </style>
 </head>
@@ -457,7 +478,6 @@
             </div>
         </div>
         
-        <!-- Eingabe-Card: Wird nur angezeigt, wenn man eingeloggt ist -->
         <div class="card debt-admin-only" style="border: 2px solid #eab308; background: #fefce8; padding: 15px; margin-bottom: 15px;">
             <span class="label" style="color: #ca8a04;">Eintragen (Admin-Modus aktiv)</span>
             <div class="debt-input-grid">
@@ -474,8 +494,14 @@
         </div>
 
         <div class="order-container-box" id="debtBoxContainer" style="display: block; border-color: #eab308; padding: 15px;">
-            <div class="box-title-sub" style="color: #ca8a04; margin-bottom: 10px;">Offene Schulden</div>
+            <div class="box-title-sub" style="color: #ca8a04; margin-bottom: 10px;">Wall of Shame (Ranking)</div>
             <ul id="list-debts"></ul>
+            
+            <!-- Gesamt-Kreide Anzeige -->
+            <div class="debt-total-summary-box">
+                <span class="debt-total-summary-label">💥 Gesamte Kreide:</span>
+                <span class="debt-total-summary-val" id="debtTotalDisplay">0.00€</span>
+            </div>
         </div>
     </div>
 
@@ -510,7 +536,7 @@
     let userName = localStorage.getItem("userName") || "Gast";
     document.getElementById("userNameDisplay").innerText = userName;
 
-    let isDebtAdmin = false; // Lokaler Anmeldeteststatus für das Schulden-Popup
+    let isDebtAdmin = false;
 
     const formatAmount = (val) => {
         let clean = val.trim();
@@ -518,6 +544,12 @@
             clean += '€';
         }
         return clean;
+    };
+
+    const parseAmountValue = (str) => {
+        if(!str) return 0;
+        let num = str.replace('€', '').replace(',', '.').trim();
+        return parseFloat(num) || 0;
     };
 
     const switchView = (id) => {
@@ -756,9 +788,8 @@
         document.getElementById("timeModal").style.display = "none"; 
     };
 
-    // --- POPUP SCHULDSCHEIN LOGIK MIT ZENTRALEM LOGIN ---
+    // --- POPUP SCHULDSCHEIN LOGIK MIT RANKING & GESAMTSUMME ---
     
-    // Login Button Event
     document.getElementById("debtLoginBtn").onclick = () => {
         if (!isDebtAdmin) {
             const pw = prompt("Admin-Passwort für Schuldenverwaltung eingeben:");
@@ -772,13 +803,11 @@
                 alert("Falsches Passwort!");
             }
         } else {
-            // Logout bei erneutem Klick
             isDebtAdmin = false;
             document.body.classList.remove("debt-admin-mode");
             const btn = document.getElementById("debtLoginBtn");
             btn.innerText = "🔑 Login";
             btn.classList.remove("logged-in");
-            // Render triggern um Lösch-Buttons neu aufzubauen
             triggerDebtRender();
         }
     };
@@ -806,7 +835,6 @@
         }
     };
 
-    // Eintragen ohne Einzelabfrage
     document.getElementById("addDebtBtn").onclick = () => {
         if(!isDebtAdmin) return;
         
@@ -829,14 +857,13 @@
         }
     };
 
-    // Löschen und Bearbeiten ohne Einzelabfrage (Prüfung über isDebtAdmin)
     document.getElementById("list-debts").onclick = (e) => {
         const btn = e.target.closest(".del-btn-inline");
         const clickArea = e.target.closest(".debt-clickable-row");
         
         if(btn) {
             e.stopPropagation();
-            if(!isDebtAdmin) return; // Schutz falls manipuliert
+            if(!isDebtAdmin) return;
             const li = btn.closest("li");
             const key = li.dataset.key;
             if(confirm("Schuldenbegleichung bestätigen und Eintrag löschen?")) {
@@ -866,19 +893,50 @@
 
     const renderDebts = (snap) => {
         const listDebts = document.getElementById("list-debts");
+        const totalDisplay = document.getElementById("debtTotalDisplay");
         listDebts.innerHTML = "";
         
         if(snap.exists()) {
+            let debtArray = [];
+            let totalSum = 0;
+
+            // Alle Einträge aus Firebase holen & parsen
             snap.forEach(child => {
-                const key = child.key;
-                const d = child.val();
+                const data = child.val();
+                const numericVal = parseAmountValue(data.amount);
+                totalSum += numericVal;
                 
+                debtArray.push({
+                    key: child.key,
+                    user: data.user,
+                    amount: data.amount,
+                    numeric: numericVal
+                });
+            });
+
+            // Nach Schuldenhöhe absteigend sortieren
+            debtArray.sort((a, b) => b.numeric - a.numeric);
+
+            // Gesamtsumme formatieren und anzeigen
+            totalDisplay.innerText = totalSum.toFixed(2) + "€";
+
+            // Liste als Ranking rendern
+            debtArray.forEach((d, index) => {
+                const rank = index + 1;
+                let rankPrefix = "";
+                
+                // Schicke Emojis für das Siegertreppchen
+                if(rank === 1) rankPrefix = "🥇 ";
+                else if(rank === 2) rankPrefix = "🥈 ";
+                else if(rank === 3) rankPrefix = "🥉 ";
+                else rankPrefix = `#${rank} `;
+
                 const li = document.createElement("li");
-                li.dataset.key = key;
+                li.dataset.key = d.key;
                 li.innerHTML = `
                     <div class="order-row">
                         <div class="order-info debt-clickable-row" data-user="${d.user}" data-amount="${d.amount}" style="flex-grow: 1; display: flex; flex-direction: column;">
-                            <span class="user-label" style="color: #ca8a04;">Kreide bei ${isDebtAdmin ? '(Klick zum Ändern)' : ''}</span>
+                            <span class="user-label" style="color: #ca8a04;">Platz ${rankPrefix} ${isDebtAdmin ? '(Klick zum Ändern)' : ''}</span>
                             <span class="food-name">${d.user}</span>
                         </div>
                         <div class="order-actions" style="display: flex; align-items: center; gap: 10px;">
@@ -890,6 +948,7 @@
             });
         } else {
             listDebts.innerHTML = '<li style="color: var(--text-muted); text-align: center; font-size: 13px;">Keine offenen Schulden! 🎉</li>';
+            totalDisplay.innerText = "0.00€";
         }
     };
 
