@@ -450,7 +450,8 @@
     };
 
     const checkDebtPassword = () => {
-        return prompt("Passwort für Schuldensystem erforderlich:") === "admin";
+        const pw = prompt("Passwort für Schuldensystem erforderlich:");
+        return pw === "admin";
     };
     
     document.getElementById("startBtn").onclick = () => { 
@@ -504,7 +505,6 @@
     document.getElementById("addOrderBtn").onclick = add;
     document.getElementById("orderInput").onkeypress = (e) => { if(e.key === "Enter") add(); };
 
-    // Geändert: Über addEventListener gelöst, um ES-Modul-Fehler zu vermeiden
     document.getElementById("list-live").onclick = (e) => {
         const delBtn = e.target.closest('.del-btn-inline');
         if (delBtn) {
@@ -638,7 +638,7 @@
         document.getElementById("timeModal").style.display = "none"; 
     };
 
-    // --- POPUP SCHULDSCHEIN LOGIK (KORRIGIERT FÜR ES-MODULE) ---
+    // --- POPUP SCHULDSCHEIN LOGIK (KORRIGIERT & FIXIERT) ---
     const openDebtModal = () => {
         document.getElementById("modalOverlay").style.display = "block";
         document.getElementById("debtModal").style.display = "block";
@@ -666,14 +666,19 @@
         const userInp = document.getElementById("debtUser");
         const amountInp = document.getElementById("debtAmount");
         
-        if(userInp.value.trim() && amountInp.value.trim()) {
+        const nameVal = userInp.value.trim();
+        const amountVal = amountInp.value.trim();
+
+        if(nameVal && amountVal) {
             if(checkDebtPassword()) {
+                // Erst in die Datenbank pushen, DANN Felder leeren
                 push(ref(db, "debts"), {
-                    user: userInp.value.trim(),
-                    amount: amountInp.value.trim()
-                });
-                userInp.value = "";
-                amountInp.value = "";
+                    user: nameVal,
+                    amount: amountVal
+                }).then(() => {
+                    userInp.value = "";
+                    amountInp.value = "";
+                }).catch(err => alert("Fehler beim Speichern: " + err));
             } else {
                 alert("Falsches Passwort! Eintrag verweigert.");
             }
@@ -682,7 +687,6 @@
         }
     };
 
-    // Über ein zentrales Click-Event auf der Liste gelöst, damit die Löschfunktion immer erreichbar ist
     document.getElementById("list-debts").onclick = (e) => {
         const btn = e.target.closest(".del-btn-inline");
         if(btn) {
@@ -708,7 +712,7 @@
                 const d = child.val();
                 
                 const li = document.createElement("li");
-                li.dataset.key = key; // Key im Dataset ablegen
+                li.dataset.key = key;
                 li.innerHTML = `
                     <div class="order-row">
                         <div class="order-info">
@@ -729,4 +733,3 @@
 </script>
 </body>
 </html>
-
