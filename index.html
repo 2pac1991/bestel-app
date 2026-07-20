@@ -1,6 +1,3 @@
-Nein, an deiner Firebase Config musst du absolut nichts ändern! Wenn die normalen Essensbestellungen geladen und gespeichert werden, stimmt mit der Datenbank-Verbindung alles.
-Das Problem liegt an einer Winzigkeit im JavaScript-Code weiter unten: Die Funktion deleteDebt (für den "Erledigt"-Button) wurde über das window-Objekt registriert, was bei ES-Modulen (<script type="module">) oft zu Reichweiten-Problemen führt. Dadurch stürzt das Skript im Hintergrund ab, sobald eine Interaktion im Schuldensystem stattfindet.
-Hier ist der finale, korrigierte Code. Ich habe die Klick-Events für das Löschen und Eintragen sauber umgeschrieben, sodass sie direkt im Modul ausgeführt werden. Damit klappt das Eintragen und Löschen jetzt sofort in Echtzeit.
 <!DOCTYPE html>
 <html lang="de">
 <head>
