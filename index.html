@@ -356,7 +356,6 @@
             text-align: center;
         }
         
-        /* Gesamt-Kreide Box Style unten im Popup */
         .debt-total-summary-box {
             background: #fee2e2;
             border: 2px solid #fecaca;
@@ -494,10 +493,9 @@
         </div>
 
         <div class="order-container-box" id="debtBoxContainer" style="display: block; border-color: #eab308; padding: 15px;">
-            <div class="box-title-sub" style="color: #ca8a04; margin-bottom: 10px;">Wall of Shame (Ranking)</div>
+            <div class="box-title-sub" style="color: #ca8a04; margin-bottom: 10px;">Offene Schulden (Ranking)</div>
             <ul id="list-debts"></ul>
             
-            <!-- Gesamt-Kreide Anzeige -->
             <div class="debt-total-summary-box">
                 <span class="debt-total-summary-label">💥 Gesamte Kreide:</span>
                 <span class="debt-total-summary-val" id="debtTotalDisplay">0.00€</span>
@@ -788,7 +786,7 @@
         document.getElementById("timeModal").style.display = "none"; 
     };
 
-    // --- POPUP SCHULDSCHEIN LOGIK MIT RANKING & GESAMTSUMME ---
+    // --- POPUP SCHULDSCHEIN LOGIK (REINIGUNG DER WALL OF SHAME) ---
     
     document.getElementById("debtLoginBtn").onclick = () => {
         if (!isDebtAdmin) {
@@ -900,7 +898,6 @@
             let debtArray = [];
             let totalSum = 0;
 
-            // Alle Einträge aus Firebase holen & parsen
             snap.forEach(child => {
                 const data = child.val();
                 const numericVal = parseAmountValue(data.amount);
@@ -914,18 +911,13 @@
                 });
             });
 
-            // Nach Schuldenhöhe absteigend sortieren
             debtArray.sort((a, b) => b.numeric - a.numeric);
-
-            // Gesamtsumme formatieren und anzeigen
             totalDisplay.innerText = totalSum.toFixed(2) + "€";
 
-            // Liste als Ranking rendern
             debtArray.forEach((d, index) => {
                 const rank = index + 1;
                 let rankPrefix = "";
                 
-                // Schicke Emojis für das Siegertreppchen
                 if(rank === 1) rankPrefix = "🥇 ";
                 else if(rank === 2) rankPrefix = "🥈 ";
                 else if(rank === 3) rankPrefix = "🥉 ";
