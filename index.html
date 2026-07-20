@@ -23,6 +23,7 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --whatsapp: #25D366;
+            --paypal: #0070ba;
         }
 
         * { box-sizing: border-box; }
@@ -355,6 +356,24 @@
             min-width: 60px;
             text-align: center;
         }
+
+        .paypal-btn-inline {
+            background: var(--paypal);
+            color: white;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 5px rgba(0, 112, 186, 0.2);
+            transition: all 0.2s ease;
+        }
+        .paypal-btn-inline:active {
+            transform: scale(0.95);
+        }
         
         .debt-total-summary-box {
             background: #fee2e2;
@@ -528,6 +547,11 @@
     const firebaseConfig = { apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs", databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+
+    // ==========================================
+    // DEIN HINTERLEGTER PAYPAL.ME NUTZERNAME
+    // ==========================================
+    const paypalName = "2Pac1991"; 
 
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
@@ -786,7 +810,7 @@
         document.getElementById("timeModal").style.display = "none"; 
     };
 
-    // --- POPUP SCHULDSCHEIN LOGIK (REINIGUNG DER WALL OF SHAME) ---
+    // --- POPUP SCHULDSCHEIN LOGIK WITH PAYPAL.ME ---
     
     document.getElementById("debtLoginBtn").onclick = () => {
         if (!isDebtAdmin) {
@@ -923,6 +947,9 @@
                 else if(rank === 3) rankPrefix = "🥉 ";
                 else rankPrefix = `#${rank} `;
 
+                // Der generierte PayPal Link mit deinem Namen und dem Betrag
+                const targetPaypalUrl = `https://www.paypal.me/${paypalName}/${d.numeric.toFixed(2)}`;
+
                 const li = document.createElement("li");
                 li.dataset.key = d.key;
                 li.innerHTML = `
@@ -931,8 +958,11 @@
                             <span class="user-label" style="color: #ca8a04;">Platz ${rankPrefix} ${isDebtAdmin ? '(Klick zum Ändern)' : ''}</span>
                             <span class="food-name">${d.user}</span>
                         </div>
-                        <div class="order-actions" style="display: flex; align-items: center; gap: 10px;">
+                        <div class="order-actions" style="display: flex; align-items: center; gap: 8px;">
                             <span class="debt-amount-badge">${d.amount}</span>
+                            <a href="${targetPaypalUrl}" target="_blank" class="paypal-btn-inline">
+                                <span>💳</span> PayPal
+                            </a>
                             <button class="del-btn-inline debt-admin-only-flex" style="background: var(--success); padding: 8px 12px; display: none; justify-content: center; align-items: center;">✓</button>
                         </div>
                     </div>`;
