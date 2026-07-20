@@ -197,6 +197,17 @@
             align-items: center;
             gap: 8px;
         }
+
+        /* SCHULDSCHEIN STYLES */
+        .debts-section {
+            margin-top: 25px;
+            margin-bottom: 25px;
+        }
+        .debt-input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -276,6 +287,29 @@
             </div>
 
             <button id="restartBtn" class="btn">Neue Liste starten</button>
+        </div>
+
+        <!-- SCHULDSCHEIN BEREICH -->
+        <div class="debts-section">
+            <div class="card" style="border: 2px solid #eab308; background: #fefce8;">
+                <span class="label" style="color: #ca8a04;">💰 Schuldschein (Admin Only Eintrag)</span>
+                <div class="debt-input-grid">
+                    <div>
+                        <span class="label">Wer schuldet?</span>
+                        <input id="debtUser" type="text" placeholder="Name" autocomplete="off">
+                    </div>
+                    <div>
+                        <span class="label">Wieviel?</span>
+                        <input id="debtAmount" type="text" placeholder="z.B. 12,50€" autocomplete="off">
+                    </div>
+                </div>
+                <button id="addDebtBtn" class="btn" style="background: #eab308; color: white; margin-top: 5px;">Schulden eintragen</button>
+            </div>
+
+            <div class="order-container-box" id="debtBoxContainer" style="display: block; border-color: #eab308; box-shadow: 0 10px 25px rgba(234, 179, 8, 0.1);">
+                <div class="box-title-sub" style="color: #ca8a04; min-height: 15px;">Offene Schulden</div>
+                <ul id="list-debts"></ul>
+            </div>
         </div>
     </div>
 
@@ -361,6 +395,11 @@
     const isAdmin = () => {
         if (userId === currentAdminId) return true;
         return prompt("Passwort:") === "admin";
+    };
+
+    // Explizite Passwortprüfung für Schuldenaktionen
+    const checkDebtPassword = () => {
+        return prompt("Passwort für Schuldensystem erforderlich:") === "admin";
     };
     
     document.getElementById("startBtn").onclick = () => { 
@@ -544,6 +583,65 @@
     };
 
     document.getElementById("cancelModalBtn").onclick = () => { document.getElementById("modalOverlay").style.display = "none"; document.getElementById("timeModal").style.display = "none"; };
+
+    // --- LOGIK FÜR DEN SCHULDSCHEIN ---
+    document.getElementById("addDebtBtn").onclick = () => {
+        const userInp = document.getElementById("debtUser");
+        const amountInp = document.getElementById("debtAmount");
+        
+        if(userInp.value.trim() && amountInp.value.trim()) {
+            if(checkDebtPassword()) {
+                push(ref(db, "debts"), {
+                    user: userInp.value.trim(),
+                    amount: amountInp.value.trim()
+                });
+                userInp.value = "";
+                amountInp.value = "";
+            } else {
+                alert("Falsches Passwort! Eintrag verweigert.");
+            }
+        } else {
+            alert("Bitte fülle beide Felder aus.");
+        }
+    };
+
+    window.deleteDebt = (key) => {
+        if(confirm("Schuldenbegleichung bestätigen und Eintrag löschen?")) {
+            if(checkDebtPassword()) {
+                remove(ref(db, `debts/${key}`));
+            } else {
+                alert("Falsches Passwort! Löschen verweigert.");
+            }
+        }
+    };
+
+    onValue(ref(db, "debts"), snap => {
+        const listDebts = document.getElementById("list-debts");
+        listDebts.innerHTML = "";
+        
+        if(snap.exists()) {
+            snap.forEach(child => {
+                const key = child.key;
+                const d = child.val();
+                
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <div class="order-row">
+                        <div class="order-info">
+                            <span class="user-label" style="color: #ca8a04;">Kreide bei</span>
+                            <span class="food-name">${d.user}</span>
+                        </div>
+                        <div class="order-actions">
+                            <span style="font-weight: 800; color: var(--danger); font-size: 16px; margin-right: 10px;">${d.amount}</span>
+                            <button class="del-btn-inline" style="background: var(--success);" onclick="deleteDebt('${key}')">Erledigt</button>
+                        </div>
+                    </div>`;
+                listDebts.appendChild(li);
+            });
+        } else {
+            listDebts.innerHTML = '<li style="color: var(--text-muted); text-align: center; font-size: 13px;">Keine offenen Schulden! 🎉</li>';
+        }
+    });
 </script>
 </body>
 </html>
