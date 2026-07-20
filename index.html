@@ -15,6 +15,7 @@
     <style>
         :root {
             --primary: #3b82f6;
+            --primary-light: #eff6ff;
             --success: #22c55e;
             --danger: #ef4444;
             --bg: #f8fafc;
@@ -39,36 +40,89 @@
             touch-action: manipulation;
         }
 
+        /* MODERNISIERTER & ZENTRIERTER APP HEADER */
         .app-header {
             width: 100%; 
             max-width: 500px;
-            background: #fff; padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            position: sticky; top: 0; z-index: 1100;
-            border-radius: 0 0 20px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            background: #ffffff; 
+            padding: 18px 20px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            position: sticky; 
+            top: 0; 
+            z-index: 1100;
+            border-radius: 0 0 24px 24px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
             flex-shrink: 0;
         }
 
-        .header-left { display: flex; align-items: center; gap: 10px; }
-        .header-logo { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
-        h1 { font-size: 20px; font-weight: 800; margin: 0; }
+        .header-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        
+        .header-logo { 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 50%; 
+            object-fit: cover;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        h1 { 
+            font-size: 19px; 
+            font-weight: 850; 
+            margin: 0; 
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
 
         .header-actions-right {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
         }
 
+        /* Stylische, luftige Buttons im Header */
         #profileBtn, #debtTriggerBtn {
-            background: #f1f5f9; border: 1.5px solid #e2e8f0; padding: 8px 14px;
-            border-radius: 12px; display: flex; align-items: center; gap: 8px;
-            cursor: pointer; font-weight: 600; font-size: 13px;
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0; 
+            padding: 9px 14px;
+            border-radius: 14px; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 13px;
+            color: var(--text-main);
+            transition: all 0.2s ease;
         }
+        
         #debtTriggerBtn {
-            background: #fefce8;
+            background: #fffdf0;
             border-color: #fef08a;
+            color: #854d0e;
+        }
+
+        #profileBtn:active, #debtTriggerBtn:active {
+            transform: scale(0.95);
+            background: #eff6ff;
+        }
+
+        /* Verhindert Zusammenquetschen auf kleinen Displays */
+        @media (max-width: 380px) {
+            #profileBtn span:last-child, 
+            #debtTriggerBtn span:last-child {
+                display: none; /* Versteckt den Text, lässt nur das Icon da */
+            }
+            #profileBtn, #debtTriggerBtn {
+                padding: 9px 12px;
+            }
+            h1 { font-size: 17px; }
         }
 
         .container { 
