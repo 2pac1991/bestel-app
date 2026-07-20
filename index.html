@@ -23,7 +23,8 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --whatsapp: #25D366;
-            --paypal: #0070ba;
+            --paypal: #00457c;
+            --paypal-hover: #0079c1;
         }
 
         * { box-sizing: border-box; }
@@ -41,7 +42,6 @@
             touch-action: manipulation;
         }
 
-        /* MODERNISIERTER & ZENTRIERTER APP HEADER */
         .app-header {
             width: 100%; 
             max-width: 500px;
@@ -261,7 +261,6 @@
             gap: 8px;
         }
 
-        /* SCHULDSCHEIN POPUP STYLES */
         #debtModal {
             display: none;
             position: fixed;
@@ -361,18 +360,19 @@
             background: var(--paypal);
             color: white;
             text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 11px;
+            padding: 7px 12px;
+            border-radius: 10px;
+            font-size: 12px;
             font-weight: 700;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            box-shadow: 0 2px 5px rgba(0, 112, 186, 0.2);
+            gap: 6px;
+            box-shadow: 0 4px 10px rgba(0, 69, 124, 0.25);
             transition: all 0.2s ease;
         }
         .paypal-btn-inline:active {
             transform: scale(0.95);
+            background: var(--paypal-hover);
         }
         
         .debt-total-summary-box {
@@ -548,9 +548,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ==========================================
-    // DEIN HINTERLEGTER PAYPAL.ME NUTZERNAME
-    // ==========================================
     const paypalName = "2Pac1991"; 
 
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
@@ -810,7 +807,7 @@
         document.getElementById("timeModal").style.display = "none"; 
     };
 
-    // --- POPUP SCHULDSCHEIN LOGIK WITH PAYPAL.ME ---
+    // --- POPUP SCHULDSCHEIN LOGIK OHNE SICHERHEITSABFRAGE BEIM LÖSCHEN ---
     
     document.getElementById("debtLoginBtn").onclick = () => {
         if (!isDebtAdmin) {
@@ -888,9 +885,8 @@
             if(!isDebtAdmin) return;
             const li = btn.closest("li");
             const key = li.dataset.key;
-            if(confirm("Schuldenbegleichung bestätigen und Eintrag löschen?")) {
-                remove(ref(db, `debts/${key}`));
-            }
+            // Direktes Löschen ohne confirm-Abfrage
+            remove(ref(db, `debts/${key}`));
             return;
         }
 
@@ -947,8 +943,8 @@
                 else if(rank === 3) rankPrefix = "🥉 ";
                 else rankPrefix = `#${rank} `;
 
-                // Der generierte PayPal Link mit deinem Namen und dem Betrag
-                const targetPaypalUrl = `https://www.paypal.me/${paypalName}/${d.numeric.toFixed(2)}`;
+                // Übergibt den genauen Betrag direkt an PayPal für die Sofortüberweisung
+                const targetPaypalUrl = `https://www.paypal.com/paypalme/${paypalName}/${d.numeric.toFixed(2)}EUR`;
 
                 const li = document.createElement("li");
                 li.dataset.key = d.key;
@@ -961,7 +957,7 @@
                         <div class="order-actions" style="display: flex; align-items: center; gap: 8px;">
                             <span class="debt-amount-badge">${d.amount}</span>
                             <a href="${targetPaypalUrl}" target="_blank" class="paypal-btn-inline">
-                                <span>💳</span> PayPal
+                                <span>💳</span> Bezahlen
                             </a>
                             <button class="del-btn-inline debt-admin-only-flex" style="background: var(--success); padding: 8px 12px; display: none; justify-content: center; align-items: center;">✓</button>
                         </div>
