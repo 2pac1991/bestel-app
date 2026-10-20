@@ -832,13 +832,11 @@
     const SEASONS = {
         halloween: {
             title: "Bestell-Liste 🎃", color: "#170d26", emoji: "🎃",
-            burst: ["🎃", "👻", "🍬", "🦇", "🕸️", "🍭"],
-            placeholder: "Was möchtest du? Süßes oder Saures? 🍬"
+            burst: ["🎃", "👻", "🍬", "🦇", "🕸️", "🍭"]
         },
         christmas: {
             title: "Bestell-Liste 🎄", color: "#0b1a2c", emoji: "🎄",
-            burst: ["🎁", "❄️", "⭐", "🎄", "🍪", "🔔"],
-            placeholder: "Was wünschst du dir? 🎁"
+            burst: ["🎁", "❄️", "⭐", "🎄", "🍪", "🔔"]
         }
     };
 
@@ -987,7 +985,6 @@
         document.getElementById("appTitle").innerText = seasonCfg.title;
         document.title = seasonCfg.title;
         document.querySelector('meta[name="theme-color"]').setAttribute("content", seasonCfg.color);
-        document.getElementById("orderInput").placeholder = seasonCfg.placeholder;
 
         if (season === "christmas") {
             const lights = document.createElement("div");
