@@ -138,7 +138,7 @@
         #view-setup.active-view { 
             display: flex; 
             flex-direction: column; 
-            justify-content: center; 
+            justify-content: flex-start; 
             flex-grow: 1; 
         }
         #view-live.active-view, #view-summary.active-view { 
@@ -399,6 +399,36 @@
 
         .order-input-card { border: 2px solid #22c55e; background: #f0fdf4; }
 
+        /* Startseite: laufende Bestellungen */
+        .rounds-overview { margin-bottom: 20px; }
+        .round-card {
+            display: flex; justify-content: space-between; align-items: center; gap: 12px;
+            background: var(--card-bg); border: 2px solid #e2e8f0; border-radius: 18px;
+            padding: 14px 16px; margin-bottom: 10px; text-decoration: none; color: var(--text-main);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); transition: transform 0.1s ease;
+        }
+        .round-card:active { transform: scale(0.98); }
+        .round-card.is-open { border-color: var(--primary); }
+        .round-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+        .round-res { font-weight: 800; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .round-meta { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+        .round-mine { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
+        .round-status {
+            flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 6px 10px; border-radius: 10px; white-space: nowrap;
+        }
+        .round-status.open { background: #fee2e2; color: #dc2626; }
+        .round-status.closed { background: #dcfce7; color: #166534; }
+        .setup-title { font-size: 17px; font-weight: 800; margin: 0 0 14px 0; }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px;
+            font-size: 13px; font-weight: 700; color: var(--text-muted); text-decoration: none;
+        }
+        body.seasonal .round-card { background: var(--card-bg); border-color: var(--border); }
+        body.seasonal .round-card.is-open { border-color: var(--accent); }
+        body.seasonal .round-status.open { background: rgba(249, 115, 22, 0.15); color: var(--accent); }
+        body.theme-christmas .round-status.open { background: rgba(225, 29, 72, 0.15); }
+        body.seasonal .round-status.closed { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+
         .countdown { display: block; font-size: 11px; font-weight: 700; margin-top: 2px; opacity: 0.85; }
 
         #fxToggleBtn {
@@ -628,7 +658,12 @@
 
     <div class="container">
         <div id="view-setup" class="view-section">
+            <div id="roundsOverview" class="rounds-overview" style="display:none">
+                <span class="label">🔥 Laufende Bestellungen</span>
+                <div id="roundsList"></div>
+            </div>
             <div class="card">
+                <h2 class="setup-title">➕ Neue Bestellung starten</h2>
                 <span class="label">📍 Restaurant</span>
                 <input id="restaurant" placeholder="z. B. Baron" autocomplete="off">
                 <span class="label">🕒 Lieferung um</span>
@@ -642,6 +677,7 @@
         </div>
 
         <div id="view-live" class="view-section">
+            <a class="back-link home-link" href="./">← Alle Bestellungen</a>
             <div id="statusDisplay">
                 <div class="status-grid">
                     <div class="status-item timer-highlight admin-editable" id="editDeadlineArea">
@@ -679,6 +715,7 @@
         </div>
 
         <div id="view-summary" class="view-section">
+            <a class="back-link home-link" href="./">← Alle Bestellungen</a>
             <div class="summary-card" style="border-color: var(--success);">
                 <span class="label" style="color: var(--success);">Bestellung abgeschlossen</span>
                 <div style="font-size: 20px; font-weight: 800;" id="sum-res">Restaurant</div>
@@ -1012,10 +1049,33 @@
         setUserName(n);
     };
 
+    // --- BESTELLRUNDEN: jede Bestellung hat ihren eigenen Link (?b=ID) ---
+    const params = new URLSearchParams(location.search);
+    const roundId = params.get("b");
+    const base = roundId ? `rounds/${roundId}` : null;
+    const ROUND_MAX_AGE = 12 * 3600 * 1000; // abgeschlossene Runden verschwinden nach 12 Std
+
+    const pageUrl = (id) => {
+        const p = new URLSearchParams(location.search);
+        if (id) p.set("b", id); else p.delete("b");
+        const q = p.toString();
+        return location.pathname + (q ? `?${q}` : "");
+    };
+    const shareUrl = () => `${location.origin}${location.pathname}?b=${roundId}`;
+    document.querySelectorAll(".home-link").forEach(a => a.href = pageUrl(null));
+
+    const newRoundId = () => {
+        const chars = "abcdefghijkmnpqrstuvwxyz23456789";
+        let id = "";
+        for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+        return id;
+    };
+
     let currentAdminId = null;
     let isGlobalActive = false;
     let latestSettings = {};
     let latestOrdersSnap = null;
+    let latestRounds = {};
 
     const formatCountdown = (ms) => {
         const total = Math.max(0, Math.floor(ms / 1000));
@@ -1038,26 +1098,77 @@
             document.getElementById("disp-res").innerText = d.restaurant || "---";
             document.getElementById("disp-time").innerText = (d.time || "---") + " Uhr";
             document.getElementById("disp-cham-live").innerText = d.chamber || "---";
-        } else if (d.summaryMode || (d.orderActive && now >= d.endTime)) {
+        } else {
             switchView('summary');
             document.getElementById("sum-res").innerText = d.restaurant || "---";
             document.getElementById("sum-meta").innerText = `${d.time || '---'} Uhr | ${d.chamber || '---'} | ${d.gate || '---'}`;
-        } else {
-            switchView('setup');
         }
 
         // Löschen-Buttons hängen vom Status ab, darum die Liste bei Änderungen neu zeichnen
         if (wasActive !== isGlobalActive && latestOrdersSnap) renderOrders(latestOrdersSnap);
     };
 
-    onValue(ref(db, "settings"), snap => {
-        latestSettings = snap.val() || {};
-        applySettings();
-        if (latestOrdersSnap) renderOrders(latestOrdersSnap);
-    });
+    const renderRounds = () => {
+        const now = Date.now();
+        const rounds = Object.entries(latestRounds)
+            .map(([id, r]) => ({ id, s: (r && r.settings) || {}, count: r && r.orders ? Object.keys(r.orders).length : 0 }))
+            .filter(r => r.s.endTime);
+        rounds.forEach(r => { r.open = r.s.orderActive && now < r.s.endTime; });
+        rounds.sort((a, b) => (b.open - a.open) || (a.open ? a.s.endTime - b.s.endTime : b.s.endTime - a.s.endTime));
+
+        const box = document.getElementById("roundsOverview");
+        box.style.display = rounds.length ? "block" : "none";
+        document.getElementById("roundsList").innerHTML = rounds.map(r => {
+            const deadline = new Date(r.s.endTime);
+            const status = r.open
+                ? `<span class="round-status open">⌛ ${formatCountdown(r.s.endTime - now)}</span>`
+                : `<span class="round-status closed">✓ Abgeschlossen</span>`;
+            return `
+                <a class="round-card ${r.open ? "is-open" : ""}" href="${escapeHtml(pageUrl(r.id))}">
+                    <div class="round-main">
+                        ${r.s.adminId === userId ? `<span class="round-mine">Deine Bestellung</span>` : ""}
+                        <span class="round-res">📍 ${escapeHtml(r.s.restaurant || "Ohne Namen")}</span>
+                        <span class="round-meta">🕒 ${escapeHtml(r.s.time || "--:--")} Uhr · ${escapeHtml(r.s.chamber || "---")} · ${r.count} ${r.count === 1 ? "Bestellung" : "Bestellungen"}</span>
+                        <span class="round-meta">Bestellschluss ${pad2(deadline.getHours())}:${pad2(deadline.getMinutes())} Uhr</span>
+                    </div>
+                    ${status}
+                </a>`;
+        }).join("");
+    };
+
+    if (roundId) {
+        onValue(ref(db, `${base}/settings`), snap => {
+            if (!snap.exists()) {
+                // Runde wurde gelöscht oder der Link ist alt: zurück zur Übersicht
+                location.replace(pageUrl(null));
+                return;
+            }
+            latestSettings = snap.val() || {};
+            applySettings();
+            if (latestOrdersSnap) renderOrders(latestOrdersSnap);
+        });
+    } else {
+        switchView('setup');
+        onValue(ref(db, "rounds"), snap => {
+            latestRounds = snap.val() || {};
+            // Alte, längst abgeschlossene Runden aufräumen
+            const now = Date.now();
+            for (const [id, r] of Object.entries(latestRounds)) {
+                const st = (r && r.settings) || {};
+                if (!st.endTime || now - st.endTime > ROUND_MAX_AGE) {
+                    remove(ref(db, `rounds/${id}`));
+                    delete latestRounds[id];
+                }
+            }
+            renderRounds();
+        });
+    }
 
     // Countdown jede Sekunde aktualisieren; bei Bestellschluss wechselt die Ansicht von selbst
-    setInterval(() => { if (latestSettings.orderActive) applySettings(); }, 1000);
+    setInterval(() => {
+        if (roundId) { if (latestSettings.orderActive) applySettings(); }
+        else renderRounds();
+    }, 1000);
 
     const isAdmin = () => {
         if (userId === currentAdminId) return true;
@@ -1065,39 +1176,42 @@
     };
 
     document.getElementById("startBtn").onclick = () => { 
-        if (isGlobalActive) return;
         document.getElementById("modalOverlay").style.display = "block"; 
         document.getElementById("timeModal").style.display = "block"; 
     };
     
-    document.getElementById("confirmStartBtn").onclick = () => {
-        if (isGlobalActive) return;
+    document.getElementById("confirmStartBtn").onclick = async () => {
         const t = document.getElementById("deadlineInput").value;
         const [h,m] = t.split(":").map(Number);
         const e = new Date(); e.setHours(h,m,0,0); if(e < new Date()) e.setDate(e.getDate()+1);
-        remove(ref(db, "orders")).then(() => {
-            update(ref(db, "settings"), {
-                orderActive: true, summaryMode: false, endTime: e.getTime(), adminId: userId,
+        const id = newRoundId();
+        const btn = document.getElementById("confirmStartBtn");
+        btn.disabled = true;
+        try {
+            await update(ref(db, `rounds/${id}/settings`), {
+                orderActive: true, summaryMode: false, endTime: e.getTime(), adminId: userId, createdAt: Date.now(),
                 restaurant: document.getElementById("restaurant").value,
                 time: document.getElementById("time").value,
                 chamber: document.getElementById("chamber").value,
                 gate: document.getElementById("gate").value
             });
-        });
-        document.getElementById("modalOverlay").style.display = "none"; 
-        document.getElementById("timeModal").style.display = "none";
+            location.href = pageUrl(id);
+        } catch (err) {
+            btn.disabled = false;
+            alert("Bestellung konnte nicht gestartet werden: " + err);
+        }
     };
 
     document.getElementById("stopActionBtn").onclick = () => { 
         if(isAdmin() && confirm("Bestellung für alle beenden?")) {
-            update(ref(db, "settings"), {orderActive: false, summaryMode: true}); 
+            update(ref(db, `${base}/settings`), {orderActive: false, summaryMode: true}); 
         }
     };
 
     document.getElementById("restartBtn").onclick = () => {
-        if(isAdmin() && confirm("Sicher? Liste wird für alle gelöscht.")) {
-            remove(ref(db, "orders"));
-            remove(ref(db, "settings"));
+        if(isAdmin() && confirm("Sicher? Diese Liste wird für alle gelöscht.")) {
+            // Die Weiterleitung zur Übersicht übernimmt der Settings-Listener (für alle Teilnehmer)
+            remove(ref(db, base));
         }
     };
 
@@ -1108,7 +1222,7 @@
                 let n = prompt("Bitte gib deinen Namen für die Bestellung ein:");
                 if(!setUserName(n)) return; 
             }
-            push(ref(db, "orders"), {name: inp.value.trim(), user: userName, owner: userId, paid: false}); 
+            push(ref(db, `${base}/orders`), {name: inp.value.trim(), user: userName, owner: userId, paid: false}); 
             inp.value = ""; 
             celebrate(document.getElementById("addOrderBtn"));
         }
@@ -1122,7 +1236,7 @@
             e.stopPropagation();
             const li = delBtn.closest('li');
             if(confirm("Möchtest du diese Bestellung wirklich löschen?")) {
-                remove(ref(db, `orders/${li.dataset.key}`));
+                remove(ref(db, `${base}/orders/${li.dataset.key}`));
             }
             return;
         }
@@ -1216,10 +1330,12 @@
         if(snap.exists()) snap.forEach(child => { knownOrderKeys.add(child.key); });
     };
 
-    onValue(ref(db, "orders"), snap => {
-        latestOrdersSnap = snap;
-        renderOrders(snap);
-    });
+    if (roundId) {
+        onValue(ref(db, `${base}/orders`), snap => {
+            latestOrdersSnap = snap;
+            renderOrders(snap);
+        });
+    }
 
     const togglePaidStatus = (li) => {
         if (!li) return;
@@ -1229,16 +1345,16 @@
         if (isAdmin()) {
             if (currentPaid) {
                 if (confirm("Möchtest du den 'Bezahlt'-Status für diese Bestellung wirklich wieder entfernen?")) {
-                    update(ref(db, `orders/${key}`), { paid: false });
+                    update(ref(db, `${base}/orders/${key}`), { paid: false });
                 }
             } else {
-                update(ref(db, `orders/${key}`), { paid: true });
+                update(ref(db, `${base}/orders/${key}`), { paid: true });
             }
         }
     };
 
     document.getElementById("shareWaBtn").onclick = async () => {
-        const [sS, oS] = await Promise.all([get(ref(db, "settings")), get(ref(db, "orders"))]);
+        const [sS, oS] = await Promise.all([get(ref(db, `${base}/settings`)), get(ref(db, `${base}/orders`))]);
         const s = sS.val() || {};
         let m = `${seasonCfg ? seasonCfg.emoji + " " : ""}*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${oS.exists() ? oS.size : 0}\n––––––––––––––––––\n`;
         if(oS.exists()) {
@@ -1248,11 +1364,11 @@
     };
 
     document.getElementById("shareLinkBtn").onclick = async () => {
-        const sSnap = await get(ref(db, "settings"));
+        const sSnap = await get(ref(db, `${base}/settings`));
         const s = sSnap.val() || {};
         const deadline = new Date(s.endTime || 0);
         const timeStr = s.endTime ? (deadline.getHours().toString().padStart(2, '0') + ":" + deadline.getMinutes().toString().padStart(2, '0')) : "--:--";
-        let message = `${seasonCfg ? seasonCfg.emoji + " " : ""}*🍕 BITTE HIER EINTRAGEN:*\n${window.location.href}\n\n📍 *Restaurant:* ${s.restaurant || '---'}\n🕒 *Lieferung:* ${s.time || '---'} Uhr\n⌛ *Bestellschluss:* ${timeStr} Uhr\n📦 *Ort:* ${s.chamber || '---'}`;
+        let message = `${seasonCfg ? seasonCfg.emoji + " " : ""}*🍕 BITTE HIER EINTRAGEN:*\n${shareUrl()}\n\n📍 *Restaurant:* ${s.restaurant || '---'}\n🕒 *Lieferung:* ${s.time || '---'} Uhr\n⌛ *Bestellschluss:* ${timeStr} Uhr\n📦 *Ort:* ${s.chamber || '---'}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     };
 
