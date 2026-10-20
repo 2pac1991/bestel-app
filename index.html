@@ -830,6 +830,15 @@
         return parseFloat(num) || 0;
     };
 
+    // Admin-Passwort nur als SHA-256-Hash (Groß-/Kleinschreibung egal)
+    const ADMIN_PW_HASH = "4b9379d88b60e6f13a381c9bc5c915f345311494a0a88e07a1a41d22cbba65e2";
+    const checkPassword = async (pw) => {
+        const data = new TextEncoder().encode(String(pw).trim().toLowerCase());
+        const digest = await crypto.subtle.digest("SHA-256", data);
+        const hex = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+        return hex === ADMIN_PW_HASH;
+    };
+
     const escapeHtml = (str) => String(str ?? "").replace(/[&<>"']/g, c => (
         { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
     ));
@@ -1193,11 +1202,11 @@
         if (latestOrdersSnap) renderOrders(latestOrdersSnap);
     };
 
-    const isAdmin = () => {
+    const isAdmin = async () => {
         if (hasAdminRights()) return true;
         const pw = prompt("Passwort:");
         if (pw === null) return false;
-        if (pw !== "admin") { alert("Falsches Passwort!"); return false; }
+        if (!(await checkPassword(pw))) { alert("Falsches Passwort!"); return false; }
         try { sessionStorage.setItem(adminStoreKey(), "1"); } catch {}
         syncAdminUi();
         return true;
@@ -1232,14 +1241,14 @@
         }
     };
 
-    document.getElementById("stopActionBtn").onclick = () => { 
-        if(isAdmin() && confirm("Bestellung für alle beenden?")) {
+    document.getElementById("stopActionBtn").onclick = async () => { 
+        if(await isAdmin() && confirm("Bestellung für alle beenden?")) {
             update(ref(db, `${base}/settings`), {orderActive: false, summaryMode: true}); 
         }
     };
 
-    document.getElementById("restartBtn").onclick = () => {
-        if(isAdmin() && confirm("Sicher? Diese Liste wird für alle gelöscht.")) {
+    document.getElementById("restartBtn").onclick = async () => {
+        if(await isAdmin() && confirm("Sicher? Diese Liste wird für alle gelöscht.")) {
             // Die Weiterleitung zur Übersicht übernimmt der Settings-Listener (für alle Teilnehmer)
             remove(ref(db, base));
         }
@@ -1407,10 +1416,10 @@
 
     // --- POPUP SCHULDSCHEIN LOGIK ---
     
-    document.getElementById("debtLoginBtn").onclick = () => {
+    document.getElementById("debtLoginBtn").onclick = async () => {
         if (!isDebtAdmin) {
             const pw = prompt("Admin-Passwort für Schuldenverwaltung eingeben:");
-            if (pw === "admin") {
+            if (pw !== null && await checkPassword(pw)) {
                 isDebtAdmin = true;
                 document.body.classList.add("debt-admin-mode");
                 const btn = document.getElementById("debtLoginBtn");
