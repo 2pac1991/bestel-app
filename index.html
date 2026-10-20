@@ -1385,6 +1385,7 @@
                 const btn = document.getElementById("debtLoginBtn");
                 btn.innerText = "🔓 Admin";
                 btn.classList.add("logged-in");
+                triggerDebtRender();
             } else if (pw !== null) {
                 alert("Falsches Passwort!");
             }
