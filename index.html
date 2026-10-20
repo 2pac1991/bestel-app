@@ -700,6 +700,7 @@
                 </div>
                 <button id="shareLinkBtn" class="share-link-btn">🟢 Bestelllink per WhatsApp teilen</button>
                 <button id="stopActionBtn" class="stop-btn-minimal">Bestellung beenden</button>
+                <button class="stop-btn-minimal admin-login-btn">🔑 Als Admin anmelden</button>
             </div>
 
             <div class="card order-input-card">
@@ -727,6 +728,7 @@
                 <ul id="list-summary"></ul>
             </div>
 
+            <button class="stop-btn-minimal admin-login-btn" style="margin-top: 20px;">🔑 Als Admin anmelden</button>
             <button id="restartBtn" class="btn">Neue Liste starten</button>
         </div>
     </div>
@@ -817,7 +819,14 @@
 
     const parseAmountValue = (str) => {
         if(!str) return 0;
-        let num = str.replace('€', '').replace(',', '.').trim();
+        let num = String(str).replace(/€|\s/g, '');
+        if (num.includes(',')) {
+            // "1.234,50" oder "12,50": Punkte sind Tausender, Komma ist Dezimal
+            num = num.replace(/\./g, '').replace(',', '.');
+        } else if (/^-?\d{1,3}(\.\d{3})+$/.test(num)) {
+            // "1.234" ohne Komma: Tausenderpunkt
+            num = num.replace(/\./g, '');
+        }
         return parseFloat(num) || 0;
     };
 
@@ -1085,7 +1094,9 @@
         const now = new Date().getTime();
         const wasActive = isGlobalActive;
         isGlobalActive = d.orderActive && now < d.endTime;
+        const adminChanged = currentAdminId !== d.adminId;
         currentAdminId = d.adminId;
+        if (adminChanged) syncAdminUi();
 
         if (isGlobalActive) {
             switchView('live');
@@ -1146,6 +1157,9 @@
         });
     } else {
         switchView('setup');
+        for (const legacy of ["settings", "orders"]) {
+            get(ref(db, legacy)).then(snap => { if (snap.exists()) remove(ref(db, legacy)); }).catch(() => {});
+        }
         onValue(ref(db, "rounds"), snap => {
             latestRounds = snap.val() || {};
             // Alte, längst abgeschlossene Runden aufräumen
@@ -1167,10 +1181,29 @@
         else renderRounds();
     }, 1000);
 
-    const isAdmin = () => {
+    // Admin einer Runde ist, wer sie gestartet hat oder sich auf diesem Gerät mit Passwort angemeldet hat
+    const adminStoreKey = () => `roundAdmin:${roundId}`;
+    const hasAdminRights = () => {
         if (userId === currentAdminId) return true;
-        return prompt("Passwort:") === "admin";
+        try { return sessionStorage.getItem(adminStoreKey()) === "1"; } catch { return false; }
     };
+
+    const syncAdminUi = () => {
+        document.querySelectorAll(".admin-login-btn").forEach(b => b.style.display = hasAdminRights() ? "none" : "block");
+        if (latestOrdersSnap) renderOrders(latestOrdersSnap);
+    };
+
+    const isAdmin = () => {
+        if (hasAdminRights()) return true;
+        const pw = prompt("Passwort:");
+        if (pw === null) return false;
+        if (pw !== "admin") { alert("Falsches Passwort!"); return false; }
+        try { sessionStorage.setItem(adminStoreKey(), "1"); } catch {}
+        syncAdminUi();
+        return true;
+    };
+
+    document.querySelectorAll(".admin-login-btn").forEach(b => b.onclick = () => isAdmin());
 
     document.getElementById("startBtn").onclick = () => { 
         document.getElementById("modalOverlay").style.display = "block"; 
@@ -1271,7 +1304,7 @@
             sortedOrders.forEach(d => {
                 const key = d.key;
                 const isNew = knownOrderKeys !== null && !knownOrderKeys.has(key);
-                const canDelete = isGlobalActive && (d.owner === userId || userId === currentAdminId);
+                const canDelete = isGlobalActive && (d.owner === userId || hasAdminRights());
                 
                 const li = document.createElement("li");
                 li.dataset.key = key;
@@ -1280,7 +1313,7 @@
                 if(d.paid) {
                     li.className = "paid-item";
                 }
-                if(userId === currentAdminId) {
+                if(hasAdminRights()) {
                     li.classList.add("summary-admin-clickable");
                 }
                 if(isNew) li.classList.add("is-new");
@@ -1304,7 +1337,7 @@
                 if(d.paid) {
                     liSum.className = "paid-item";
                 }
-                if(userId === currentAdminId) {
+                if(hasAdminRights()) {
                     liSum.classList.add("summary-admin-clickable");
                 }
                 
@@ -1335,18 +1368,16 @@
     }
 
     const togglePaidStatus = (li) => {
-        if (!li) return;
+        if (!li || !li.dataset.key || !hasAdminRights()) return;
         const key = li.dataset.key;
         const currentPaid = li.dataset.paid === "true";
-        
-        if (isAdmin()) {
-            if (currentPaid) {
-                if (confirm("Möchtest du den 'Bezahlt'-Status für diese Bestellung wirklich wieder entfernen?")) {
-                    update(ref(db, `${base}/orders/${key}`), { paid: false });
-                }
-            } else {
-                update(ref(db, `${base}/orders/${key}`), { paid: true });
+
+        if (currentPaid) {
+            if (confirm("Möchtest du den 'Bezahlt'-Status für diese Bestellung wirklich wieder entfernen?")) {
+                update(ref(db, `${base}/orders/${key}`), { paid: false });
             }
+        } else {
+            update(ref(db, `${base}/orders/${key}`), { paid: true });
         }
     };
 
@@ -1374,7 +1405,7 @@
         document.getElementById("timeModal").style.display = "none"; 
     };
 
-    // --- POPUP SCHULDSCHEIN LOGIK OHNE SICHERHEITSABFRAGE BEIM LÖSCHEN ---
+    // --- POPUP SCHULDSCHEIN LOGIK ---
     
     document.getElementById("debtLoginBtn").onclick = () => {
         if (!isDebtAdmin) {
@@ -1453,8 +1484,10 @@
             if(!isDebtAdmin) return;
             const li = btn.closest("li");
             const key = li.dataset.key;
-            // Direktes Löschen ohne confirm-Abfrage
-            remove(ref(db, `debts/${key}`));
+            const row = li.querySelector(".debt-clickable-row");
+            if (confirm(`Schuld von ${row.dataset.user} (${row.dataset.amount}) als bezahlt austragen?`)) {
+                remove(ref(db, `debts/${key}`));
+            }
             return;
         }
 
