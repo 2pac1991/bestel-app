@@ -29,14 +29,14 @@
             --sep: rgba(60,60,67,.16);
             --fill: rgba(120,120,128,.12); --fill-2: rgba(120,120,128,.18);
 
-            --glass: rgba(255,255,255,.58);
+            --glass: rgba(255,255,255,.74);
             --glass-strong: rgba(255,255,255,.78);
             --glass-edge: rgba(255,255,255,.75);
             --glass-hi: rgba(255,255,255,.95);
             --glass-shade: rgba(0,0,0,.04);
             --glass-shadow: 0 8px 28px -10px rgba(30,40,70,.18), 0 1px 2px rgba(30,40,70,.06);
             --glass-shadow-lg: 0 24px 70px -18px rgba(20,30,60,.35);
-            --blur: blur(26px) saturate(190%);
+            --blur: blur(48px) saturate(170%);
 
             --blob-1: rgba(0,122,255,.30); --blob-2: rgba(175,82,222,.22); --blob-3: rgba(48,176,199,.24);
 
@@ -62,7 +62,7 @@
                 --label: #fff; --label-2: rgba(235,235,245,.8); --label-3: rgba(235,235,245,.58); --label-4: rgba(235,235,245,.28);
                 --sep: rgba(84,84,88,.55);
                 --fill: rgba(118,118,128,.24); --fill-2: rgba(118,118,128,.34);
-                --glass: rgba(40,40,46,.52);
+                --glass: rgba(40,40,46,.72);
                 --glass-strong: rgba(36,36,42,.82);
                 --glass-edge: rgba(255,255,255,.14);
                 --glass-hi: rgba(255,255,255,.22);
@@ -323,7 +323,8 @@
         /* ---------- Fenster (Mitte am PC, schwebendes Sheet am Handy) ---------- */
         #modalOverlay {
             display: none; position: fixed; inset: 0; z-index: 1999;
-            background: rgba(0,0,0,.28); animation: fade .25s ease-out;
+            background: rgba(0,0,0,.34); animation: fade .25s ease-out;
+            -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
         }
         @keyframes fade { from { opacity: 0; } }
         #timeModal, #debtModal, .sheet-modal {
@@ -511,6 +512,21 @@
         #menuModal { overflow: hidden; }
         #menuModal #menuPages { max-height: calc(85vh - 205px); overflow-y: auto; overscroll-behavior: contain; border-radius: var(--r-lg); }
         @media (max-width: 640px) { #menuModal #menuPages { max-height: calc(86vh - 185px - env(safe-area-inset-bottom) * .5); } }
+
+        /* Speisekarte immer im Vollbild */
+        #menuModal, #menuModal[style] {
+            inset: 0 !important; left: 0 !important; right: 0 !important; top: 0 !important; bottom: 0 !important;
+            transform: none !important; width: 100% !important; max-width: none !important; height: 100% !important; height: 100dvh !important; max-height: none !important;
+            border-radius: 0 !important; border: 0 !important;
+            background: color-mix(in srgb, var(--bg) 93%, transparent) !important;
+            padding: calc(12px + env(safe-area-inset-top)) 16px calc(10px + env(safe-area-inset-bottom)) !important;
+            flex-direction: column; animation: menuFull .35s var(--ease);
+        }
+        #menuModal[style*="block"] { display: flex !important; }
+        #menuModal::before { display: none !important; }
+        #menuModal .debt-modal-header, #menuModal .menu-search { flex-shrink: 0; max-width: 900px; width: 100%; margin-left: auto; margin-right: auto; }
+        #menuModal #menuPages, #menuModal[style] #menuPages { flex: 1 1 auto; min-height: 0; max-height: none !important; width: 100%; max-width: 900px; margin: 0 auto; }
+        @keyframes menuFull { from { opacity: 0; transform: scale(.97); } }
         .menu-search { margin: 0 0 12px; }
         .ms-field { position: relative; display: flex; align-items: center; }
         .ms-field svg { position: absolute; left: 12px; width: 18px; height: 18px; color: var(--label-3); pointer-events: none; }
@@ -711,7 +727,7 @@
             --label: #fff; --label-2: rgba(240,230,255,.82); --label-3: rgba(225,215,245,.6); --label-4: rgba(225,215,245,.3);
             --sep: rgba(150,120,190,.25);
             --fill: rgba(150,120,190,.16); --fill-2: rgba(150,120,190,.26);
-            --glass: rgba(34,20,48,.5); --glass-strong: rgba(26,15,38,.86);
+            --glass: rgba(34,20,48,.7); --glass-strong: rgba(26,15,38,.86);
             --glass-edge: rgba(255,200,150,.14); --glass-hi: rgba(255,210,170,.2); --glass-shade: rgba(0,0,0,.3);
             --glass-shadow: 0 10px 30px -12px rgba(0,0,0,.8); --glass-shadow-lg: 0 30px 80px -20px rgba(0,0,0,.9);
             --blob-1: rgba(255,120,20,.30); --blob-2: rgba(130,50,220,.34); --blob-3: rgba(60,200,120,.10);
