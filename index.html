@@ -936,21 +936,15 @@
                 <ellipse cx="60" cy="60" rx="34" ry="7" fill="url(#spGloss)" transform="rotate(-8 60 60)"/>
                 <path d="M22 70 C30 60 46 56 64 56" stroke="rgba(255,255,255,.7)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
                 <!-- Airbrush: "Geht ab wie Sau" -->
-                <g class="sp-airbrush">
+                <g class="sp-airbrush" transform="translate(76 64.5) rotate(-7) skewX(-6)">
                     <defs>
-                        <path id="spTagPath" d="M24 74 C54 71 92 68 129 64"/>
-                        <linearGradient id="spTagFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#fff3b0"/><stop offset="1" stop-color="#ffc83d"/>
+                        <linearGradient id="spTagFill" x1="0" y1="-10" x2="0" y2="12" gradientUnits="userSpaceOnUse">
+                            <stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#fff1a8"/><stop offset="1" stop-color="#ffb52e"/>
                         </linearGradient>
-                        <filter id="spSpray" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="1.8"/></filter>
+                        <filter id="spSpray" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="2"/></filter>
                     </defs>
-                    <!-- weicher Sprühschatten dahinter -->
-                    <text font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="900" font-style="italic" letter-spacing=".2"><textPath href="#spTagPath" textLength="104" lengthAdjust="spacingAndGlyphs" fill="#ff9d00" stroke="#ff9d00" stroke-width="3" opacity=".55" filter="url(#spSpray)">Geht ab wie Sau</textPath></text>
-                    <!-- klare Schrift mit dunkler Kontur -->
-                    <text font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="900" font-style="italic" letter-spacing=".2"><textPath href="#spTagPath" textLength="104" lengthAdjust="spacingAndGlyphs" fill="url(#spTagFill)" stroke="#3a0400" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke">Geht ab wie Sau</textPath></text>
-                    <g fill="#ffd84d" opacity=".5">
-                        <circle cx="21" cy="78" r=".6"/><circle cx="28" cy="81" r=".4"/><circle cx="132" cy="60" r=".5"/><circle cx="127" cy="57" r=".35"/>
-                    </g>
+                    <text font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-weight="900" font-style="italic" text-anchor="middle" fill="#ff8c00" stroke="#ff8c00" stroke-width="3" opacity=".5" filter="url(#spSpray)"><tspan x="0" y="0" font-size="12.5">GEHT AB</tspan><tspan x="3" y="11" font-size="10">wie Sau</tspan></text>
+                    <text font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-weight="900" font-style="italic" text-anchor="middle" fill="url(#spTagFill)" stroke="#3a0400" stroke-width="2.2" stroke-linejoin="round" paint-order="stroke"><tspan x="0" y="0" font-size="12.5">GEHT AB</tspan><tspan x="3" y="11" font-size="10">wie Sau</tspan></text>
                 </g>
                 <!-- Rücklicht -->
                 <path d="M13 66 C14 60 18 56 22 55 L22 64 Z" fill="#ffb21f"/>
