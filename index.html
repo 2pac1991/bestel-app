@@ -74,7 +74,9 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; background: var(--bg); color: var(--label); }
+        html { background: var(--bg); }
+        html, body { margin: 0; color: var(--label); }
+        body { background: transparent; }
         body {
             font-size: 16px; line-height: 1.42; min-height: 100vh; -webkit-font-smoothing: antialiased; letter-spacing: -.012em;
             padding-bottom: calc(120px + env(safe-area-inset-bottom));
@@ -551,15 +553,109 @@
 
         /* ===================== SAISON-MODI ===================== */
         /* Gleiches Glas-Design, nur Tint-Farbe, Lichtflecken und Effekte wechseln */
+        /* Halloween: immer Gruselnacht (dunkel), egal ob das Handy hell oder dunkel eingestellt ist */
+        html:has(body.theme-halloween) { background: #07040d; }
         body.theme-halloween {
-            --tint: #ff8a1f; --tint-2: #e8590c; --tint-ink: #fff; --tint-soft: rgba(255,138,31,.16);
-            --blob-1: rgba(255,138,31,.30); --blob-2: rgba(168,85,247,.26); --blob-3: rgba(255,90,40,.14);
+            color-scheme: dark;
+            --tint: #ff8a1f; --tint-2: #e8590c; --tint-ink: #1a0b00; --tint-soft: rgba(255,138,31,.17);
+            --green: #30d158; --green-soft: rgba(48,209,88,.18); --red: #ff453a; --red-soft: rgba(255,69,58,.17); --orange: #ffa040;
+            --bg: #07040d;
+            --label: #fff; --label-2: rgba(240,230,255,.82); --label-3: rgba(225,215,245,.6); --label-4: rgba(225,215,245,.3);
+            --sep: rgba(150,120,190,.25);
+            --fill: rgba(150,120,190,.16); --fill-2: rgba(150,120,190,.26);
+            --glass: rgba(34,20,48,.5); --glass-strong: rgba(26,15,38,.86);
+            --glass-edge: rgba(255,200,150,.14); --glass-hi: rgba(255,210,170,.2); --glass-shade: rgba(0,0,0,.3);
+            --glass-shadow: 0 10px 30px -12px rgba(0,0,0,.8); --glass-shadow-lg: 0 30px 80px -20px rgba(0,0,0,.9);
+            --blob-1: rgba(255,120,20,.30); --blob-2: rgba(130,50,220,.34); --blob-3: rgba(60,200,120,.10);
         }
+        body.theme-halloween .share-link-btn { color: #4ade80; }
+        body.theme-halloween .btn.primary, body.theme-halloween #startBtn, body.theme-halloween #confirmStartBtn,
+        body.theme-halloween .add-btn, body.theme-halloween .round-status.open, body.theme-halloween .app-hint .hint-action {
+            background: linear-gradient(180deg, #ffb35c 0%, #ff8a1f 45%, #e8590c 100%); color: #1a0b00;
+        }
+        /* Kürbis-Kerzenflackern */
+        body.theme-halloween .btn.primary, body.theme-halloween #startBtn, body.theme-halloween .add-btn {
+            animation: candle 3.2s steps(1, end) infinite;
+        }
+        @keyframes candle {
+            0%   { box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 22px -6px rgba(255,138,31,.65); }
+            12%  { box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 4px 30px -4px rgba(255,150,40,.85), 0 0 46px rgba(255,120,20,.25); }
+            19%  { box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 18px -8px rgba(255,138,31,.5); }
+            33%  { box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 26px -5px rgba(255,140,30,.75), 0 0 60px rgba(150,60,240,.18); }
+            58%  { box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 5px 20px -7px rgba(255,138,31,.55); }
+            71%  { box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 4px 32px -3px rgba(255,160,50,.9), 0 0 50px rgba(255,120,20,.3); }
+            85%  { box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 22px -6px rgba(255,138,31,.62); }
+        }
+        body.theme-halloween .timer-highlight {
+            background: radial-gradient(120% 140% at 50% 120%, rgba(255,120,20,.35), rgba(255,120,20,.08) 60%, transparent), var(--fill);
+            box-shadow: inset 0 0 0 .5px rgba(255,160,60,.35);
+        }
+        body.theme-halloween .timer-highlight .status-val { color: #ffd6a8; text-shadow: 0 0 18px rgba(255,138,31,.55); animation: textFlicker 4s steps(1, end) infinite; }
+        @keyframes textFlicker { 0%, 100% { opacity: 1; } 47% { opacity: 1; } 48% { opacity: .55; } 49% { opacity: 1; } 51% { opacity: .7; } 52% { opacity: 1; } }
+        body.theme-halloween .pagehead h1 {
+            background: linear-gradient(180deg, #fff 30%, #ffb070 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+            filter: drop-shadow(0 0 18px rgba(255,138,31,.25));
+        }
+        body.theme-halloween .round-card.is-open { box-shadow: inset 0 0 0 1px rgba(255,150,50,.55), 0 0 30px -6px rgba(255,120,20,.45), var(--glass-shadow); }
+
+        /* Vollmond (hinter dem Glas, daher schön verschwommen) */
+        .hw-moon {
+            position: fixed; z-index: -1; pointer-events: none; top: calc(64px + env(safe-area-inset-top)); right: max(-34px, calc(50% - 400px));
+            width: 180px; height: 180px; border-radius: 50%;
+            background:
+                radial-gradient(circle at 30% 34%, rgba(190,160,100,.55) 0 9%, transparent 10%),
+                radial-gradient(circle at 62% 58%, rgba(190,160,100,.45) 0 13%, transparent 14%),
+                radial-gradient(circle at 46% 78%, rgba(190,160,100,.35) 0 6%, transparent 7%),
+                radial-gradient(circle at 72% 28%, rgba(190,160,100,.3) 0 5%, transparent 6%),
+                radial-gradient(circle at 36% 30%, #fff8e1, #f6e2a8 48%, #ddb766 80%, #b98c3e);
+            box-shadow: 0 0 50px 14px rgba(255,214,140,.28), 0 0 140px 60px rgba(255,160,60,.14);
+            transition: box-shadow .15s, filter .15s;
+        }
+        .hw-moon.flash { filter: brightness(1.35); box-shadow: 0 0 80px 30px rgba(230,220,255,.5), 0 0 200px 90px rgba(200,190,255,.25); }
+        /* Spinnennetz unten links */
+        .hw-web { position: fixed; left: 0; bottom: 0; width: 130px; height: 130px; z-index: 999; pointer-events: none; opacity: .5; }
+        body.view-summary.can-manage .hw-web { display: none; }
+
+        /* Nebel */
+        .fx-fog { position: fixed; left: 0; right: 0; bottom: 0; height: 42vh; z-index: 999; pointer-events: none; overflow: hidden;
+            -webkit-mask-image: linear-gradient(0deg, #000 30%, transparent); mask-image: linear-gradient(0deg, #000 30%, transparent); }
+        .fx-fog::before, .fx-fog::after {
+            content: ""; position: absolute; bottom: -10%; left: 0; width: 300%; height: 120%;
+            background:
+                radial-gradient(18% 40% at 10% 70%, rgba(190,175,230,.16), transparent 70%),
+                radial-gradient(22% 45% at 32% 80%, rgba(170,150,220,.13), transparent 70%),
+                radial-gradient(16% 38% at 55% 72%, rgba(200,185,240,.15), transparent 70%),
+                radial-gradient(24% 50% at 78% 82%, rgba(170,150,220,.12), transparent 70%),
+                radial-gradient(18% 40% at 95% 70%, rgba(190,175,230,.16), transparent 70%);
+            filter: blur(8px); animation: fog 38s linear infinite;
+        }
+        .fx-fog::after { animation-duration: 60s; animation-direction: reverse; opacity: .8; bottom: -20%; }
+        @keyframes fog { to { transform: translateX(-33.333%); } }
+
+        /* Blitz */
+        .fx-flash { position: absolute; inset: 0; background: radial-gradient(90% 70% at 80% 5%, rgba(225,215,255,.42), rgba(200,190,255,.1) 60%, transparent); opacity: 0; animation: flash 1.3s ease-out forwards; }
+        @keyframes flash { 0% { opacity: 0; } 4% { opacity: 1; } 9% { opacity: .1; } 15% { opacity: .85; } 35% { opacity: 0; } 100% { opacity: 0; } }
+
+        /* Leuchtende Augen im Dunkeln */
+        .fx-eyes { display: flex; gap: 9px; opacity: 0; animation: eyes 5.5s ease-in-out forwards; }
+        .fx-eyes i { width: 11px; height: 7px; border-radius: 50% 50% 50% 50% / 70% 70% 30% 30%; background: radial-gradient(circle at 50% 60%, #fff59a, #ffb800 60%, #ff7a00);
+            box-shadow: 0 0 10px 3px rgba(255,190,0,.55); animation: blink 5.5s steps(1, end) forwards; }
+        .fx-eyes i:first-child { transform: rotate(8deg); } .fx-eyes i:last-child { transform: rotate(-8deg); }
+        @keyframes eyes { 0% { opacity: 0; } 15% { opacity: .95; } 80% { opacity: .95; } 100% { opacity: 0; } }
+        @keyframes blink { 0%, 100% { scale: 1 1; } 38% { scale: 1 .1; } 41% { scale: 1 1; } 66% { scale: 1 .1; } 68% { scale: 1 1; } }
+
+        /* Hexe vor dem Mond */
+        .fx-witch { font-size: 34px; animation: witchFly linear forwards; filter: drop-shadow(0 0 6px rgba(0,0,0,.6)); }
+        .fx-witch span { display: inline-block; transform: scaleX(-1); }
+        @keyframes witchFly {
+            0% { transform: translate(110vw, 4vh) rotate(-6deg); } 30% { transform: translate(70vw, -2vh) rotate(4deg); }
+            60% { transform: translate(35vw, 3vh) rotate(-5deg); } 100% { transform: translate(-20vw, -4vh) rotate(6deg); }
+        }
+
         body.theme-christmas {
             --tint: #e5243b; --tint-2: #b81a2e; --tint-ink: #fff; --tint-soft: rgba(229,36,59,.14);
             --blob-1: rgba(229,36,59,.26); --blob-2: rgba(52,199,89,.22); --blob-3: rgba(255,214,10,.14);
         }
-        body.theme-halloween #startBtn { animation: pumpkinGlow 2.4s ease-in-out infinite; }
         @keyframes pumpkinGlow {
             0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 8px 22px -8px rgba(255,138,31,.6); }
             50% { box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 0 26px rgba(255,138,31,.55), 0 0 50px rgba(168,85,247,.22); }
@@ -602,7 +698,8 @@
 
         @media (prefers-reduced-motion: reduce) {
             #seasonFx, .fx-spider { display: none; }
-            body::before, body.seasonal #startBtn, .fx-lights i, .section-label .dot { animation: none; }
+            body::before, body.seasonal #startBtn, .fx-lights i, .section-label .dot,
+            body.theme-halloween .btn, body.theme-halloween .timer-highlight .status-val { animation: none !important; }
             .view-section.active-view, .menu, #timeModal, #debtModal, .sheet-modal, .toast { animation: none; }
         }
         @media (prefers-reduced-transparency: reduce) {
@@ -1034,6 +1131,79 @@
         }, dur * 1000);
     };
 
+    const spawnBatSwarm = () => {
+        const top = rand(6, 35), size = rand(14, 22), dur = rand(5.5, 8);
+        for (let i = 0; i < 7; i++) {
+            setTimeout(() => spawn("fx-bat", `<span>🦇</span>`, {
+                left: "0", top: `${top + rand(-6, 6)}vh`, fontSize: `${size + rand(-4, 6)}px`, animationDuration: `${dur + rand(-.6, .6)}s`
+            }, (dur + 1) * 1000), i * rand(90, 260));
+        }
+    };
+
+    const spawnEyes = () => {
+        spawn("fx-eyes", "<i></i><i></i>", { left: `${rand(4, 86)}vw`, top: `${rand(58, 88)}vh` }, 5600);
+    };
+
+    const spawnWitch = () => {
+        const dur = rand(11, 15);
+        spawn("fx-witch", "<span>🧙‍♀️</span>", { left: "0", top: `calc(${rand(60, 140)}px + env(safe-area-inset-top))`, animationDuration: `${dur}s` }, dur * 1000);
+    };
+
+    const lightning = () => {
+        spawn("fx-flash", "", {}, 1400);
+        const moon = document.querySelector(".hw-moon");
+        if (moon) {
+            moon.classList.add("flash");
+            setTimeout(() => moon.classList.remove("flash"), 120);
+            setTimeout(() => moon.classList.add("flash"), 200);
+            setTimeout(() => moon.classList.remove("flash"), 420);
+        }
+    };
+
+    // Aufsteigende Glut / Glühwürmchen
+    const startEmbers = () => {
+        const canvas = document.createElement("canvas");
+        fxLayer.appendChild(canvas);
+        const ctx = canvas.getContext("2d");
+        const sprite = (color) => {
+            const c = document.createElement("canvas"); c.width = c.height = 32;
+            const g = c.getContext("2d"), grd = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+            grd.addColorStop(0, "rgba(255,255,230,1)"); grd.addColorStop(.25, color); grd.addColorStop(1, "rgba(0,0,0,0)");
+            g.fillStyle = grd; g.fillRect(0, 0, 32, 32); return c;
+        };
+        const sprites = [sprite("rgba(255,150,40,.9)"), sprite("rgba(255,110,20,.85)"), sprite("rgba(170,90,255,.8)"), sprite("rgba(140,255,120,.7)")];
+        let w, h, raf, t = 0;
+        const resize = () => {
+            const dpr = window.devicePixelRatio || 1;
+            w = canvas.clientWidth; h = canvas.clientHeight;
+            canvas.width = w * dpr; canvas.height = h * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
+        window.addEventListener("resize", resize);
+        const mk = (anywhere) => ({
+            x: Math.random() * w, y: anywhere ? Math.random() * h : h + 10, r: rand(3, 9), vy: rand(.15, .55),
+            p: Math.random() * Math.PI * 2, f: rand(1.5, 4), img: sprites[Math.random() < .7 ? (Math.random() < .5 ? 0 : 1) : (Math.random() < .6 ? 2 : 3)]
+        });
+        const parts = Array.from({ length: Math.min(36, Math.round(w * h / 22000)) }, () => mk(true));
+        const draw = () => {
+            t += 0.016;
+            ctx.clearRect(0, 0, w, h);
+            ctx.globalCompositeOperation = "lighter";
+            for (let i = 0; i < parts.length; i++) {
+                const e = parts[i];
+                e.y -= e.vy; e.x += Math.sin(t * .8 + e.p) * .35;
+                if (e.y < -20) parts[i] = mk(false);
+                const fade = Math.min(1, e.y / (h * .35));
+                ctx.globalAlpha = Math.max(0, fade * (.45 + .55 * Math.abs(Math.sin(t * e.f + e.p))));
+                ctx.drawImage(e.img, e.x - e.r, e.y - e.r, e.r * 2, e.r * 2);
+            }
+            raf = requestAnimationFrame(draw);
+        };
+        draw();
+        return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); canvas.remove(); };
+    };
+
     const spawnGhost = () => {
         const dur = rand(9, 14);
         spawn("fx-ghost", "👻", {
@@ -1101,8 +1271,16 @@
         stopFx();
         if (!fxEnabled()) return;
         if (season === "halloween") {
-            every(spawnBat, 4000, 9000);
-            every(spawnGhost, 5000, 11000);
+            const fog = document.createElement("div");
+            fog.className = "fx-fog";
+            fxLayer.appendChild(fog);
+            snowStop = startEmbers();
+            every(spawnBat, 5000, 10000);
+            every(spawnBatSwarm, 18000, 32000);
+            every(spawnGhost, 6000, 12000);
+            every(spawnEyes, 12000, 22000);
+            every(spawnWitch, 30000, 50000);
+            every(lightning, 25000, 50000);
             const spider = document.createElement("div");
             spider.className = "fx-spider";
             spider.innerHTML = "<span>🕷️</span>";
@@ -1133,6 +1311,24 @@
         document.body.classList.add("seasonal", `theme-${season}`);
         document.getElementById("appTitle").innerText = seasonCfg.title;
         document.title = seasonCfg.title;
+
+        if (season === "halloween") {
+            document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", "#07040d"));
+            const moon = document.createElement("div");
+            moon.className = "hw-moon";
+            document.body.appendChild(moon);
+            const web = document.createElement("div");
+            web.className = "hw-web";
+            const rays = [0, 15, 32, 50, 68, 90].map(a => {
+                const r = a * Math.PI / 180; return `M0 130 L${(Math.sin(r) * 135).toFixed(1)} ${(130 - Math.cos(r) * 135).toFixed(1)}`;
+            }).join(" ");
+            const rings = [28, 52, 78, 104].map(d => {
+                const pts = [0, 15, 32, 50, 68, 90].map(a => { const r = a * Math.PI / 180; return [Math.sin(r) * d, 130 - Math.cos(r) * d]; });
+                return "M" + pts.map(([x, y], i) => i ? `Q${((pts[i - 1][0] + x) / 2 + 4).toFixed(1)} ${((pts[i - 1][1] + y) / 2 + 4).toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}` : `${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+            }).join(" ");
+            web.innerHTML = `<svg viewBox="0 0 130 130" width="130" height="130" fill="none" stroke="rgba(230,220,255,.55)" stroke-width=".8"><path d="${rays} ${rings}"/></svg>`;
+            document.body.appendChild(web);
+        }
 
         if (season === "christmas") {
             const lights = document.createElement("div");
