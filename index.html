@@ -45,7 +45,7 @@
             padding-bottom: calc(110px + env(safe-area-inset-bottom));
             touch-action: manipulation;
         }
-        button, input, select { font: inherit; color: inherit; letter-spacing: inherit; }
+        button, input, select, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
         button { cursor: pointer; }
         :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 8px; }
         a { color: var(--amber); text-decoration: none; }
@@ -271,21 +271,25 @@
             background: rgba(4,6,9,.62); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: fade .2s ease-out;
         }
         @keyframes fade { from { opacity: 0; } }
-        #timeModal, #debtModal {
+        #timeModal, #debtModal, .sheet-modal {
             display: none; position: fixed; z-index: 2000; left: 50%; top: 50%; transform: translate(-50%, -50%);
             width: min(440px, calc(100% - 32px)); max-height: 85vh; overflow-y: auto;
             background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-xl);
             padding: 22px; box-shadow: var(--shadow-lg); animation: modalIn .25s var(--ease);
         }
         #debtModal { z-index: 2050; }
+        #adminModal { z-index: 2040; }
+        #menuModal { z-index: 2070; }
+        @media (min-width: 641px) { #menuModal { width: min(720px, calc(100% - 32px)); } }
+        body.sheet-stack #modalOverlay { z-index: 2045; }
         @keyframes modalIn { from { opacity: 0; transform: translate(-50%, -46%) scale(.98); } }
         @media (max-width: 640px) {
-            #timeModal, #debtModal {
+            #timeModal, #debtModal, .sheet-modal {
                 left: 0; right: 0; top: auto; bottom: 0; transform: none; width: 100%; max-height: 88vh;
                 border-radius: 24px 24px 0 0; border-bottom: 0; padding: 12px 18px calc(22px + env(safe-area-inset-bottom));
                 animation: sheetIn .3s var(--ease);
             }
-            #timeModal::before, #debtModal::before {
+            #timeModal::before, #debtModal::before, .sheet-modal::before {
                 content: ""; display: block; width: 38px; height: 5px; border-radius: 3px; background: var(--surface-3); margin: 0 auto 14px;
             }
         }
@@ -367,6 +371,71 @@
         .app-hint .hint-close { flex-shrink: 0; background: none; border: none; color: var(--faint); font-size: 14px; padding: 6px; line-height: 1; }
         .app-hint .ios-share { display: inline-block; vertical-align: -2px; width: 13px; height: 15px; color: var(--text-2); }
 
+        /* ---------- Admin ---------- */
+        .badge { font-size: 10.5px; font-weight: 650; padding: 2px 8px; border-radius: 999px; background: var(--amber-soft); color: var(--amber); letter-spacing: .02em; text-transform: uppercase; vertical-align: 2px; margin-left: 6px; }
+        .admin-card { padding: 18px; }
+        .admin-h { font-size: 16px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 2px; }
+        textarea {
+            width: 100%; background: var(--bg); border: 1px solid var(--line-2); border-radius: var(--r-md);
+            padding: 11px 13px; margin: 0 0 12px; font-size: 15px; color: var(--text); resize: vertical; min-height: 84px;
+        }
+        textarea:focus { outline: none; border-color: rgba(245,184,61,.6); box-shadow: 0 0 0 4px rgba(245,184,61,.12); }
+        .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--text-2); margin: 0 0 12px; cursor: pointer; }
+        .switch-row input {
+            appearance: none; -webkit-appearance: none; flex-shrink: 0; width: 42px; height: 24px; margin: 0; padding: 0;
+            border-radius: 999px; background: var(--surface-3); border: 1px solid var(--line-2); position: relative; cursor: pointer;
+        }
+        .switch-row input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.4); transition: transform .22s var(--ease); }
+        .switch-row input:checked { background: linear-gradient(180deg, #f8c255, var(--amber-2)); border-color: transparent; }
+        .switch-row input:checked::after { transform: translateX(18px); }
+        .rest-row { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 8px; }
+        .rest-main b { display: block; font-weight: 650; }
+        .rest-main span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+        .rest-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .btn.small { width: auto; padding: 6px 11px; font-size: 13px; border-radius: var(--r-sm); }
+        .btn.danger { color: var(--bad); border-color: rgba(255,107,107,.28); background: var(--bad-soft); }
+        .add-rest { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8px; margin-top: 12px; }
+        .add-rest input { margin-bottom: 8px; }
+        .add-rest .btn { grid-column: 1 / -1; }
+        .empty-note { color: var(--muted); font-size: 13.5px; padding: 6px 0 4px; }
+        .progress-note { font-size: 13px; color: var(--amber); margin: 6px 0 0; }
+
+        /* Restaurant-Vorschläge beim Starten */
+        .rest-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 14px; }
+        .rest-chip {
+            border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px;
+            font-size: 13px; font-weight: 550; color: var(--text-2); display: inline-flex; align-items: center; gap: 5px;
+        }
+        .rest-chip svg { width: 14px; height: 14px; color: var(--amber); }
+        .rest-chip[aria-pressed=true] { background: var(--text); color: var(--bg); border-color: var(--text); }
+        .rest-chip[aria-pressed=true] svg { color: var(--amber-2); }
+
+        /* Hinweis & Speisekarte bei der Bestellung */
+        .order-note {
+            display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;
+            background: var(--amber-soft); border: 1px solid rgba(245,184,61,.35); border-radius: var(--r-lg); padding: 14px 16px;
+        }
+        .order-note svg { width: 20px; height: 20px; color: var(--amber); flex-shrink: 0; margin-top: 1px; }
+        .order-note b { display: block; color: var(--amber); font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+        .order-note p { margin: 3px 0 0; color: var(--text); font-size: 14.5px; white-space: pre-line; overflow-wrap: anywhere; }
+        .menu-link-btn {
+            width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; margin-bottom: 16px;
+            background: linear-gradient(180deg, var(--surface), var(--bg-2)); border: 1px solid var(--line); border-radius: var(--r-lg);
+            padding: 13px 16px; color: var(--text); box-shadow: var(--shadow); transition: border-color .2s;
+        }
+        .menu-link-btn:hover { border-color: var(--line-2); }
+        .menu-link-btn .ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: var(--amber-soft); color: var(--amber); flex-shrink: 0; }
+        .menu-link-btn b { display: block; font-weight: 650; }
+        .menu-link-btn small { color: var(--muted); font-size: 12.5px; }
+        .menu-link-btn .chev { margin-left: auto; color: var(--faint); }
+        .call-btn { margin-bottom: 16px; text-decoration: none; }
+        .menu-meta { display: block; color: var(--muted); font-size: 12.5px; }
+        #menuPages { display: flex; flex-direction: column; gap: 10px; }
+        #menuPages .pg { overflow-x: auto; border-radius: var(--r-md); background: #fff; }
+        #menuPages img { display: block; width: 100%; height: auto; cursor: zoom-in; }
+        #menuPages .pg.zoomed img { width: 230%; max-width: none; cursor: zoom-out; }
+        .menu-tip { color: var(--faint); font-size: 12px; text-align: center; margin: 2px 0 0; }
+
         /* ---------- Toast ---------- */
         .toast {
             position: fixed; top: calc(14px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
@@ -440,7 +509,7 @@
         @media (prefers-reduced-motion: reduce) {
             #seasonFx, .fx-spider { display: none; }
             body.seasonal #startBtn, .fx-lights i, .section-label .dot { animation: none; }
-            .view-section.active-view, .menu, #timeModal, #debtModal { animation: none; }
+            .view-section.active-view, .menu, #timeModal, #debtModal, .sheet-modal { animation: none; }
         }
     </style>
 </head>
@@ -459,7 +528,7 @@
             <div class="me">
                 <button id="avatarBtn" class="avatar" type="button" aria-label="Profil und Einstellungen" aria-haspopup="true" aria-expanded="false">?</button>
                 <div id="meMenu" class="menu" hidden>
-                    <div class="who"><b id="userNameDisplay">Gast</b><span>Dein Name auf der Bestellliste</span></div>
+                    <div class="who"><b><span id="userNameDisplay">Gast</span><span class="badge" id="adminBadge" hidden>Admin</span></b><span>Dein Name auf der Bestellliste</span></div>
                     <button id="profileBtn" type="button">
                         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
                         <span class="grow">Name ändern</span>
@@ -472,6 +541,10 @@
                     <button id="pushTestBtn" type="button" hidden>
                         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
                         <span class="grow">Test-Nachricht senden</span>
+                    </button>
+                    <button id="adminMenuBtn" type="button">
+                        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <span class="grow">Admin-Bereich</span>
                     </button>
                     <button id="installMenuBtn" type="button" hidden>
                         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>
@@ -495,7 +568,9 @@
                 <h2 class="setup-title">Neue Bestellung starten</h2>
                 <p class="setup-hint">Alle anderen bekommen eine Benachrichtigung.</p>
                 <span class="label">Restaurant</span>
-                <input id="restaurant" placeholder="z. B. Baron" autocomplete="off">
+                <input id="restaurant" placeholder="z. B. Baron" autocomplete="off" list="restDatalist">
+                <datalist id="restDatalist"></datalist>
+                <div id="restChips" class="rest-chips" hidden></div>
                 <div class="field-grid">
                     <div>
                         <span class="label">Lieferung um</span>
@@ -544,6 +619,15 @@
                 </div>
             </div>
 
+            <div id="orderNote" class="order-note" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                <div><b>Bitte beachten</b><p id="orderNoteText"></p></div>
+            </div>
+            <button id="menuBtn" class="menu-link-btn" type="button" hidden>
+                <span class="ic"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></span>
+                <span><b>Speisekarte ansehen</b><small id="menuBtnSub"></small></span>
+                <svg class="i chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
             <div class="card order-input-card">
                 <span class="label">Deine Bestellung</span>
                 <input id="orderInput" type="text" placeholder="Was möchtest du?" autocomplete="off">
@@ -564,6 +648,10 @@
                 <div class="sum-meta" id="sum-meta">Zeit | Kammerl</div>
             </div>
 
+            <a id="callBtn" class="btn primary call-btn" hidden>
+                <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>
+                <span id="callBtnText">Restaurant anrufen</span>
+            </a>
             <div class="order-container-box" style="display: block;">
                 <div class="box-title-sub" id="sumBoxTitle">Gesamtliste für den Lieferanten</div>
                 <ul id="list-summary"></ul>
@@ -614,6 +702,47 @@
         </div>
     </div>
 
+    <!-- ADMIN-BEREICH -->
+    <div id="adminModal" class="sheet-modal" role="dialog" aria-label="Admin-Bereich">
+        <div class="debt-modal-header">
+            <h2>Admin-Bereich</h2>
+            <button class="debt-modal-close" id="closeAdminBtn" type="button" aria-label="Schließen">✕</button>
+        </div>
+        <div class="card admin-card">
+            <h3 class="admin-h">Hinweis bei Bestellungen</h3>
+            <p class="setup-hint">Alle sehen ihn über dem Eingabefeld, solange er eingeschaltet ist.</p>
+            <label class="switch-row"><span>Hinweis anzeigen</span><input type="checkbox" id="noteActive"></label>
+            <textarea id="noteText" rows="3" placeholder="z. B. Bitte Getränke extra dazuschreiben"></textarea>
+            <button class="btn primary" id="saveNoteBtn" type="button">Hinweis speichern</button>
+        </div>
+        <div class="card admin-card">
+            <h3 class="admin-h">Restaurants &amp; Speisekarten</h3>
+            <p class="setup-hint">Erscheinen als Vorschläge beim Starten. Die Speisekarte sehen alle bei der Bestellung. Fotos oder PDF, neue Karte ersetzt die alte.</p>
+            <div id="restList"></div>
+            <div class="add-rest">
+                <input id="newRestName" placeholder="Name des Restaurants" autocomplete="off">
+                <input id="newRestPhone" type="tel" placeholder="Telefon (optional)" autocomplete="off">
+                <button class="btn" id="addRestBtn" type="button">Restaurant hinzufügen</button>
+            </div>
+        </div>
+        <div class="card admin-card">
+            <h3 class="admin-h">Sonstiges</h3>
+            <p class="setup-hint">Als Admin kannst du Bestellungen beenden, löschen, als bezahlt markieren und Schulden verwalten – ohne Passwort.</p>
+            <button class="btn" id="adminDebtBtn" type="button">Schulden verwalten</button>
+            <button class="btn ghost" id="adminLogoutBtn" type="button" style="margin-top: 8px;">Admin auf diesem Gerät abmelden</button>
+        </div>
+    </div>
+
+    <!-- SPEISEKARTE -->
+    <div id="menuModal" class="sheet-modal" role="dialog" aria-label="Speisekarte">
+        <div class="debt-modal-header">
+            <div><h2 id="menuTitle">Speisekarte</h2><span class="menu-meta" id="menuMeta"></span></div>
+            <button class="debt-modal-close" id="closeMenuBtn" type="button" aria-label="Schließen">✕</button>
+        </div>
+        <div id="menuPages"></div>
+    </div>
+    <input type="file" id="menuFileInput" accept="image/*,application/pdf" multiple hidden>
+
     <div id="timeModal" role="dialog" aria-label="Bestellschluss">
         <h2 class="modal-title">Bestellschluss festlegen</h2>
         <p class="modal-hint">Bis wann dürfen alle ihre Bestellung eintragen?</p>
@@ -637,7 +766,7 @@
     }
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove, update, get, set } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
     const firebaseConfig = { apiKey: "AIzaSyAxhf0RYl9rDxaBUagwYIh8F35RDGpPZHs", databaseURL: "https://essen-bestelliste-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
@@ -680,6 +809,9 @@
         const hex = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
         return hex === ADMIN_PW_HASH;
     };
+
+    // Admin auf diesem Gerät (einmal anmelden, bleibt gespeichert)
+    let isGlobalAdmin = (() => { try { return localStorage.getItem("globalAdmin") === "1"; } catch { return false; } })();
 
     const escapeHtml = (str) => String(str ?? "").replace(/[&<>"']/g, c => (
         { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
@@ -1200,6 +1332,7 @@
             }
             latestSettings = snap.val() || {};
             applySettings();
+            updateRestaurantLinks();
             if (latestOrdersSnap) renderOrders(latestOrdersSnap);
         });
     } else {
@@ -1231,7 +1364,7 @@
     // Admin einer Runde ist, wer sie gestartet hat oder sich auf diesem Gerät mit Passwort angemeldet hat
     const adminStoreKey = () => `roundAdmin:${roundId}`;
     const hasAdminRights = () => {
-        if (userId === currentAdminId) return true;
+        if (isGlobalAdmin || userId === currentAdminId) return true;
         try { return sessionStorage.getItem(adminStoreKey()) === "1"; } catch { return false; }
     };
 
@@ -1242,12 +1375,7 @@
 
     const isAdmin = async () => {
         if (hasAdminRights()) return true;
-        const pw = prompt("Passwort:");
-        if (pw === null) return false;
-        if (!(await checkPassword(pw))) { alert("Falsches Passwort!"); return false; }
-        try { sessionStorage.setItem(adminStoreKey(), "1"); } catch {}
-        syncAdminUi();
-        return true;
+        return requireAdmin();
     };
 
     document.querySelectorAll(".admin-login-btn").forEach(b => b.onclick = () => isAdmin());
@@ -1455,28 +1583,7 @@
 
     // --- POPUP SCHULDSCHEIN LOGIK ---
     
-    document.getElementById("debtLoginBtn").onclick = async () => {
-        if (!isDebtAdmin) {
-            const pw = prompt("Admin-Passwort für Schuldenverwaltung eingeben:");
-            if (pw !== null && await checkPassword(pw)) {
-                isDebtAdmin = true;
-                document.body.classList.add("debt-admin-mode");
-                const btn = document.getElementById("debtLoginBtn");
-                btn.innerText = "🔓 Admin";
-                btn.classList.add("logged-in");
-                triggerDebtRender();
-            } else if (pw !== null) {
-                alert("Falsches Passwort!");
-            }
-        } else {
-            isDebtAdmin = false;
-            document.body.classList.remove("debt-admin-mode");
-            const btn = document.getElementById("debtLoginBtn");
-            btn.innerText = "🔑 Login";
-            btn.classList.remove("logged-in");
-            triggerDebtRender();
-        }
-    };
+    document.getElementById("debtLoginBtn").onclick = () => requireAdmin();
 
     const openDebtModal = () => {
         document.getElementById("modalOverlay").style.display = "block";
@@ -1494,6 +1601,8 @@
     document.getElementById("closeDebtModalBtn").onclick = closeDebtModal;
     
     document.getElementById("modalOverlay").onclick = () => {
+        if (document.getElementById("menuModal").style.display === "block") { closeSheet("menuModal"); return; }
+        if (document.getElementById("adminModal").style.display === "block" && document.getElementById("debtModal").style.display !== "block") { closeSheet("adminModal"); return; }
         if(document.getElementById("timeModal").style.display === "block") {
             document.getElementById("cancelModalBtn").click();
         } else {
@@ -1623,6 +1732,301 @@
         latestDebtsSnap = snap;
         renderDebts(snap);
     });
+
+    // ===================== ADMIN-BEREICH =====================
+    const $ = (id) => document.getElementById(id);
+    const openSheet = (id) => {
+        const anyOpen = ["adminModal", "debtModal", "timeModal"].some(m => m !== id && $(m).style.display === "block");
+        document.body.classList.toggle("sheet-stack", anyOpen);
+        $("modalOverlay").style.display = "block";
+        $(id).style.display = "block";
+    };
+    const closeSheet = (id) => {
+        $(id).style.display = "none";
+        const stillOpen = ["adminModal", "debtModal", "timeModal", "menuModal"].some(m => $(m).style.display === "block");
+        if (!stillOpen) $("modalOverlay").style.display = "none";
+        document.body.classList.remove("sheet-stack");
+    };
+
+    const applyAdminState = () => {
+        document.body.classList.toggle("is-admin", isGlobalAdmin);
+        $("adminBadge").hidden = !isGlobalAdmin;
+        isDebtAdmin = isGlobalAdmin;
+        document.body.classList.toggle("debt-admin-mode", isGlobalAdmin);
+        $("debtLoginBtn").hidden = isGlobalAdmin;
+        syncAdminUi();
+        triggerDebtRender();
+        renderRestList();
+    };
+
+    const requireAdmin = async () => {
+        if (isGlobalAdmin) return true;
+        const pw = prompt("Admin-Passwort:");
+        if (pw === null) return false;
+        if (!(await checkPassword(pw))) { alert("Falsches Passwort!"); return false; }
+        isGlobalAdmin = true;
+        try { localStorage.setItem("globalAdmin", "1"); } catch {}
+        applyAdminState();
+        showToast("Als Admin angemeldet – auf diesem Gerät bleibst du angemeldet");
+        return true;
+    };
+
+    $("adminMenuBtn").onclick = async () => {
+        setMenu(false);
+        if (!(await requireAdmin())) return;
+        $("noteActive").checked = !!latestNote.active;
+        $("noteText").value = latestNote.text || "";
+        openSheet("adminModal");
+    };
+    $("closeAdminBtn").onclick = () => closeSheet("adminModal");
+    $("adminLogoutBtn").onclick = () => {
+        if (!confirm("Admin auf diesem Gerät abmelden?")) return;
+        isGlobalAdmin = false;
+        try { localStorage.removeItem("globalAdmin"); } catch {}
+        applyAdminState();
+        closeSheet("adminModal");
+        showToast("Abgemeldet");
+    };
+    $("adminDebtBtn").onclick = () => { closeSheet("adminModal"); openDebtModal(); };
+
+    // ---------- Hinweis bei Bestellungen ----------
+    let latestNote = {};
+    const renderNote = () => {
+        const text = (latestNote.text || "").trim();
+        $("orderNote").hidden = !(latestNote.active && text);
+        $("orderNoteText").textContent = text;
+    };
+    onValue(ref(db, "config/orderNote"), snap => { latestNote = snap.val() || {}; renderNote(); });
+    $("saveNoteBtn").onclick = async () => {
+        if (!isGlobalAdmin) return;
+        const text = $("noteText").value.trim();
+        const active = $("noteActive").checked && !!text;
+        try {
+            await set(ref(db, "config/orderNote"), { active, text, updated: Date.now() });
+            if ($("noteActive").checked && !text) $("noteActive").checked = false;
+            showToast(active ? "Hinweis ist sichtbar" : "Hinweis ist ausgeblendet");
+        } catch (err) { alert("Speichern fehlgeschlagen: " + err.message); }
+    };
+
+    // ---------- Restaurants ----------
+    let restaurants = {};
+    const restEntries = () => Object.entries(restaurants)
+        .filter(([, r]) => r && r.name)
+        .sort((a, b) => a[1].name.localeCompare(b[1].name, "de"));
+    const findRest = (name) => {
+        const n = String(name || "").trim().toLowerCase();
+        if (!n) return null;
+        const hit = restEntries().find(([, r]) => r.name.trim().toLowerCase() === n);
+        return hit ? { id: hit[0], ...hit[1] } : null;
+    };
+    const fmtDate = (ms) => new Date(ms).toLocaleDateString("de-AT", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const bookIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>`;
+
+    const renderRestChips = () => {
+        const box = $("restChips");
+        const list = restEntries();
+        box.hidden = !list.length;
+        const current = $("restaurant").value.trim().toLowerCase();
+        box.innerHTML = list.map(([id, r]) =>
+            `<button type="button" class="rest-chip" data-name="${escapeHtml(r.name)}" aria-pressed="${r.name.trim().toLowerCase() === current}">${r.menuPages ? bookIcon : ""}${escapeHtml(r.name)}</button>`
+        ).join("");
+        $("restDatalist").innerHTML = list.map(([, r]) => `<option value="${escapeHtml(r.name)}">`).join("");
+    };
+    $("restChips").onclick = (e) => {
+        const chip = e.target.closest(".rest-chip");
+        if (!chip) return;
+        $("restaurant").value = chip.dataset.name;
+        renderRestChips();
+    };
+    $("restaurant").addEventListener("input", renderRestChips);
+
+    const renderRestList = () => {
+        const box = $("restList");
+        if (!box) return;
+        const list = restEntries();
+        if (!list.length) { box.innerHTML = `<div class="empty-note">Noch keine Restaurants gespeichert.</div>`; return; }
+        box.innerHTML = list.map(([id, r]) => {
+            const info = [r.phone ? escapeHtml(r.phone) : "", r.menuPages ? `Speisekarte: ${r.menuPages} ${r.menuPages === 1 ? "Seite" : "Seiten"}, vom ${fmtDate(r.menuUpdated)}` : "Keine Speisekarte"].filter(Boolean).join(" · ");
+            return `<div class="rest-row" data-id="${id}">
+                <div class="rest-main"><b>${escapeHtml(r.name)}</b><span>${info}</span></div>
+                <div class="rest-actions">
+                    <button type="button" class="btn small primary" data-act="upload">${r.menuPages ? "Neue Karte hochladen" : "Karte hochladen"}</button>
+                    ${r.menuPages ? `<button type="button" class="btn small" data-act="view">Ansehen</button><button type="button" class="btn small" data-act="delmenu">Karte löschen</button>` : ""}
+                    <button type="button" class="btn small" data-act="phone">Telefon</button>
+                    <button type="button" class="btn small danger" data-act="del">Entfernen</button>
+                </div>
+                <div class="progress-note" hidden></div>
+            </div>`;
+        }).join("");
+    };
+
+    const updateRestaurantLinks = () => {
+        if (!roundId) return;
+        const r = findRest(latestSettings.restaurant);
+        const hasMenu = !!(r && r.menuPages);
+        $("menuBtn").hidden = !hasMenu;
+        if (hasMenu) $("menuBtnSub").textContent = `${r.name} · Stand ${fmtDate(r.menuUpdated)}`;
+        $("menuBtn").onclick = () => r && openMenu(r.id);
+        const phone = r && r.phone ? r.phone.replace(/[^\d+]/g, "") : "";
+        $("callBtn").hidden = !phone;
+        if (phone) { $("callBtn").href = `tel:${phone}`; $("callBtnText").textContent = `${r.name} anrufen`; }
+    };
+
+    onValue(ref(db, "restaurants"), snap => {
+        restaurants = snap.val() || {};
+        renderRestChips();
+        renderRestList();
+        updateRestaurantLinks();
+    });
+
+    $("addRestBtn").onclick = async () => {
+        if (!isGlobalAdmin) return;
+        const name = $("newRestName").value.trim();
+        const phone = $("newRestPhone").value.trim();
+        if (!name) { $("newRestName").focus(); return; }
+        if (findRest(name)) { alert("Dieses Restaurant gibt es schon."); return; }
+        await push(ref(db, "restaurants"), { name, phone, created: Date.now() });
+        $("newRestName").value = ""; $("newRestPhone").value = "";
+        showToast(`${name} gespeichert`);
+    };
+
+    // ---------- Speisekarte hochladen ----------
+    const MAX_SIDE = 1600, MAX_PAGES = 20;
+    const canvasFrom = (src, w, h) => {
+        const k = Math.min(1, MAX_SIDE / Math.max(w, h));
+        const c = document.createElement("canvas");
+        c.width = Math.round(w * k); c.height = Math.round(h * k);
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(src, 0, 0, c.width, c.height);
+        return c.toDataURL("image/jpeg", 0.74);
+    };
+    const imageToPage = (file) => new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { try { resolve(canvasFrom(img, img.naturalWidth, img.naturalHeight)); } finally { URL.revokeObjectURL(url); } };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(`${file.name} ist kein lesbares Bild`)); };
+        img.src = url;
+    });
+    let pdfLib = null;
+    const loadPdfJs = () => pdfLib ? Promise.resolve(pdfLib) : new Promise((resolve, reject) => {
+        const sc = document.createElement("script");
+        sc.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+        sc.onload = () => {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+            pdfLib = window.pdfjsLib; resolve(pdfLib);
+        };
+        sc.onerror = () => reject(new Error("PDF-Leser konnte nicht geladen werden"));
+        document.head.appendChild(sc);
+    });
+    const pdfToPages = async (file, onPage) => {
+        const lib = await loadPdfJs();
+        const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+        const pages = [];
+        for (let i = 1; i <= Math.min(pdf.numPages, MAX_PAGES); i++) {
+            onPage(i, pdf.numPages);
+            const page = await pdf.getPage(i);
+            const base = page.getViewport({ scale: 1 });
+            const vp = page.getViewport({ scale: Math.min(2.5, MAX_SIDE / Math.max(base.width, base.height)) });
+            const c = document.createElement("canvas");
+            c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+            const ctx = c.getContext("2d");
+            ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+            await page.render({ canvasContext: ctx, viewport: vp }).promise;
+            pages.push(c.toDataURL("image/jpeg", 0.74));
+        }
+        return pages;
+    };
+
+    let uploadTarget = null;
+    $("menuFileInput").onchange = async (e) => {
+        const files = [...e.target.files];
+        e.target.value = "";
+        const rid = uploadTarget;
+        if (!files.length || !rid || !restaurants[rid]) return;
+        const row = document.querySelector(`.rest-row[data-id="${rid}"]`);
+        const note = row && row.querySelector(".progress-note");
+        const say = (t) => { if (note) { note.hidden = false; note.textContent = t; } };
+        try {
+            const pages = [];
+            for (const f of files) {
+                if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) {
+                    pages.push(...await pdfToPages(f, (i, n) => say(`PDF wird gelesen … Seite ${i} von ${n}`)));
+                } else {
+                    say(`Bild ${pages.length + 1} wird verkleinert …`);
+                    pages.push(await imageToPage(f));
+                }
+                if (pages.length >= MAX_PAGES) break;
+            }
+            const list = pages.slice(0, MAX_PAGES);
+            const bytes = list.reduce((n, p) => n + p.length, 0);
+            if (bytes > 9.5 * 1024 * 1024) throw new Error("Die Karte ist zu groß. Bitte weniger Seiten hochladen.");
+            say("Wird gespeichert …");
+            const now = Date.now();
+            await set(ref(db, `menus/${rid}`), { updated: now, pages: list });
+            await update(ref(db, `restaurants/${rid}`), { menuPages: list.length, menuUpdated: now });
+            showToast(`Speisekarte gespeichert (${list.length} ${list.length === 1 ? "Seite" : "Seiten"})`);
+        } catch (err) {
+            say("");
+            alert("Hochladen fehlgeschlagen: " + (err && err.message || err));
+        }
+    };
+
+    $("restList").onclick = async (e) => {
+        const btn = e.target.closest("button[data-act]");
+        if (!btn || !isGlobalAdmin) return;
+        const rid = btn.closest(".rest-row").dataset.id;
+        const r = restaurants[rid];
+        if (!r) return;
+        const act = btn.dataset.act;
+        if (act === "upload") {
+            if (r.menuPages && !confirm(`Die bisherige Karte von ${r.name} wird ersetzt. Weiter?`)) return;
+            uploadTarget = rid;
+            $("menuFileInput").click();
+        } else if (act === "view") {
+            openMenu(rid);
+        } else if (act === "delmenu") {
+            if (!confirm(`Speisekarte von ${r.name} löschen?`)) return;
+            await remove(ref(db, `menus/${rid}`));
+            await update(ref(db, `restaurants/${rid}`), { menuPages: null, menuUpdated: null });
+            showToast("Speisekarte gelöscht");
+        } else if (act === "phone") {
+            const ph = prompt(`Telefonnummer von ${r.name}:`, r.phone || "");
+            if (ph !== null) await update(ref(db, `restaurants/${rid}`), { phone: ph.trim() });
+        } else if (act === "del") {
+            if (!confirm(`${r.name} samt Speisekarte entfernen?`)) return;
+            await remove(ref(db, `menus/${rid}`));
+            await remove(ref(db, `restaurants/${rid}`));
+            showToast(`${r.name} entfernt`);
+        }
+    };
+
+    // ---------- Speisekarte ansehen ----------
+    const openMenu = async (rid) => {
+        const r = restaurants[rid];
+        if (!r) return;
+        $("menuTitle").textContent = r.name;
+        $("menuMeta").textContent = r.menuUpdated ? `Stand ${fmtDate(r.menuUpdated)}` : "";
+        $("menuPages").innerHTML = `<div class="empty-note">Speisekarte wird geladen …</div>`;
+        openSheet("menuModal");
+        try {
+            const snap = await get(ref(db, `menus/${rid}/pages`));
+            const pages = Object.values(snap.val() || {});
+            if (!pages.length) { $("menuPages").innerHTML = `<div class="empty-note">Keine Speisekarte vorhanden.</div>`; return; }
+            $("menuPages").innerHTML = pages.map((src, i) => `<div class="pg"><img src="${src}" alt="Seite ${i + 1}" loading="lazy"></div>`).join("")
+                + `<p class="menu-tip">Tippe auf eine Seite zum Vergrößern</p>`;
+        } catch (err) {
+            $("menuPages").innerHTML = `<div class="empty-note">Speisekarte konnte nicht geladen werden.</div>`;
+        }
+    };
+    $("menuPages").onclick = (e) => {
+        const pg = e.target.closest(".pg");
+        if (pg) pg.classList.toggle("zoomed");
+    };
+    $("closeMenuBtn").onclick = () => closeSheet("menuModal");
+
+    applyAdminState();
+
 </script>
 </body>
 </html>
