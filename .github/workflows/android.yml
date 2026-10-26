@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
       KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -60,7 +60,17 @@ jobs:
         working-directory: android/build
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          echo "ANDROID_HOME=$ANDROID_HOME"; ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools" || true
+          set +e
+          ./gradlew assembleRelease --no-daemon > gradle.log 2>&1
+          rc=$?
+          set -e
+          tail -60 gradle.log
+          if [ $rc -ne 0 ]; then
+            msg=$( (grep -A25 "What went wrong" gradle.log || tail -25 gradle.log) | head -30 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+            echo "::error title=Gradle::$msg"
+            exit 1
+          fi
 
       - name: APK signieren
         working-directory: android/build
