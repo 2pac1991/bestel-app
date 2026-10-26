@@ -2683,6 +2683,7 @@
                 <div class="rest-actions">
                     <button type="button" class="btn small primary" data-act="upload">${r.menuPages ? "Neue Karte hochladen" : "Karte hochladen"}</button>
                     ${r.menuPages ? `<button type="button" class="btn small" data-act="view">Ansehen</button><button type="button" class="btn small" data-act="delmenu">Karte löschen</button>` : ""}
+                    <button type="button" class="btn small" data-act="rename">Umbenennen</button>
                     <button type="button" class="btn small" data-act="phone">Telefon</button>
                     <button type="button" class="btn small danger" data-act="del">Entfernen</button>
                 </div>
@@ -2823,6 +2824,21 @@
             await remove(ref(db, `menus/${rid}`));
             await update(ref(db, `restaurants/${rid}`), { menuPages: null, menuUpdated: null });
             showToast("Speisekarte gelöscht");
+        } else if (act === "rename") {
+            const input = prompt(`Neuer Name für ${r.name}:`, r.name);
+            if (input === null) return;
+            const name = input.trim();
+            if (!name || name === r.name) return;
+            const clash = findRest(name);
+            if (clash && clash.id !== rid) { alert("Ein Restaurant mit diesem Namen gibt es schon."); return; }
+            const oldKey = r.name.trim().toLowerCase();
+            await update(ref(db, `restaurants/${rid}`), { name });
+            // Bestellungen, die noch den alten Namen tragen, mitziehen, damit Speisekarte und Anruf-Knopf weiter passen
+            const allRounds = roundId ? ((await get(ref(db, "rounds")).catch(() => null))?.val() || {}) : latestRounds;
+            await Promise.all(Object.entries(allRounds || {})
+                .filter(([, rd]) => rd && rd.settings && String(rd.settings.restaurant || "").trim().toLowerCase() === oldKey)
+                .map(([id]) => update(ref(db, `rounds/${id}/settings`), { restaurant: name }).catch(() => {})));
+            showToast(`Umbenannt in ${name}`);
         } else if (act === "phone") {
             const ph = prompt(`Telefonnummer von ${r.name}:`, r.phone || "");
             if (ph !== null) await update(ref(db, `restaurants/${rid}`), { phone: ph.trim() });
@@ -3154,7 +3170,8 @@
 
     // ---------- Vorbereitete Restaurants (werden einmalig von einem Admin-Gerät eingetragen) ----------
     const SEED_RESTAURANTS = [
-        { key: "pizzeria-milano-v1", name: "Pizzeria Milano", phone: "07672 92634", pages: [1, 2, 3, 4, 5].map(n => `menus/pizzeria-milano/${n}.jpg`) }
+        { key: "pizzeria-milano-v1", name: "Pizzeria Milano", phone: "07672 92634", pages: [1, 2, 3, 4, 5].map(n => `menus/pizzeria-milano/${n}.jpg`) },
+        { key: "wok-und-box-v1", name: "Wok & Box", phone: "", pages: [1, 2, 3, 4].map(n => `menus/wok-und-box/${n}.jpg`) }
     ];
     const runSeeds = async () => {
         if (!isGlobalAdmin) return;
@@ -3168,7 +3185,8 @@
                 const now = Date.now();
                 const pages = sd.pages.map(pth => new URL(pth, location.href).href);
                 await set(ref(db, `menus/${rid}`), { updated: now, pages });
-                await update(ref(db, `restaurants/${rid}`), { name: sd.name, phone: sd.phone, menuPages: pages.length, menuUpdated: now, created: (all[rid] && all[rid].created) || now });
+                const prev = all[rid] || {};
+                await update(ref(db, `restaurants/${rid}`), { name: prev.name || sd.name, phone: prev.phone || sd.phone, menuPages: pages.length, menuUpdated: now, created: prev.created || now });
                 await set(ref(db, `config/seeds/${sd.key}`), now);
                 showToast(`${sd.name} mit Speisekarte eingetragen`);
             } catch (err) { console.log("Seed fehlgeschlagen:", err); }
