@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "site.kalorienkonferenz.bestellliste",
+    "sha256_cert_fingerprints": ["CC:27:11:33:19:10:F5:46:65:7E:89:4D:58:F3:74:B9:4F:19:CA:27:FF:3C:11:63:9A:D6:82:B0:DA:B8:2B:99"]
+  }
+}]

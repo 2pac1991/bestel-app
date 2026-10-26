@@ -1,0 +1,88 @@
+name: Android-App bauen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'icon.png'
+      - 'app/notification-icon.png'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+      KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
+      VERSION: 1.0.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Signaturschlüssel aus Secrets holen
+        run: |
+          if [ -z "$KS_B64" ] || [ -z "$KS_PASS" ]; then
+            echo "::warning::Secrets KEYSTORE_BASE64/KEYSTORE_PASSWORD fehlen: Testbau mit Wegwerf-Schlüssel, kein Release."
+            P=$(openssl rand -hex 16)
+            keytool -genkeypair -keystore android/bestellliste.keystore -storetype JKS -alias bestellliste \
+              -keyalg RSA -keysize 2048 -validity 365 -storepass "$P" -keypass "$P" -dname "CN=Test"
+            echo "KS_PASS=$P" >> "$GITHUB_ENV"
+            echo "RELEASE=no" >> "$GITHUB_ENV"
+          else
+            echo "$KS_B64" | base64 -d > android/bestellliste.keystore
+            echo "RELEASE=yes" >> "$GITHUB_ENV"
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bubblewrap installieren
+        run: npm install --no-save --prefix android @bubblewrap/core
+
+      - name: Android-Projekt erzeugen
+        run: node android/generate.js ${{ github.run_number }}
+
+      - name: APK bauen
+        working-directory: android/build
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: APK signieren
+        working-directory: android/build
+        run: |
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          UNSIGNED=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          "$BT/zipalign" -f -p 4 "$UNSIGNED" aligned.apk
+          "$BT/apksigner" sign --ks ../bestellliste.keystore --ks-key-alias bestellliste \
+            --ks-pass env:KS_PASS --key-pass env:KS_PASS --out ../../Bestellliste.apk aligned.apk
+          "$BT/apksigner" verify --print-certs ../../Bestellliste.apk | head -5
+
+      - name: Release veröffentlichen
+        if: env.RELEASE == 'yes'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "app-v$VERSION" Bestellliste.apk \
+            --title "Bestellliste App $VERSION" \
+            --notes "Android-App der Bestellliste. Auf dem Handy herunterladen und installieren (Installation aus unbekannten Quellen erlauben)." \
+            --latest
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bestellliste-apk
+          path: Bestellliste.apk
