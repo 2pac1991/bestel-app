@@ -469,6 +469,10 @@
                         <span class="grow">Benachrichtigungen<span class="sub" id="pushSub">Bei Start und Ende einer Bestellung</span></span>
                         <i class="tgl"></i>
                     </button>
+                    <button id="pushTestBtn" type="button" hidden>
+                        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
+                        <span class="grow">Test-Nachricht senden</span>
+                    </button>
                     <button id="installMenuBtn" type="button" hidden>
                         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>
                         <span class="grow">Als App installieren</span>
@@ -976,6 +980,7 @@
     const syncPushBtn = () => {
         const on = pushIsOn() && pushSupported && Notification.permission === "granted";
         pushBtn.classList.toggle("on", on);
+        document.getElementById("pushTestBtn").hidden = !on;
         pushBtn.setAttribute("aria-checked", String(on));
         const sub = document.getElementById("pushSub");
         if (pushSupported && Notification.permission === "denied") sub.textContent = "In den Handy-Einstellungen blockiert";
@@ -1055,6 +1060,16 @@
         } else {
             hintEl.hidden = true;
         }
+    };
+
+    document.getElementById("pushTestBtn").onclick = async () => {
+        setMenu(false);
+        try {
+            const sub = await getSub();
+            if (!sub) { showToast("Benachrichtigungen sind nicht eingeschaltet"); return; }
+            await update(ref(db, `push/tests/${await pushKeyId(sub.endpoint)}`), { at: Date.now() });
+            showToast("Test angefordert – kommt in ein paar Sekunden");
+        } catch (err) { showToast("Test fehlgeschlagen: " + (err && err.message || err)); }
     };
 
     const installMenuBtn = document.getElementById("installMenuBtn");

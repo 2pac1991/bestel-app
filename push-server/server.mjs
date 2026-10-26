@@ -223,6 +223,24 @@ const stream = async () => {
   }
 };
 
+// Test-Nachrichten: die App schreibt push/tests/<Geräte-ID>, der Server schickt eine Nachricht an genau dieses Gerät
+const handleTests = async () => {
+  try {
+    const tests = (await dbGet('push/tests')) || {};
+    for (const id of Object.keys(tests)) {
+      await dbDelete(`push/tests/${id}`);
+      const s = await dbGet(`pushSubs/${id}`);
+      if (!s || !s.sub || s.key !== VAPID_PUBLIC) { log(`Test für ${id}: Gerät nicht angemeldet`); continue; }
+      const status = DRY_RUN ? 201 : await sendPush(s.sub, {
+        title: '🔔 Test-Nachricht', body: 'Benachrichtigungen funktionieren. Du bekommst Bescheid, wenn eine Bestellung startet oder endet.',
+        url: `${SITE_URL}/`, tag: 'test',
+      });
+      if (status === 404 || status === 410) await dbDelete(`pushSubs/${id}`);
+      log(`Test-Nachricht an ${s.user || id}: HTTP ${status}`);
+    }
+  } catch (err) { log('Test-Nachrichten fehlgeschlagen:', err.message); }
+};
+
 // Öffentlichen Schlüssel für die App bereitstellen (und wiederherstellen, falls überschrieben)
 const publishKey = async () => {
   try {
@@ -236,5 +254,6 @@ if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1])))
   await publishKey();
   setInterval(publishKey, 5 * 60 * 1000);
   setInterval(runCheck, 10000);
+  setInterval(handleTests, 4000);
   stream();
 }
