@@ -4,5 +4,4 @@ RUN apk add --no-cache tzdata
 WORKDIR /app
 COPY server.mjs .
 VOLUME /data
-USER node
 CMD ["node", "server.mjs"]
