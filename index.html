@@ -501,9 +501,41 @@
         .call-btn { margin-bottom: 16px; text-decoration: none; }
         .menu-meta { display: block; color: var(--label-3); font-size: 14px; }
         #menuPages { display: flex; flex-direction: column; gap: 10px; }
-        #menuPages .pg { overflow-x: auto; border-radius: var(--r-lg); background: #fff; }
+        #menuPages .pg { overflow-x: auto; border-radius: var(--r-lg); background: #fff; flex-shrink: 0; }
+        #menuPages .pg-in { position: relative; width: 100%; }
+        #menuPages .pg.zoomed .pg-in { width: 230%; }
         #menuPages img { display: block; width: 100%; height: auto; cursor: zoom-in; }
-        #menuPages .pg.zoomed img { width: 230%; max-width: none; cursor: zoom-out; }
+        #menuPages .pg.zoomed img { cursor: zoom-out; }
+
+        /* Suche in der Speisekarte */
+        #menuModal { overflow: hidden; }
+        #menuModal #menuPages { max-height: calc(85vh - 205px); overflow-y: auto; overscroll-behavior: contain; border-radius: var(--r-lg); }
+        @media (max-width: 640px) { #menuModal #menuPages { max-height: calc(86vh - 185px - env(safe-area-inset-bottom) * .5); } }
+        .menu-search { margin: 0 0 12px; }
+        .ms-field { position: relative; display: flex; align-items: center; }
+        .ms-field svg { position: absolute; left: 12px; width: 18px; height: 18px; color: var(--label-3); pointer-events: none; }
+        .ms-field input { margin: 0; padding: 11px 40px 11px 38px; border-radius: 999px; font-size: 17px; }
+        .ms-field input::-webkit-search-cancel-button { display: none; }
+        .ms-clear {
+            position: absolute; right: 8px; width: 26px; height: 26px; border-radius: 50%; border: 0; padding: 0;
+            background: var(--label-4); color: var(--bg); font-size: 12px; font-weight: 800; display: grid; place-items: center;
+        }
+        .ms-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 6px 0 14px; font-size: 14px; color: var(--label-3); }
+        .ms-bar b { color: var(--label); font-weight: 600; }
+        .ms-nav { display: flex; gap: 6px; }
+        .ms-nav button {
+            width: 34px; height: 34px; border-radius: 50%; border: 0; padding: 0; background: var(--fill); color: var(--tint);
+            display: grid; place-items: center; transition: transform .3s var(--spring);
+        }
+        .ms-nav button:active { transform: scale(.9); }
+        .ms-nav button:disabled { opacity: .35; }
+        .ms-nav svg { width: 18px; height: 18px; }
+        .hl {
+            position: absolute; border-radius: 4px; pointer-events: none;
+            background: rgba(255,214,10,.45); box-shadow: 0 0 0 2px rgba(255,170,0,.95); mix-blend-mode: multiply;
+        }
+        .hl.cur { background: rgba(255,149,0,.55); box-shadow: 0 0 0 3px #ff6a00, 0 0 16px 4px rgba(255,120,0,.55); mix-blend-mode: normal; animation: hlPulse 1.2s ease-in-out 2; }
+        @keyframes hlPulse { 50% { box-shadow: 0 0 0 5px #ff6a00, 0 0 22px 8px rgba(255,120,0,.6); } }
         .menu-tip { color: var(--label-4); font-size: 13px; text-align: center; margin: 2px 0 0; }
 
         /* ---------- Bearbeiten ---------- */
@@ -1211,6 +1243,20 @@
         <div class="debt-modal-header">
             <div><h2 id="menuTitle">Speisekarte</h2><span class="menu-meta" id="menuMeta"></span></div>
             <button class="debt-modal-close" id="closeMenuBtn" type="button" aria-label="Schließen">✕</button>
+        </div>
+        <div class="menu-search">
+            <div class="ms-field">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input id="menuSearch" type="search" placeholder="In Speisekarte suchen" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false">
+                <button class="ms-clear" id="menuSearchClear" type="button" aria-label="Suche löschen" hidden>✕</button>
+            </div>
+            <div class="ms-bar" id="msBar" hidden>
+                <span id="msInfo"></span>
+                <span class="ms-nav" id="msNav">
+                    <button id="msPrev" type="button" aria-label="Vorheriger Treffer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></button>
+                    <button id="msNext" type="button" aria-label="Nächster Treffer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                </span>
+            </div>
         </div>
         <div id="menuPages"></div>
     </div>
@@ -2714,6 +2760,8 @@
             const now = Date.now();
             await set(ref(db, `menus/${rid}`), { updated: now, pages: list });
             await update(ref(db, `restaurants/${rid}`), { menuPages: list.length, menuUpdated: now });
+            // Texterkennung gleich im Hintergrund starten, damit die Suche für alle sofort bereit ist
+            runOcr(rid, list, now).catch(() => {});
             showToast(`Speisekarte gespeichert (${list.length} ${list.length === 1 ? "Seite" : "Seiten"})`);
         } catch (err) {
             say("");
@@ -2751,19 +2799,231 @@
     };
 
     // ---------- Speisekarte ansehen ----------
+    // ---------- Texterkennung (OCR) & Suche in der Speisekarte ----------
+    // Der Text jeder Seite wird einmal per Tesseract erkannt und unter menus/<id>/ocr für alle gespeichert.
+    const OCR_V = 1;
+    let tessLib = null;
+    const loadTesseract = () => tessLib ? Promise.resolve(tessLib) : new Promise((resolve, reject) => {
+        const sc = document.createElement("script");
+        sc.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+        sc.onload = () => { tessLib = window.Tesseract; tessLib ? resolve(tessLib) : reject(new Error("Texterkennung fehlt")); };
+        sc.onerror = () => reject(new Error("Texterkennung konnte nicht geladen werden"));
+        document.head.appendChild(sc);
+    });
+    const imgSize = (src) => new Promise((resolve) => {
+        const im = new Image();
+        im.onload = () => resolve([im.naturalWidth || 1, im.naturalHeight || 1]);
+        im.onerror = () => resolve([1, 1]);
+        im.src = src;
+    });
+    const r4 = (n) => Math.round(n * 10000) / 10000;
+    const ocrLocalKey = (rid) => `menuOcr:${rid}`;
+    const ocrJobs = {};
+    const runOcr = (rid, pages, updated, onProgress) => {
+        if (ocrJobs[rid]) { ocrJobs[rid].listeners.push(onProgress); return ocrJobs[rid].promise; }
+        const job = { listeners: [onProgress], result: pages.map(() => null) };
+        const tell = (i, n, done) => job.listeners.forEach(fn => { try { fn && fn(i, n, job.result, done); } catch {} });
+        job.promise = (async () => {
+            const T = await loadTesseract();
+            const worker = await T.createWorker("deu");
+            try {
+                for (let i = 0; i < pages.length; i++) {
+                    tell(i + 1, pages.length, false);
+                    const [W, H] = await imgSize(pages[i]);
+                    const { data } = await worker.recognize(pages[i]);
+                    job.result[i] = (data.words || [])
+                        .filter(w => w.text && w.text.trim() && w.confidence > 25)
+                        .map(w => [w.text.trim(), r4(w.bbox.x0 / W), r4(w.bbox.y0 / H), r4((w.bbox.x1 - w.bbox.x0) / W), r4((w.bbox.y1 - w.bbox.y0) / H)]);
+                }
+            } finally { worker.terminate().catch(() => {}); }
+            const rec = { v: OCR_V, updated: updated || 0, data: JSON.stringify(job.result) };
+            try { localStorage.setItem(ocrLocalKey(rid), JSON.stringify(rec)); } catch {}
+            update(ref(db, `menus/${rid}`), { ocr: rec }).catch(() => {});
+            tell(pages.length, pages.length, true);
+            return job.result;
+        })().finally(() => { delete ocrJobs[rid]; });
+        ocrJobs[rid] = job;
+        return job.promise;
+    };
+    const parseOcr = (rec, updated, count) => {
+        try {
+            if (!rec || rec.v !== OCR_V || (rec.updated || 0) !== (updated || 0)) return null;
+            const d = JSON.parse(rec.data);
+            return Array.isArray(d) && d.length === count ? d : null;
+        } catch { return null; }
+    };
+
+    const fold = (t) => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss").replace(/[^a-z0-9]/g, "");
+    const menuState = { rid: null, ocr: [], ocrDone: false, ocrPage: 0, ocrTotal: 0, ocrError: "", hits: [], cur: -1 };
+
+    const renderHits = () => {
+        document.querySelectorAll("#menuPages .hls").forEach(h => h.innerHTML = "");
+        menuState.hits.forEach((hit, n) => {
+            const layer = document.querySelector(`#menuPages .pg[data-i="${hit.page}"] .hls`);
+            if (!layer) return;
+            const el = document.createElement("i");
+            el.className = "hl" + (n === menuState.cur ? " cur" : "");
+            const pad = .004;
+            el.style.left = `${(hit.x - pad) * 100}%`; el.style.top = `${(hit.y - pad) * 100}%`;
+            el.style.width = `${(hit.w + pad * 2) * 100}%`; el.style.height = `${(hit.h + pad * 2) * 100}%`;
+            hit.el = el;
+            layer.appendChild(el);
+        });
+    };
+    const updateSearchBar = () => {
+        const q = $("menuSearch").value.trim();
+        $("menuSearchClear").hidden = !q;
+        const bar = $("msBar"), info = $("msInfo");
+        const running = !menuState.ocrDone && !menuState.ocrError;
+        const prog = running ? (menuState.ocrTotal ? `Speisekarte wird durchsuchbar gemacht … Seite ${menuState.ocrPage} von ${menuState.ocrTotal}` : "Speisekarte wird durchsuchbar gemacht …") : "";
+        if (!q) {
+            bar.hidden = !running && !menuState.ocrError;
+            info.textContent = menuState.ocrError || prog;
+            $("msNav").hidden = true;
+            return;
+        }
+        bar.hidden = false;
+        const n = menuState.hits.length;
+        $("msNav").hidden = n < 2;
+        if (n) info.innerHTML = `<b>${menuState.cur + 1}</b> von <b>${n}</b> ${n === 1 ? "Treffer" : "Treffern"}`
+            + (menuState.fallback ? ` für „${escapeHtml(menuState.fallback)}“` : "") + (menuState.fuzzy ? " (ähnliche Schreibweise)" : "") + (running ? " · sucht noch …" : "");
+        else info.textContent = menuState.ocrError || (running ? prog : "Nichts gefunden");
+    };
+    const focusHit = (n) => {
+        if (!menuState.hits.length) return;
+        menuState.cur = (n + menuState.hits.length) % menuState.hits.length;
+        renderHits();
+        updateSearchBar();
+        const el = menuState.hits[menuState.cur].el;
+        if (!el) return;
+        // Nur innerhalb der Karte scrollen, das Fenster selbst bleibt stehen
+        const box = $("menuPages"), r = el.getBoundingClientRect(), bb = box.getBoundingClientRect();
+        box.scrollBy({ top: r.top - bb.top - bb.height / 2 + r.height / 2, behavior: "smooth" });
+        const pg = el.closest(".pg");
+        if (pg && pg.classList.contains("zoomed")) {
+            const pr = pg.getBoundingClientRect();
+            pg.scrollBy({ left: r.left - pr.left - pr.width / 2 + r.width / 2, behavior: "smooth" });
+        }
+        $("menuModal").scrollTop = 0;
+    };
+    // Erlaubt einen Tippfehler bzw. einen anderen Buchstaben (z. B. „Kebab“ findet „Kebap“)
+    const lev1 = (a, b) => {
+        if (Math.abs(a.length - b.length) > 1) return false;
+        let i = 0, j = 0, edits = 0;
+        while (i < a.length && j < b.length) {
+            if (a[i] === b[j]) { i++; j++; continue; }
+            if (++edits > 1) return false;
+            if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; }
+        }
+        return edits + (a.length - i) + (b.length - j) <= 1;
+    };
+    const fuzzyHas = (tok, term) => {
+        if (tok.includes(term)) return true;
+        if (term.length < 4) return false;
+        for (const L of [term.length - 1, term.length, term.length + 1]) {
+            for (let k = 0; k + L <= tok.length; k++) if (lev1(tok.substr(k, L), term)) return true;
+        }
+        return false;
+    };
+    const findHits = (terms, fuzzy = false) => {
+        const has = fuzzy ? fuzzyHas : (tok, term) => tok.includes(term);
+        const hits = [];
+        menuState.ocr.forEach((words, page) => {
+            if (!words) return;
+            const toks = words.map(w => fold(w[0]));
+            for (let i = 0; i < toks.length; i++) {
+                if (!has(toks[i], terms[0])) continue;
+                let ok = true;
+                for (let k = 1; k < terms.length; k++) if (!toks[i + k] || !has(toks[i + k], terms[k])) { ok = false; break; }
+                if (!ok) continue;
+                const ws = words.slice(i, i + terms.length);
+                const x = Math.min(...ws.map(w => w[1])), y = Math.min(...ws.map(w => w[2]));
+                const x2 = Math.max(...ws.map(w => w[1] + w[3])), y2 = Math.max(...ws.map(w => w[2] + w[4]));
+                // Wörter in verschiedenen Zeilen nicht zu einem riesigen Kasten verbinden
+                if (y2 - y > (ws[0][4] || .02) * 2.6) { ws.forEach(w => hits.push({ page, x: w[1], y: w[2], w: w[3], h: w[4] })); continue; }
+                hits.push({ page, x, y, w: x2 - x, h: y2 - y });
+            }
+        });
+        return hits;
+    };
+    const runSearch = (jump = true) => {
+        const raw = $("menuSearch").value.trim().split(/\s+/).filter(Boolean);
+        const terms = raw.map(fold).filter(Boolean);
+        let hits = terms.length ? findHits(terms) : [];
+        menuState.fallback = ""; menuState.fuzzy = false;
+        // Wortfolge nicht gefunden (z. B. „Pizza Diavolo“, auf der Karte steht nur „Diavolo“):
+        // dann nach dem seltensten einzelnen Wort suchen. Erst exakt, dann mit einem Tippfehler Spielraum.
+        for (const fuzzy of [false, true]) {
+            if (hits.length || !terms.length) break;
+            if (fuzzy) { hits = findHits(terms, true); if (hits.length) { menuState.fuzzy = true; break; } }
+            if (terms.length > 1) {
+                let best = null;
+                terms.forEach((t, i) => { const h = findHits([t], fuzzy); if (h.length && (!best || h.length < best.h.length)) best = { h, word: raw[i] }; });
+                if (best) { hits = best.h; menuState.fallback = best.word; menuState.fuzzy = fuzzy; }
+            }
+        }
+        const prev = menuState.hits[menuState.cur];
+        menuState.hits = hits;
+        if (!hits.length) menuState.cur = -1;
+        else if (!jump && prev) {
+            const same = hits.findIndex(h => h.page === prev.page && Math.abs(h.x - prev.x) < 1e-4 && Math.abs(h.y - prev.y) < 1e-4);
+            menuState.cur = same >= 0 ? same : 0;
+        } else menuState.cur = 0;
+        renderHits();
+        updateSearchBar();
+        if (jump && hits.length) focusHit(0);
+    };
+    let searchTimer = null;
+    $("menuSearch").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => runSearch(true), 160); });
+    $("menuSearch").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); clearTimeout(searchTimer); if (menuState.hits.length) focusHit(menuState.cur + 1); else runSearch(true); }
+    });
+    $("menuSearchClear").onclick = () => { $("menuSearch").value = ""; runSearch(false); $("menuSearch").focus(); };
+    $("msPrev").onclick = () => focusHit(menuState.cur - 1);
+    $("msNext").onclick = () => focusHit(menuState.cur + 1);
+
     const openMenu = async (rid) => {
         const r = restaurants[rid];
         if (!r) return;
         $("menuTitle").textContent = r.name;
         $("menuMeta").textContent = r.menuUpdated ? `Stand ${fmtDate(r.menuUpdated)}` : "";
         $("menuPages").innerHTML = `<div class="empty-note">Speisekarte wird geladen …</div>`;
+        $("menuSearch").value = "";
+        Object.assign(menuState, { rid, ocr: [], ocrDone: false, ocrPage: 0, ocrTotal: 0, ocrError: "", hits: [], cur: -1 });
+        updateSearchBar();
         openSheet("menuModal");
         try {
-            const snap = await get(ref(db, `menus/${rid}/pages`));
-            const pages = Object.values(snap.val() || {});
-            if (!pages.length) { $("menuPages").innerHTML = `<div class="empty-note">Keine Speisekarte vorhanden.</div>`; return; }
-            $("menuPages").innerHTML = pages.map((src, i) => `<div class="pg"><img src="${src}" alt="Seite ${i + 1}" loading="lazy"></div>`).join("")
+            const [pSnap, uSnap, oSnap] = await Promise.all([
+                get(ref(db, `menus/${rid}/pages`)), get(ref(db, `menus/${rid}/updated`)), get(ref(db, `menus/${rid}/ocr`))
+            ]);
+            const pages = Object.values(pSnap.val() || {});
+            const updated = uSnap.val() || 0;
+            if (!pages.length) { $("menuPages").innerHTML = `<div class="empty-note">Keine Speisekarte vorhanden.</div>`; menuState.ocrDone = true; updateSearchBar(); return; }
+            $("menuPages").innerHTML = pages.map((src, i) => `<div class="pg" data-i="${i}"><div class="pg-in"><img src="${src}" alt="Seite ${i + 1}" loading="lazy"><div class="hls"></div></div></div>`).join("")
                 + `<p class="menu-tip">Tippe auf eine Seite zum Vergrößern</p>`;
+
+            let ocr = parseOcr(oSnap.val(), updated, pages.length);
+            if (!ocr) { try { ocr = parseOcr(JSON.parse(localStorage.getItem(ocrLocalKey(rid))), updated, pages.length); } catch {} }
+            if (ocr) {
+                Object.assign(menuState, { ocr, ocrDone: true });
+                updateSearchBar();
+                if ($("menuSearch").value.trim()) runSearch(true);
+                return;
+            }
+            menuState.ocr = pages.map(() => null);
+            menuState.ocrTotal = pages.length;
+            updateSearchBar();
+            runOcr(rid, pages, updated, (i, n, result, done) => {
+                if (menuState.rid !== rid) return;
+                menuState.ocr = result.slice();
+                Object.assign(menuState, { ocrPage: i, ocrTotal: n, ocrDone: done });
+                if ($("menuSearch").value.trim()) runSearch(menuState.hits.length === 0);
+                else updateSearchBar();
+            }).catch(err => {
+                if (menuState.rid !== rid) return;
+                menuState.ocrError = "Suche gerade nicht möglich (keine Verbindung zur Texterkennung)";
+                updateSearchBar();
+            });
         } catch (err) {
             $("menuPages").innerHTML = `<div class="empty-note">Speisekarte konnte nicht geladen werden.</div>`;
         }
