@@ -360,7 +360,7 @@
         .dock-row { width: 100%; max-width: 608px; display: flex; gap: 8px; }
         .dock-row .wa-btn { flex: 1; }
         .dock-btn {
-            flex-shrink: 0; width: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+            flex-shrink: 0; width: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
             background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r-md); color: var(--text);
             font-size: 11.5px; font-weight: 650; padding: 8px 4px; box-shadow: var(--shadow-lg);
         }
@@ -369,21 +369,6 @@
         .del-mini { background: none; border: 0; color: var(--faint); font-size: 14px; padding: 6px 8px; border-radius: 8px; }
         .del-mini:hover { color: var(--bad); background: var(--bad-soft); }
         .added-by { font-size: 11px; color: var(--faint); font-weight: 500; margin-left: 4px; }
-
-        /* ---------- Druckansicht ---------- */
-        #printArea { display: none; }
-        @media print {
-            @page { margin: 14mm; }
-            body { background: #fff !important; color: #000 !important; padding: 0 !important; }
-            body > *:not(#printArea) { display: none !important; }
-            #printArea { display: block !important; font-family: Arial, Helvetica, sans-serif; color: #000; }
-            #printArea h1 { font-size: 22px; margin: 0 0 4px; }
-            #printArea .meta { font-size: 13px; color: #333; margin-bottom: 14px; }
-            #printArea table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-            #printArea th { text-align: left; border-bottom: 2px solid #000; padding: 6px 6px; }
-            #printArea td { border-bottom: 1px solid #bbb; padding: 7px 6px; vertical-align: top; }
-            #printArea .foot { margin-top: 12px; font-size: 12px; color: #555; }
-        }
 
         /* ---------- App-Hinweis ---------- */
         .app-hint {
@@ -804,13 +789,9 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
                 <span>PDF</span>
             </button>
-            <button id="printBtn" class="dock-btn" type="button" aria-label="Drucken">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
-                <span>Drucken</span>
-            </button>
         </div>
     </div>
-    <div id="printArea" aria-hidden="true"></div>
+
 
 <script type="module">
     if ('serviceWorker' in navigator) {
@@ -2113,17 +2094,6 @@
     };
     const summaryTitle = (s) => `Bestellung ${s.restaurant || ""}`.trim();
     const metaLine = (s, d, n) => [d, s.time ? `Lieferung ${s.time} Uhr` : "", s.chamber || "", s.gate || "", `${n} ${n === 1 ? "Bestellung" : "Bestellungen"}`].filter(Boolean).join(" · ");
-
-    document.getElementById("printBtn").onclick = async () => {
-        const { s, orders, dateStr } = await collectSummary();
-        document.getElementById("printArea").innerHTML = `
-            <h1>${escapeHtml(summaryTitle(s))}</h1>
-            <div class="meta">${escapeHtml(metaLine(s, dateStr, orders.length))}</div>
-            <table><thead><tr><th style="width:36px">#</th><th style="width:32%">Name</th><th>Bestellung</th><th style="width:70px">Bezahlt</th></tr></thead>
-            <tbody>${orders.map((o, i) => `<tr><td>${i + 1}</td><td>${escapeHtml(o.user)}</td><td>${escapeHtml(o.name)}</td><td>${o.paid ? "✓" : ""}</td></tr>`).join("")}</tbody></table>
-            <div class="foot">Erstellt mit der Bestell-Liste · ${new Date().toLocaleString("de-AT")}</div>`;
-        setTimeout(() => window.print(), 50);
-    };
 
     let jsPdfLib = null;
     const loadJsPdf = () => jsPdfLib ? Promise.resolve(jsPdfLib) : new Promise((resolve, reject) => {
