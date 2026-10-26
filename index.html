@@ -209,7 +209,7 @@
         #restartBtn { margin: 14px 0 40px; background: transparent; color: var(--muted); border-color: var(--line); }
 
         /* ---------- Bestellliste ---------- */
-        .order-container-box { padding: 16px 18px 6px; display: none; }
+        .order-container-box { padding: 16px 18px 6px; display: none; margin-bottom: 16px; }
         .box-title-sub {
             font-size: 11.5px; font-weight: 650; color: var(--muted); text-transform: uppercase;
             letter-spacing: .06em; display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
@@ -355,6 +355,35 @@
         }
         .wa-btn:active { transform: scale(.98); }
         .wa-btn svg { width: 21px; height: 21px; fill: currentColor; }
+
+        .opt { color: var(--faint); font-weight: 500; }
+        .dock-row { width: 100%; max-width: 608px; display: flex; gap: 8px; }
+        .dock-row .wa-btn { flex: 1; }
+        .dock-btn {
+            flex-shrink: 0; width: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+            background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r-md); color: var(--text);
+            font-size: 11.5px; font-weight: 650; padding: 8px 4px; box-shadow: var(--shadow-lg);
+        }
+        .dock-btn svg { width: 20px; height: 20px; color: var(--amber); }
+        .dock-btn:active { transform: scale(.96); }
+        .del-mini { background: none; border: 0; color: var(--faint); font-size: 14px; padding: 6px 8px; border-radius: 8px; }
+        .del-mini:hover { color: var(--bad); background: var(--bad-soft); }
+        .added-by { font-size: 11px; color: var(--faint); font-weight: 500; margin-left: 4px; }
+
+        /* ---------- Druckansicht ---------- */
+        #printArea { display: none; }
+        @media print {
+            @page { margin: 14mm; }
+            body { background: #fff !important; color: #000 !important; padding: 0 !important; }
+            body > *:not(#printArea) { display: none !important; }
+            #printArea { display: block !important; font-family: Arial, Helvetica, sans-serif; color: #000; }
+            #printArea h1 { font-size: 22px; margin: 0 0 4px; }
+            #printArea .meta { font-size: 13px; color: #333; margin-bottom: 14px; }
+            #printArea table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+            #printArea th { text-align: left; border-bottom: 2px solid #000; padding: 6px 6px; }
+            #printArea td { border-bottom: 1px solid #bbb; padding: 7px 6px; vertical-align: top; }
+            #printArea .foot { margin-top: 12px; font-size: 12px; color: #555; }
+        }
 
         /* ---------- App-Hinweis ---------- */
         .app-hint {
@@ -628,7 +657,11 @@
                 <svg class="i chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </button>
             <div class="card order-input-card">
-                <span class="label">Deine Bestellung</span>
+                <div class="admin-only">
+                    <span class="label">Für wen? <span class="opt">(leer = für dich)</span></span>
+                    <input id="orderForName" type="text" placeholder="Name eingeben" autocomplete="off">
+                </div>
+                <span class="label">Bestellung</span>
                 <input id="orderInput" type="text" placeholder="Was möchtest du?" autocomplete="off">
                 <button id="addOrderBtn" class="btn add-btn" type="button">Hinzufügen</button>
             </div>
@@ -654,6 +687,16 @@
             <div class="order-container-box" style="display: block;">
                 <div class="box-title-sub" id="sumBoxTitle">Gesamtliste für den Lieferanten</div>
                 <ul id="list-summary"></ul>
+            </div>
+
+            <div class="card admin-only" id="lateAddCard">
+                <h2 class="setup-title">Nachtragen</h2>
+                <p class="setup-hint">Bestellung nachträglich für jemanden hinzufügen.</p>
+                <div class="field-grid">
+                    <div><span class="label">Name</span><input id="lateName" type="text" placeholder="Name" autocomplete="off"></div>
+                    <div><span class="label">Bestellung</span><input id="lateItem" type="text" placeholder="Was?" autocomplete="off"></div>
+                </div>
+                <button id="lateAddBtn" class="btn" type="button">Hinzufügen</button>
             </div>
 
             <button id="restartBtn" class="btn admin-only" type="button">Liste löschen</button>
@@ -752,11 +795,22 @@
     </div>
 
     <div id="waLeiste" class="wa-sticky admin-only" style="display:none">
-        <button id="shareWaBtn" class="wa-btn" type="button">
-            <svg viewBox="0 0 24 24"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35M12.05 21.78a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88M20.46 3.49A11.82 11.82 0 0 0 12.05 0C5.45 0 .08 5.36.08 11.97c0 2.11.55 4.18 1.6 5.98L0 24l6.15-1.61a11.83 11.83 0 0 0 5.9 1.57h.01c6.6 0 11.97-5.36 11.97-11.97 0-3.2-1.25-6.2-3.51-8.47z"/></svg>
-            Auf WhatsApp teilen
-        </button>
+        <div class="dock-row">
+            <button id="shareWaBtn" class="wa-btn" type="button">
+                <svg viewBox="0 0 24 24"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35M12.05 21.78a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88M20.46 3.49A11.82 11.82 0 0 0 12.05 0C5.45 0 .08 5.36.08 11.97c0 2.11.55 4.18 1.6 5.98L0 24l6.15-1.61a11.83 11.83 0 0 0 5.9 1.57h.01c6.6 0 11.97-5.36 11.97-11.97 0-3.2-1.25-6.2-3.51-8.47z"/></svg>
+                WhatsApp
+            </button>
+            <button id="pdfBtn" class="dock-btn" type="button" aria-label="Als PDF ansehen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+                <span>PDF</span>
+            </button>
+            <button id="printBtn" class="dock-btn" type="button" aria-label="Drucken">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+                <span>Drucken</span>
+            </button>
+        </div>
     </div>
+    <div id="printArea" aria-hidden="true"></div>
 
 <script type="module">
     if ('serviceWorker' in navigator) {
@@ -1422,12 +1476,16 @@
     const add = () => {
         const inp = document.getElementById("orderInput");
         if(inp.value.trim()) {
-            if(userName === "Gast") {
+            if(userName === "Gast" && !(hasAdminRights() && document.getElementById("orderForName").value.trim())) {
                 let n = prompt("Bitte gib deinen Namen für die Bestellung ein:");
                 if(!setUserName(n)) return; 
             }
-            push(ref(db, `${base}/orders`), {name: inp.value.trim(), user: userName, owner: userId, paid: false}); 
-            inp.value = ""; 
+            const forInp = document.getElementById("orderForName");
+            const forName = hasAdminRights() ? forInp.value.trim() : "";
+            const entry = {name: inp.value.trim(), user: forName || userName, owner: userId, paid: false};
+            if (forName) entry.addedBy = userName;
+            push(ref(db, `${base}/orders`), entry); 
+            inp.value = ""; forInp.value = "";
             celebrate(document.getElementById("addOrderBtn"));
         }
     };
@@ -1449,6 +1507,13 @@
     };
 
     document.getElementById("list-summary").onclick = (e) => {
+        const del = e.target.closest(".del-mini");
+        if (del) {
+            e.stopPropagation();
+            const li = del.closest("li");
+            if (hasAdminRights() && confirm("Diese Bestellung löschen?")) remove(ref(db, `${base}/orders/${li.dataset.key}`));
+            return;
+        }
         const li = e.target.closest("li");
         togglePaidStatus(li);
     };
@@ -1521,7 +1586,10 @@
                             <span class="user-label">${escapeHtml(d.user)}</span>
                             <span class="food-name">${escapeHtml(d.name)}</span>
                         </div>
-                        ${d.paid ? `<span class="paid-badge">🏆 Bezahlt</span>` : ""}
+                        <div class="order-actions">
+                            ${d.paid ? `<span class="paid-badge" style="position:static">Bezahlt</span>` : ""}
+                            ${hasAdminRights() ? `<button class="del-mini" type="button" aria-label="Löschen">✕</button>` : ""}
+                        </div>
                     </div>`;
                 listSum.appendChild(liSum);
             });
@@ -2022,6 +2090,99 @@
         if (pg) pg.classList.toggle("zoomed");
     };
     $("closeMenuBtn").onclick = () => closeSheet("menuModal");
+
+    // ===================== NACHTRAGEN, PDF & DRUCKEN =====================
+    document.getElementById("lateAddBtn").onclick = async () => {
+        if (!hasAdminRights() || !base) return;
+        const n = document.getElementById("lateName"), it = document.getElementById("lateItem");
+        if (!n.value.trim()) { n.focus(); return; }
+        if (!it.value.trim()) { it.focus(); return; }
+        await push(ref(db, `${base}/orders`), { name: it.value.trim(), user: n.value.trim(), owner: userId, paid: false, addedBy: userName, late: true });
+        showToast(`Für ${n.value.trim()} nachgetragen`);
+        n.value = ""; it.value = "";
+    };
+
+    const collectSummary = async () => {
+        const [sS, oS] = await Promise.all([get(ref(db, `${base}/settings`)), get(ref(db, `${base}/orders`))]);
+        const s = sS.val() || {};
+        const orders = [];
+        if (oS.exists()) oS.forEach(c => { const v = c.val(); orders.push({ user: v.user || "", name: v.name || "", paid: !!v.paid }); });
+        orders.sort((a, b) => a.user.localeCompare(b.user, "de"));
+        const created = new Date(s.createdAt || s.endTime || Date.now());
+        return { s, orders, dateStr: created.toLocaleDateString("de-AT", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }) };
+    };
+    const summaryTitle = (s) => `Bestellung ${s.restaurant || ""}`.trim();
+    const metaLine = (s, d, n) => [d, s.time ? `Lieferung ${s.time} Uhr` : "", s.chamber || "", s.gate || "", `${n} ${n === 1 ? "Bestellung" : "Bestellungen"}`].filter(Boolean).join(" · ");
+
+    document.getElementById("printBtn").onclick = async () => {
+        const { s, orders, dateStr } = await collectSummary();
+        document.getElementById("printArea").innerHTML = `
+            <h1>${escapeHtml(summaryTitle(s))}</h1>
+            <div class="meta">${escapeHtml(metaLine(s, dateStr, orders.length))}</div>
+            <table><thead><tr><th style="width:36px">#</th><th style="width:32%">Name</th><th>Bestellung</th><th style="width:70px">Bezahlt</th></tr></thead>
+            <tbody>${orders.map((o, i) => `<tr><td>${i + 1}</td><td>${escapeHtml(o.user)}</td><td>${escapeHtml(o.name)}</td><td>${o.paid ? "✓" : ""}</td></tr>`).join("")}</tbody></table>
+            <div class="foot">Erstellt mit der Bestell-Liste · ${new Date().toLocaleString("de-AT")}</div>`;
+        setTimeout(() => window.print(), 50);
+    };
+
+    let jsPdfLib = null;
+    const loadJsPdf = () => jsPdfLib ? Promise.resolve(jsPdfLib) : new Promise((resolve, reject) => {
+        const sc = document.createElement("script");
+        sc.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+        sc.onload = () => { jsPdfLib = window.jspdf.jsPDF; resolve(jsPdfLib); };
+        sc.onerror = () => reject(new Error("PDF-Werkzeug konnte nicht geladen werden"));
+        document.head.appendChild(sc);
+    });
+    // Standardschrift kann nur Latin-1 (+€): Emojis & Co. entfernen
+    const pdfText = (t) => String(t || "").replace(/[^\x20-\x7E\xA0-\xFF€–—„“‚‘’…•]/g, "").replace(/\s+/g, " ").trim();
+
+    document.getElementById("pdfBtn").onclick = async () => {
+        const win = window.open("", "_blank");
+        try {
+            const [JsPDF, { s, orders, dateStr }] = await Promise.all([loadJsPdf(), collectSummary()]);
+            const doc = new JsPDF({ unit: "mm", format: "a4" });
+            const W = 210, M = 16;
+            let y = 22;
+            doc.setFont("helvetica", "bold"); doc.setFontSize(18);
+            doc.text(pdfText(summaryTitle(s)), M, y); y += 7;
+            doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.setTextColor(90);
+            doc.splitTextToSize(pdfText(metaLine(s, dateStr, orders.length)), W - 2 * M).forEach(l => { doc.text(l, M, y); y += 5; });
+            y += 4; doc.setTextColor(0);
+            const cols = [M, M + 10, M + 62, W - M - 18];
+            const head = () => {
+                doc.setFont("helvetica", "bold"); doc.setFontSize(10.5);
+                ["#", "Name", "Bestellung", "Bezahlt"].forEach((h, i) => doc.text(h, cols[i], y));
+                y += 2.5; doc.setLineWidth(0.5); doc.line(M, y, W - M, y); y += 5.5;
+                doc.setFont("helvetica", "normal");
+            };
+            head();
+            orders.forEach((o, i) => {
+                const nameLines = doc.splitTextToSize(pdfText(o.user), cols[2] - cols[1] - 3);
+                const itemLines = doc.splitTextToSize(pdfText(o.name), cols[3] - cols[2] - 4);
+                const h = Math.max(nameLines.length, itemLines.length) * 5;
+                if (y + h > 282) { doc.addPage(); y = 20; head(); }
+                doc.text(String(i + 1), cols[0], y);
+                doc.text(nameLines, cols[1], y);
+                doc.text(itemLines, cols[2], y);
+                if (o.paid) doc.text("ja", cols[3], y);
+                y += h - 1.5; doc.setLineWidth(0.15); doc.setDrawColor(190); doc.line(M, y, W - M, y); doc.setDrawColor(0); y += 5;
+            });
+            doc.setFontSize(9); doc.setTextColor(120);
+            doc.text(pdfText(`Erstellt mit der Bestell-Liste · ${new Date().toLocaleString("de-AT")}`), M, Math.min(y + 4, 290));
+            const blob = doc.output("blob");
+            const url = URL.createObjectURL(blob);
+            const fileName = `${pdfText(summaryTitle(s)).replace(/[^\wäöüÄÖÜß-]+/g, "_") || "Bestellung"}.pdf`;
+            if (win) { win.location.href = url; }
+            else {
+                const a = document.createElement("a");
+                a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); a.remove();
+            }
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+        } catch (err) {
+            if (win) win.close();
+            alert("PDF konnte nicht erstellt werden: " + (err && err.message || err));
+        }
+    };
 
     applyAdminState();
 
