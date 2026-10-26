@@ -938,26 +938,18 @@
                 <!-- Airbrush: "Geht ab wie Sau" -->
                 <g class="sp-airbrush">
                     <defs>
-                        <path id="spTagPath" d="M26 76 C52 71 92 68 128 63"/>
+                        <path id="spTagPath" d="M24 74 C54 71 92 68 129 64"/>
                         <linearGradient id="spTagFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0" stop-color="#fffbe6"/><stop offset=".45" stop-color="#ffe066"/><stop offset="1" stop-color="#ff9a1f"/>
+                            <stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#fff3b0"/><stop offset="1" stop-color="#ffc83d"/>
                         </linearGradient>
-                        <filter id="spSpray" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="1.6"/></filter>
-                        <filter id="spSoft" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation=".35"/></filter>
+                        <filter id="spSpray" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="1.8"/></filter>
                     </defs>
-                    <text font-family="'Brush Script MT','Segoe Script','Dancing Script','Snell Roundhand',cursive" font-size="14" font-weight="700" font-style="italic">
-                        <textPath href="#spTagPath" textLength="98" lengthAdjust="spacingAndGlyphs" fill="none" stroke="#5a0600" stroke-width="4" opacity=".55" filter="url(#spSpray)">Geht ab wie Sau</textPath>
-                    </text>
-                    <text font-family="'Brush Script MT','Segoe Script','Dancing Script','Snell Roundhand',cursive" font-size="14" font-weight="700" font-style="italic">
-                        <textPath href="#spTagPath" textLength="98" lengthAdjust="spacingAndGlyphs" fill="#ffb020" stroke="#ff7a00" stroke-width="2.2" opacity=".6" filter="url(#spSpray)">Geht ab wie Sau</textPath>
-                    </text>
-                    <text font-family="'Brush Script MT','Segoe Script','Dancing Script','Snell Roundhand',cursive" font-size="14" font-weight="700" font-style="italic">
-                        <textPath href="#spTagPath" textLength="98" lengthAdjust="spacingAndGlyphs" fill="url(#spTagFill)" stroke="#7a1200" stroke-width=".5" paint-order="stroke" filter="url(#spSoft)">Geht ab wie Sau</textPath>
-                    </text>
-                    <!-- Sprühnebel-Pünktchen -->
-                    <g fill="#ffd84d" opacity=".55">
-                        <circle cx="24" cy="80" r=".6"/><circle cx="31" cy="82" r=".4"/><circle cx="130" cy="60" r=".5"/><circle cx="125" cy="58" r=".35"/>
-                        <circle cx="70" cy="80" r=".4"/><circle cx="104" cy="75" r=".45"/><circle cx="46" cy="66" r=".35"/>
+                    <!-- weicher Sprühschatten dahinter -->
+                    <text font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="900" font-style="italic" letter-spacing=".2"><textPath href="#spTagPath" textLength="104" lengthAdjust="spacingAndGlyphs" fill="#ff9d00" stroke="#ff9d00" stroke-width="3" opacity=".55" filter="url(#spSpray)">Geht ab wie Sau</textPath></text>
+                    <!-- klare Schrift mit dunkler Kontur -->
+                    <text font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="900" font-style="italic" letter-spacing=".2"><textPath href="#spTagPath" textLength="104" lengthAdjust="spacingAndGlyphs" fill="url(#spTagFill)" stroke="#3a0400" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke">Geht ab wie Sau</textPath></text>
+                    <g fill="#ffd84d" opacity=".5">
+                        <circle cx="21" cy="78" r=".6"/><circle cx="28" cy="81" r=".4"/><circle cx="132" cy="60" r=".5"/><circle cx="127" cy="57" r=".35"/>
                     </g>
                 </g>
                 <!-- Rücklicht -->
