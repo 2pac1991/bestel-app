@@ -201,6 +201,8 @@
         .stop-btn-minimal:hover { background: var(--surface-2); color: var(--text); }
         #stopActionBtn { color: var(--bad); border-color: rgba(255,107,107,.25); }
         #stopActionBtn:hover { background: var(--bad-soft); }
+        body:not(.can-manage) .admin-only { display: none !important; }
+        body:not(.can-manage) #statusDisplay .status-grid { margin-bottom: 0; }
         .action-row { display: flex; gap: 8px; }
         .action-row > * { flex: 1; }
         .action-row .stop-btn-minimal { margin-top: 0; }
@@ -450,7 +452,7 @@
             width: 42px; height: 42px; border-radius: 50%; font-size: 17px; padding: 0;
             background: var(--surface-2); border: 1px solid var(--line-2); box-shadow: var(--shadow-lg);
         }
-        body.view-summary #fxToggleBtn { bottom: calc(92px + env(safe-area-inset-bottom)); }
+        body.view-summary.can-manage #fxToggleBtn { bottom: calc(92px + env(safe-area-inset-bottom)); }
         body.seasonal #fxToggleBtn { display: block; }
 
         @media (max-width: 420px) {
@@ -609,14 +611,11 @@
                         <div class="status-val" id="disp-cham-live">---</div>
                     </div>
                 </div>
-                <button id="shareLinkBtn" class="share-link-btn" type="button">
+                <button id="shareLinkBtn" class="share-link-btn admin-only" type="button">
                     <svg viewBox="0 0 24 24"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35M12.05 21.78a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88M20.46 3.49A11.82 11.82 0 0 0 12.05 0C5.45 0 .08 5.36.08 11.97c0 2.11.55 4.18 1.6 5.98L0 24l6.15-1.61a11.83 11.83 0 0 0 5.9 1.57h.01c6.6 0 11.97-5.36 11.97-11.97 0-3.2-1.25-6.2-3.51-8.47z"/></svg>
                     Bestelllink per WhatsApp teilen
                 </button>
-                <div class="action-row">
-                    <button id="stopActionBtn" class="stop-btn-minimal" type="button">Bestellung beenden</button>
-                    <button class="stop-btn-minimal admin-login-btn" type="button">Als Admin anmelden</button>
-                </div>
+                <button id="stopActionBtn" class="stop-btn-minimal admin-only" type="button">Bestellung beenden</button>
             </div>
 
             <div id="orderNote" class="order-note" hidden>
@@ -657,8 +656,7 @@
                 <ul id="list-summary"></ul>
             </div>
 
-            <button class="stop-btn-minimal admin-login-btn" type="button" style="margin-top: 16px;">Als Admin anmelden</button>
-            <button id="restartBtn" class="btn" type="button">Liste löschen</button>
+            <button id="restartBtn" class="btn admin-only" type="button">Liste löschen</button>
         </div>
     </div>
 
@@ -753,7 +751,7 @@
         </div>
     </div>
 
-    <div id="waLeiste" class="wa-sticky" style="display:none">
+    <div id="waLeiste" class="wa-sticky admin-only" style="display:none">
         <button id="shareWaBtn" class="wa-btn" type="button">
             <svg viewBox="0 0 24 24"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35M12.05 21.78a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88M20.46 3.49A11.82 11.82 0 0 0 12.05 0C5.45 0 .08 5.36.08 11.97c0 2.11.55 4.18 1.6 5.98L0 24l6.15-1.61a11.83 11.83 0 0 0 5.9 1.57h.01c6.6 0 11.97-5.36 11.97-11.97 0-3.2-1.25-6.2-3.51-8.47z"/></svg>
             Auf WhatsApp teilen
@@ -1369,7 +1367,7 @@
     };
 
     const syncAdminUi = () => {
-        document.querySelectorAll(".admin-login-btn").forEach(b => b.style.display = hasAdminRights() ? "none" : "block");
+        document.body.classList.toggle("can-manage", hasAdminRights());
         if (latestOrdersSnap) renderOrders(latestOrdersSnap);
     };
 
