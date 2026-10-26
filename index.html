@@ -1814,6 +1814,7 @@
         isGlobalAdmin = true;
         try { localStorage.setItem("globalAdmin", "1"); } catch {}
         applyAdminState();
+        runSeeds();
         showToast("Als Admin angemeldet – auf diesem Gerät bleibst du angemeldet");
         return true;
     };
@@ -2154,7 +2155,31 @@
         }
     };
 
+    // ---------- Vorbereitete Restaurants (werden einmalig von einem Admin-Gerät eingetragen) ----------
+    const SEED_RESTAURANTS = [
+        { key: "pizzeria-milano-v1", name: "Pizzeria Milano", phone: "07672 92634", pages: [1, 2, 3, 4, 5].map(n => `menus/pizzeria-milano/${n}.jpg`) }
+    ];
+    const runSeeds = async () => {
+        if (!isGlobalAdmin) return;
+        for (const sd of SEED_RESTAURANTS) {
+            try {
+                const done = await get(ref(db, `config/seeds/${sd.key}`));
+                if (done.exists()) continue;
+                const all = (await get(ref(db, "restaurants"))).val() || {};
+                let rid = Object.keys(all).find(id => all[id] && String(all[id].name || "").trim().toLowerCase() === sd.name.toLowerCase());
+                if (!rid) rid = push(ref(db, "restaurants")).key;
+                const now = Date.now();
+                const pages = sd.pages.map(pth => new URL(pth, location.href).href);
+                await set(ref(db, `menus/${rid}`), { updated: now, pages });
+                await update(ref(db, `restaurants/${rid}`), { name: sd.name, phone: sd.phone, menuPages: pages.length, menuUpdated: now, created: (all[rid] && all[rid].created) || now });
+                await set(ref(db, `config/seeds/${sd.key}`), now);
+                showToast(`${sd.name} mit Speisekarte eingetragen`);
+            } catch (err) { console.log("Seed fehlgeschlagen:", err); }
+        }
+    };
+
     applyAdminState();
+    runSeeds();
 
 </script>
 </body>
