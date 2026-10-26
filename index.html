@@ -404,6 +404,51 @@
         body.view-summary #fxToggleBtn { bottom: 96px; }
         body.seasonal #fxToggleBtn { display: block; }
 
+
+        /* ---------- App-Hinweis & Glocke ---------- */
+        #pushBtn {
+            background: var(--card-bg); border: 1px solid var(--border);
+            width: 38px; height: 38px; padding: 0; border-radius: 12px;
+            font-size: 16px; cursor: pointer; box-shadow: var(--shadow-sm);
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.15s ease;
+        }
+        #pushBtn:active { transform: scale(0.92); }
+        h1 { white-space: nowrap; }
+        @media (max-width: 440px) {
+            #debtTriggerBtn span:last-child { display: none; }
+            #debtTriggerBtn { padding: 9px 11px; }
+            h1 { font-size: 16px; }
+            .header-logo { width: 34px; height: 34px; border-radius: 12px; }
+            .header-actions-right { gap: 6px; }
+            .app-header { gap: 8px; }
+        }
+        #pushBtn.on { background: var(--primary-light); border-color: #c7d2fe; }
+        body.seasonal #pushBtn { background: var(--surface-2); border-color: var(--border); }
+
+        .app-hint {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 8px 8px 8px 12px; margin-bottom: 14px;
+            font-size: 12.5px; line-height: 1.35; color: var(--text-muted);
+            box-shadow: var(--shadow-sm); animation: viewIn 0.35s ease-out;
+        }
+        .app-hint[hidden] { display: none; }
+        .app-hint b { color: var(--text-main); font-weight: 700; }
+        .app-hint .hint-text { flex: 1; min-width: 0; }
+        .app-hint .hint-action {
+            flex-shrink: 0; background: var(--primary); color: #fff; border: none;
+            border-radius: 10px; padding: 7px 11px; font: 700 12.5px inherit; font-family: inherit;
+            text-decoration: none; cursor: pointer; white-space: nowrap;
+        }
+        .app-hint .hint-close {
+            flex-shrink: 0; background: none; border: none; color: var(--text-muted);
+            font-size: 15px; padding: 4px 6px; cursor: pointer; line-height: 1;
+        }
+        .app-hint .ios-share {
+            display: inline-block; vertical-align: -2px; width: 13px; height: 15px;
+        }
+
         /* ===================== SAISON-MODI ===================== */
         /* Gemeinsames dunkles Grundgerüst, Farben kommen pro Saison aus den Variablen */
         body.seasonal {
@@ -610,6 +655,7 @@
             <h1 id="appTitle">Bestell-Liste 🍔</h1>
         </div>
         <div class="header-actions-right">
+            <button id="pushBtn" title="Benachrichtigungen" aria-label="Benachrichtigungen">🔕</button>
             <button id="debtTriggerBtn">
                 <span>💰</span>
                 <span>Schulden</span>
@@ -622,6 +668,7 @@
     </header>
 
     <div class="container">
+        <div id="appHint" class="app-hint" hidden></div>
         <div id="view-setup" class="view-section">
             <div id="roundsOverview" class="rounds-overview" style="display:none">
                 <span class="label">🔥 Laufende Bestellungen</span>
@@ -1030,6 +1077,147 @@
         setUserName(n);
     };
 
+
+    // --- APP-HINWEIS & PUSH-BENACHRICHTIGUNGEN ---
+    const APK_URL = "https://github.com/2pac1991/bestel-app/releases/latest/download/Bestellliste.apk";
+    const ua = navigator.userAgent;
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    try {
+        if (new URLSearchParams(location.search).get("app") === "android" || document.referrer.startsWith("android-app://")) sessionStorage.setItem("inApp", "1");
+    } catch {}
+    const inApp = isStandalone || (() => { try { return sessionStorage.getItem("inApp") === "1"; } catch { return false; } })();
+    const pushSupported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+    const hintEl = document.getElementById("appHint");
+    const pushBtn = document.getElementById("pushBtn");
+    const hintDismissed = (key) => { try { return Number(localStorage.getItem(key) || 0) > Date.now(); } catch { return false; } };
+    const dismissHint = (key, days) => { try { localStorage.setItem(key, String(Date.now() + days * 86400000)); } catch {} };
+    const shareIcon = `<svg class="ios-share" viewBox="0 0 13 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 1v8.5M3.5 4l3-3 3 3"/><path d="M4 6.5H2.5a1 1 0 0 0-1 1v5.5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H9"/></svg>`;
+    const iosHowTo = `In Safari unten auf <b>Teilen</b> ${shareIcon} tippen und <b>„Zum Home-Bildschirm“</b> wählen.`;
+
+    const showHint = (html, actionHtml, key, days) => {
+        hintEl.innerHTML = `<span class="hint-text">${html}</span>${actionHtml || ""}<button class="hint-close" aria-label="Ausblenden">✕</button>`;
+        hintEl.hidden = false;
+        hintEl.querySelector(".hint-close").onclick = () => { hintEl.hidden = true; dismissHint(key, days); };
+    };
+
+    let vapidKey = null;
+    const pushKeyId = async (endpoint) => {
+        const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(endpoint));
+        return Array.from(new Uint8Array(d).slice(0, 12), b => b.toString(16).padStart(2, "0")).join("");
+    };
+    const urlB64ToBytes = (b64) => {
+        const raw = atob((b64 + "=".repeat((4 - b64.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/"));
+        return Uint8Array.from(raw, c => c.charCodeAt(0));
+    };
+    const getSub = async () => {
+        if (!pushSupported) return null;
+        const reg = await navigator.serviceWorker.ready;
+        return reg.pushManager.getSubscription();
+    };
+    const pushIsOn = () => { try { return localStorage.getItem("pushOn") === "1"; } catch { return false; } };
+    const syncPushBtn = () => {
+        const on = pushIsOn() && pushSupported && Notification.permission === "granted";
+        pushBtn.textContent = on ? "🔔" : "🔕";
+        pushBtn.classList.toggle("on", on);
+        pushBtn.title = on ? "Benachrichtigungen sind an" : "Benachrichtigungen einschalten";
+    };
+
+    const saveSub = async (sub) => {
+        const id = await pushKeyId(sub.endpoint);
+        await update(ref(db, `pushSubs/${id}`), {
+            sub: sub.toJSON(), key: vapidKey, userId, user: userName,
+            platform: inApp && isAndroid ? "android-app" : isIOS ? "ios" : isAndroid ? "android" : "web",
+            updated: Date.now()
+        });
+        try { localStorage.setItem("pushKey", vapidKey); localStorage.setItem("pushOn", "1"); } catch {}
+    };
+
+    const enablePush = async () => {
+        if (!pushSupported) {
+            if (isIOS && !isStandalone) alert("Benachrichtigungen gehen am iPhone nur mit der App vom Home-Bildschirm:\n\nIn Safari unten auf Teilen tippen → „Zum Home-Bildschirm“, dann die Bestellliste von dort öffnen und hier die Glocke antippen.");
+            else alert("Dieser Browser unterstützt leider keine Benachrichtigungen.");
+            return false;
+        }
+        if (!vapidKey) { alert("Benachrichtigungen werden gerade eingerichtet. Bitte später noch einmal probieren."); return false; }
+        const perm = await Notification.requestPermission();
+        if (perm !== "granted") {
+            alert("Benachrichtigungen sind blockiert. Du kannst sie in den Einstellungen deines Handys für diese App erlauben.");
+            return false;
+        }
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (sub && localStorage.getItem("pushKey") !== vapidKey) { await sub.unsubscribe().catch(() => {}); sub = null; }
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToBytes(vapidKey) });
+        await saveSub(sub);
+        syncPushBtn();
+        return true;
+    };
+
+    const disablePush = async () => {
+        try { localStorage.setItem("pushOn", "0"); } catch {}
+        const sub = await getSub().catch(() => null);
+        if (sub) {
+            remove(ref(db, `pushSubs/${await pushKeyId(sub.endpoint)}`)).catch(() => {});
+            await sub.unsubscribe().catch(() => {});
+        }
+        syncPushBtn();
+    };
+
+    pushBtn.onclick = async () => {
+        pushBtn.disabled = true;
+        try {
+            if (pushIsOn() && pushSupported && Notification.permission === "granted") {
+                if (confirm("Benachrichtigungen bei neuen und beendeten Bestellungen ausschalten?")) await disablePush();
+            } else if (await enablePush()) {
+                hintEl.hidden = true;
+                alert("🔔 Fertig! Du bekommst jetzt eine Nachricht, wenn eine Bestellung startet oder endet.");
+            }
+        } catch (err) {
+            alert("Benachrichtigungen konnten nicht eingeschaltet werden: " + (err && err.message || err));
+        } finally {
+            pushBtn.disabled = false;
+        }
+    };
+
+    // Kleiner Hinweis: App installieren bzw. Benachrichtigungen einschalten
+    const updateHint = () => {
+        if (!inApp && isAndroid && !hintDismissed("hintApk")) {
+            showHint("📲 <b>Jetzt auch als App</b> – mit Push bei neuen Bestellungen.",
+                `<a class="hint-action" href="${APK_URL}">Herunterladen</a>`, "hintApk", 30);
+        } else if (!inApp && isIOS && !hintDismissed("hintIos")) {
+            showHint(`📲 <b>Als App aufs iPhone:</b> ${iosHowTo}`, "", "hintIos", 30);
+        } else if (inApp && pushSupported && vapidKey && Notification.permission === "default" && !pushIsOn() && !hintDismissed("hintPush")) {
+            showHint("🔔 <b>Benachrichtigungen</b> bei neuen und beendeten Bestellungen?",
+                `<button class="hint-action" id="hintPushBtn">Einschalten</button>`, "hintPush", 14);
+            document.getElementById("hintPushBtn").onclick = () => pushBtn.onclick();
+        } else {
+            hintEl.hidden = true;
+        }
+    };
+
+    onValue(ref(db, "push/vapidPublicKey"), async snap => {
+        vapidKey = snap.val() || null;
+        updateHint();
+        syncPushBtn();
+        // Schlüssel geändert oder Name neu: Anmeldung still erneuern
+        if (vapidKey && pushIsOn() && pushSupported && Notification.permission === "granted") {
+            try {
+                let sub = await getSub();
+                if (sub && localStorage.getItem("pushKey") !== vapidKey) { await sub.unsubscribe(); sub = null; }
+                if (!sub) {
+                    const reg = await navigator.serviceWorker.ready;
+                    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToBytes(vapidKey) });
+                }
+                await saveSub(sub);
+            } catch (err) { console.log("Push-Erneuerung fehlgeschlagen:", err); }
+        }
+    });
+    syncPushBtn();
+    updateHint();
+
     // --- BESTELLRUNDEN: jede Bestellung hat ihren eigenen Link (?b=ID) ---
     const params = new URLSearchParams(location.search);
     const roundId = params.get("b");
@@ -1195,6 +1383,7 @@
         try {
             await update(ref(db, `rounds/${id}/settings`), {
                 orderActive: true, summaryMode: false, endTime: e.getTime(), adminId: userId, createdAt: Date.now(),
+                adminName: userName !== "Gast" ? userName : "",
                 restaurant: document.getElementById("restaurant").value,
                 time: document.getElementById("time").value,
                 chamber: document.getElementById("chamber").value,
@@ -1209,7 +1398,7 @@
 
     document.getElementById("stopActionBtn").onclick = async () => { 
         if(await isAdmin() && confirm("Bestellung für alle beenden?")) {
-            update(ref(db, `${base}/settings`), {orderActive: false, summaryMode: true}); 
+            update(ref(db, `${base}/settings`), {orderActive: false, summaryMode: true, stoppedBy: userId}); 
         }
     };
 
