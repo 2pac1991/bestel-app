@@ -802,7 +802,7 @@
     };
 
     // Admin-Passwort nur als SHA-256-Hash (Groß-/Kleinschreibung egal)
-    const ADMIN_PW_HASH = "4b9379d88b60e6f13a381c9bc5c915f345311494a0a88e07a1a41d22cbba65e2";
+    const ADMIN_PW_HASH = "699390f3e3cffb02a95ac33bd374c41c655eb5a5b655c6e073cd4d8ea2abd10e";
     const checkPassword = async (pw) => {
         const data = new TextEncoder().encode(String(pw).trim().toLowerCase());
         const digest = await crypto.subtle.digest("SHA-256", data);
