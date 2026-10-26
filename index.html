@@ -957,19 +957,6 @@
                 <!-- Beinschild & Kotflügel -->
                 <path d="M148 92 C148 68 156 44 170 22 L182 25 C176 48 176 70 178 92 Z" fill="url(#spShield)"/>
                 <path d="M171 27 C162 46 157 66 157 86" stroke="rgba(255,255,255,.55)" stroke-width="2" fill="none" stroke-linecap="round"/>
-                <!-- Emblem "AKIN" vorne am Beinschild -->
-                <g class="sp-emblem" transform="translate(167 60) rotate(-6)">
-                    <defs>
-                        <linearGradient id="spEmbChrome" x1="0" y1="-4" x2="0" y2="4" gradientUnits="userSpaceOnUse">
-                            <stop offset="0" stop-color="#ffffff"/><stop offset=".42" stop-color="#c9ced6"/><stop offset=".52" stop-color="#6f7680"/><stop offset="1" stop-color="#e8ebef"/>
-                        </linearGradient>
-                    </defs>
-                    <rect x="-11.5" y="-4.6" width="23" height="9.2" rx="2.4" fill="rgba(0,0,0,.35)" transform="translate(.5 .8)"/>
-                    <rect x="-11.5" y="-4.6" width="23" height="9.2" rx="2.4" fill="url(#spEmbChrome)" stroke="#4b5058" stroke-width=".5"/>
-                    <rect x="-10.2" y="-3.4" width="20.4" height="6.8" rx="1.6" fill="#141418"/>
-                    <text x=".35" y="2.3" font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-weight="900" text-anchor="middle" font-size="6.4" letter-spacing=".7" fill="url(#spEmbChrome)">AKIN</text>
-                    <path d="M-9.5 -2.9 L9.5 -2.9" stroke="rgba(255,255,255,.35)" stroke-width=".5" stroke-linecap="round"/>
-                </g>
                 <path d="M162 88 C166 70 206 70 210 88 Z" fill="url(#spBody)"/>
                 <path d="M170 78 C178 72 194 72 202 78" stroke="rgba(255,255,255,.6)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
                 <!-- Lenker mit Spiegel -->
@@ -977,6 +964,22 @@
                 <path d="M166 4 L160 -8" stroke="#7d838c" stroke-width="1.6" stroke-linecap="round"/>
                 <ellipse cx="159" cy="-10" rx="5" ry="3.4" fill="url(#spChrome)" stroke="#5b5f66" stroke-width=".8"/>
                 <path d="M156 6 L186 4" stroke="url(#spSeat)" stroke-width="6.5" stroke-linecap="round"/>
+                <!-- Emblem "AKIN" direkt unter dem Scheinwerfer, in den Beinschild eingelassen -->
+                <g class="sp-emblem" transform="translate(175.6 38.8) rotate(-16) scale(.95)">
+                    <defs>
+                        <linearGradient id="spEmbChrome" x1="0" y1="-3" x2="0" y2="2" gradientUnits="userSpaceOnUse">
+                            <stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#d3d7dd"/><stop offset=".55" stop-color="#6c737c"/><stop offset="1" stop-color="#eef0f3"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- eingeprägte Mulde -->
+                    <path d="M-8.6 -3.6 Q0 -4.6 8.6 -3.6 L7.8 2.9 Q0 3.8 -7.8 2.9 Z" fill="rgba(70,0,0,.45)"/>
+                    <path d="M-7.8 2.9 Q0 3.8 7.8 2.9" stroke="rgba(255,150,140,.55)" stroke-width=".5" fill="none"/>
+                    <!-- Chromleiste darunter -->
+                    <path d="M-7.6 4.6 Q0 5.4 7.6 4.6" stroke="url(#spEmbChrome)" stroke-width=".9" fill="none" stroke-linecap="round"/>
+                    <!-- Chrombuchstaben mit Prägeschatten -->
+                    <text x=".4" y="2.2" font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-weight="900" font-style="italic" text-anchor="middle" font-size="5.2" letter-spacing=".35" fill="rgba(40,0,0,.7)">AKIN</text>
+                    <text x="0" y="1.7" font-family="-apple-system,'SF Pro Display','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-weight="900" font-style="italic" text-anchor="middle" font-size="5.2" letter-spacing=".35" fill="url(#spEmbChrome)" stroke="#3b3f45" stroke-width=".18">AKIN</text>
+                </g>
                 <!-- Scheinwerfer -->
                 <circle cx="183" cy="22" r="8" fill="url(#spChrome)"/>
                 <circle cx="184" cy="22" r="6" fill="url(#spLamp)"/>
