@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rye&display=swap" rel="stylesheet">
 
     <style>
         /* ===================== Design: iOS / Liquid Glass ===================== */
@@ -896,6 +896,85 @@
         @media (prefers-reduced-transparency: reduce) {
             :root { --glass: var(--glass-strong); }
         }
+
+        /* ===================== SCHULDSCHEIN: Wild-West-Holztafel ===================== */
+        body #debtModal {
+            --wood-1: #8a5a33; --wood-2: #6e4424; --wood-3: #a06b3e; --ink: #2a1408; --carve-hi: rgba(255,214,160,.38);
+            background:
+                url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='w'><feTurbulence type='fractalNoise' baseFrequency='0.006 0.11' numOctaves='4' seed='7'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.08  0 0 0 0 0.02  0 0 0 1.25 -0.35'/></filter><rect width='100%25' height='100%25' filter='url(%23w)'/></svg>") ,
+                repeating-linear-gradient(180deg, transparent 0 86px, rgba(30,14,4,.55) 86px 88px, rgba(255,200,140,.12) 88px 89px),
+                linear-gradient(180deg, var(--wood-3), var(--wood-1) 35%, var(--wood-2) 70%, #5a3519);
+            background-size: 600px 600px, auto, auto;
+            border: 0; border-radius: 14px; color: #f5e2c4;
+            -webkit-backdrop-filter: none; backdrop-filter: none;
+            box-shadow: inset 0 0 0 3px #3b2010, inset 0 0 0 6px rgba(255,200,140,.12), inset 0 0 60px rgba(25,10,2,.75), 0 30px 80px -20px rgba(0,0,0,.85);
+            transform-origin: 50% -40px;
+            animation: wwSwing .9s cubic-bezier(.2,.9,.3,1.25);
+            overflow-x: hidden;
+        }
+        @keyframes wwSwing { 0% { opacity: 0; transform: translate(-50%, -50%) rotate(-9deg) translateY(-30px); } 55% { transform: translate(-50%, -50%) rotate(3deg); } 80% { transform: translate(-50%, -50%) rotate(-1.2deg); } 100% { opacity: 1; transform: translate(-50%, -50%) rotate(0); } }
+        @media (max-width: 640px) {
+            body #debtModal { border-radius: 14px; animation: wwSwingM .9s cubic-bezier(.2,.9,.3,1.25); }
+            @keyframes wwSwingM { 0% { opacity: 0; transform: rotate(-6deg) translateY(40px); } 55% { transform: rotate(2deg); } 80% { transform: rotate(-.8deg); } 100% { opacity: 1; transform: none; } }
+            body #debtModal::before { background: rgba(255,210,160,.35); }
+        }
+        /* Nägel in den Ecken */
+        #debtModal .ww-nail { position: absolute; width: 13px; height: 13px; border-radius: 50%; z-index: 2; pointer-events: none;
+            background: radial-gradient(circle at 35% 30%, #f1f1f1, #9a9a9a 40%, #4a4a4a 75%, #222); box-shadow: 0 1px 2px rgba(0,0,0,.7), 0 0 0 2px rgba(30,14,4,.35); }
+        #debtModal .ww-nail.tl { top: 10px; left: 10px; } #debtModal .ww-nail.tr { top: 10px; right: 10px; }
+        #debtModal .ww-nail.bl { bottom: 10px; left: 10px; } #debtModal .ww-nail.br { bottom: 10px; right: 10px; }
+        /* Schusslöcher */
+        #debtModal .ww-holes { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; border-radius: inherit; }
+        #debtModal .ww-hole { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; opacity: 0; }
+        #debtModal .ww-hole.on { animation: wwShot .18s ease-out forwards; }
+        @keyframes wwShot { 0% { opacity: 0; transform: scale(2.2); } 100% { opacity: 1; transform: scale(1); } }
+        body #debtModal.ww-recoil { animation: wwRecoil .16s; }
+        @keyframes wwRecoil { 50% { translate: 2px -1px; } }
+        /* Kopf: eingebrannter Titel */
+        #debtModal .debt-modal-header { position: relative; z-index: 3; padding: 8px 6px 4px; }
+        #debtModal .debt-modal-header h2 {
+            font-family: 'Rye', 'Georgia', serif; font-weight: 400; font-size: 30px; letter-spacing: .04em; color: #24110a;
+            text-shadow: 0 1px 0 var(--carve-hi), 0 -1px 0 rgba(0,0,0,.6), 0 0 14px rgba(255,140,40,.15);
+        }
+        #debtModal .debt-modal-header h2::after { content: "WANTED: Euer Geld"; display: block; font-size: 12px; letter-spacing: .28em; margin-top: 4px; color: rgba(36,17,10,.85); }
+        #debtModal .debt-login-btn, #debtModal .debt-modal-close {
+            background: linear-gradient(180deg, #d9b27a, #a87c45 55%, #7d5528); color: #2a1408; border: 1px solid #3b2010;
+            box-shadow: inset 0 1px 0 rgba(255,240,200,.6), 0 2px 4px rgba(0,0,0,.5); -webkit-backdrop-filter: none; backdrop-filter: none;
+            font-family: 'Rye', serif; font-weight: 400;
+        }
+        #debtModal .debt-login-btn.logged-in { background: linear-gradient(180deg, #b7d48a, #6f9440); color: #18260a; }
+        /* Liste: in die Tafel geritzt */
+        #debtModal .order-container-box, #debtModal #debtBoxContainer { background: transparent !important; position: relative; z-index: 3; }
+        #debtModal .box-title-sub { font-family: 'Rye', serif; color: #2a1408; text-shadow: 0 1px 0 var(--carve-hi); letter-spacing: .08em; font-size: 15px; text-transform: uppercase; }
+        #debtModal #list-debts li { padding: 14px 10px; }
+        #debtModal #list-debts li + li::before { left: 6px; right: 6px; height: 2px; background: linear-gradient(180deg, rgba(25,10,2,.6), rgba(255,210,160,.2)); }
+        #debtModal #list-debts .user-label { font-family: 'Rye', serif; font-size: 12px; letter-spacing: .06em; color: rgba(42,20,8,.78) !important; text-shadow: 0 1px 0 var(--carve-hi); }
+        #debtModal #list-debts .food-name {
+            font-family: 'Rye', 'Georgia', serif; font-weight: 400; font-size: 22px; letter-spacing: .03em; color: #1f0e06;
+            text-shadow: 0 1px 0 var(--carve-hi), 0 -1px 0 rgba(0,0,0,.55), 1px 0 0 rgba(0,0,0,.25);
+        }
+        /* Betrag: mit dem Messer eingeritzt */
+        #debtModal .debt-amount-badge {
+            font-family: 'Rye', serif; font-weight: 400; font-size: 19px; color: #f6e1bf; background: transparent; padding: 2px 4px; min-width: 0;
+            text-shadow: 0 -1px 0 rgba(0,0,0,.85), 0 1px 0 rgba(255,230,190,.35), 0 0 1px #000;
+            -webkit-text-stroke: .4px rgba(40,18,6,.9); position: relative; transform: rotate(-3deg);
+        }
+        #debtModal .debt-amount-badge::after { content: ""; position: absolute; left: -4px; right: -6px; top: 52%; height: 2px; transform: rotate(-6deg);
+            background: linear-gradient(90deg, transparent, rgba(20,8,2,.75) 15%, rgba(255,220,180,.35) 55%, rgba(20,8,2,.7) 85%, transparent); border-radius: 2px; opacity: .55; }
+        #debtModal .paypal-btn-inline {
+            background: linear-gradient(180deg, #e9c46a, #b8892f 55%, #8a6118); color: #2a1408; border: 1px solid #4a2f0c;
+            box-shadow: inset 0 1px 0 rgba(255,245,200,.7), 0 2px 4px rgba(0,0,0,.5); font-family: 'Rye', serif; font-weight: 400; font-size: 13px;
+        }
+        #debtModal .debt-total-summary-box { border-top: 3px double rgba(25,10,2,.6); }
+        #debtModal .debt-total-summary-label { font-family: 'Rye', serif; font-weight: 400; color: #2a1408; text-shadow: 0 1px 0 var(--carve-hi); letter-spacing: .06em; }
+        #debtModal .debt-total-summary-val { font-family: 'Rye', serif; font-weight: 400; font-size: 26px; color: #f6e1bf; text-shadow: 0 -1px 0 rgba(0,0,0,.85), 0 1px 0 rgba(255,230,190,.35); -webkit-text-stroke: .4px rgba(40,18,6,.9); }
+        #debtModal #list-debts li[style] { color: #2a1408 !important; font-family: 'Rye', serif; font-size: 16px !important; text-shadow: 0 1px 0 var(--carve-hi); }
+        /* Admin-Eingabe als angenagelter Zettel */
+        #debtModal .debt-admin-card { background: linear-gradient(180deg, #f3e3bf, #e2c999) !important; color: #3a2210; position: relative; z-index: 3; transform: rotate(-.8deg);
+            box-shadow: 0 4px 12px rgba(0,0,0,.45) !important; border-radius: 4px !important; }
+        #debtModal .debt-admin-card > .label, #debtModal .debt-admin-card .label { color: #5a3414 !important; font-family: 'Rye', serif; font-weight: 400; }
+        #debtModal .debt-admin-card input { background: rgba(255,255,255,.55) !important; color: #2a1408; }
+        @media (prefers-reduced-motion: reduce) { body #debtModal, body #debtModal.ww-recoil, #debtModal .ww-hole.on { animation: none; opacity: 1; } }
     </style>
 </head>
 <body>
@@ -1286,6 +1365,8 @@
 
     <!-- SCHULDSCHEIN -->
     <div id="debtModal" role="dialog" aria-label="Schuldschein">
+        <i class="ww-nail tl"></i><i class="ww-nail tr"></i><i class="ww-nail bl"></i><i class="ww-nail br"></i>
+        <div class="ww-holes" id="wwHoles" aria-hidden="true"></div>
         <div class="debt-modal-header">
             <h2>Schuldschein</h2>
             <div class="debt-modal-right-actions">
@@ -2498,9 +2579,32 @@
     
     document.getElementById("debtLoginBtn").onclick = () => requireAdmin();
 
+    // Schusslöcher: werden beim Öffnen nacheinander "reingeschossen"
+    const holeSvg = (k) => `<svg viewBox="0 0 26 26" width="26" height="26"><defs><radialGradient id="whg${k}"><stop offset="0" stop-color="#000"/><stop offset=".55" stop-color="#120700"/><stop offset=".8" stop-color="#3a1d0a"/><stop offset="1" stop-color="#3a1d0a" stop-opacity="0"/></radialGradient></defs>
+        <g transform="rotate(${k * 47} 13 13)"><path d="M13 2 L14.5 9 L21 5 L16.5 11 L24 13 L16.5 15 L20 21 L14 16.5 L13 24 L11.5 16.8 L5 21 L9.3 15 L2 13 L9.5 11.2 L6 5 L11.6 9.2 Z" fill="rgba(255,205,150,.28)"/>
+        <circle cx="13" cy="13" r="8.5" fill="url(#whg${k})"/><circle cx="13" cy="13" r="4.2" fill="#050200"/><circle cx="11.8" cy="11.6" r="1.1" fill="rgba(255,220,180,.25)"/></g></svg>`;
+    const HOLE_SPOTS = [[3.5, 30], [96.5, 24], [3.5, 64], [96.5, 50], [96.5, 78], [3.5, 86], [62, 2.5], [36, 97.5]];
+    const shootHoles = () => {
+        const box = document.getElementById("wwHoles");
+        if (!box) return;
+        const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const spots = HOLE_SPOTS.slice().sort(() => Math.random() - .5).slice(0, 5);
+        box.innerHTML = spots.map(([x, y], k) => `<span class="ww-hole" style="left:${x}%;top:${y + (Math.random() * 6 - 3)}%">${holeSvg(k)}</span>`).join("");
+        const modal = document.getElementById("debtModal");
+        box.querySelectorAll(".ww-hole").forEach((h, k) => {
+            if (reduce) { h.classList.add("on"); return; }
+            setTimeout(() => {
+                h.classList.add("on");
+                modal.classList.remove("ww-recoil"); void modal.offsetWidth; modal.classList.add("ww-recoil");
+            }, 950 + k * 170);
+        });
+    };
     const openDebtModal = () => {
         document.getElementById("modalOverlay").style.display = "block";
-        document.getElementById("debtModal").style.display = "block";
+        const m = document.getElementById("debtModal");
+        m.classList.remove("ww-recoil");
+        m.style.display = "none"; void m.offsetWidth; m.style.display = "block";
+        shootHoles();
     };
 
     const closeDebtModal = () => {
