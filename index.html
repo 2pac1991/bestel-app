@@ -528,6 +528,8 @@
         #menuPages .pg { overflow-x: auto; border-radius: var(--r-lg); background: #fff; flex-shrink: 0; }
         #menuPages .pg-in { position: relative; width: 100%; }
         #menuPages .pg.zoomed .pg-in { width: 230%; }
+        #menuPages { touch-action: pan-x pan-y; }
+        #menuPages .pg { touch-action: pan-x pan-y; }
         #menuPages img { display: block; width: 100%; height: auto; cursor: zoom-in; }
         #menuPages .pg.zoomed img { cursor: zoom-out; }
 
@@ -3157,7 +3159,7 @@
             const updated = uSnap.val() || 0;
             if (!pages.length) { $("menuPages").innerHTML = `<div class="empty-note">Keine Speisekarte vorhanden.</div>`; menuState.ocrDone = true; updateSearchBar(); return; }
             $("menuPages").innerHTML = pages.map((src, i) => `<div class="pg" data-i="${i}"><div class="pg-in"><img src="${src}" alt="Seite ${i + 1}" loading="lazy"><div class="hls"></div></div></div>`).join("")
-                + `<p class="menu-tip">Tippe auf eine Seite zum Vergrößern</p>`;
+                + `<p class="menu-tip">Antippen zum Vergrößern oder mit zwei Fingern zoomen</p>`;
 
             let ocr = parseOcr(oSnap.val(), updated, pages.length);
             if (!ocr) { try { ocr = parseOcr(JSON.parse(localStorage.getItem(ocrLocalKey(rid))), updated, pages.length); } catch {} }
@@ -3185,9 +3187,68 @@
             $("menuPages").innerHTML = `<div class="empty-note">Speisekarte konnte nicht geladen werden.</div>`;
         }
     };
-    $("menuPages").onclick = (e) => {
+    // ---------- Zoomen: Antippen (Stufe) oder mit zwei Fingern (stufenlos) ----------
+    const ZOOM_MIN = 1, ZOOM_MAX = 6, ZOOM_TAP = 2.3;
+    const setPageZoom = (pg, z) => {
+        z = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
+        pg.dataset.zoom = z;
+        pg.querySelector(".pg-in").style.width = (z * 100) + "%";
+        pg.classList.toggle("zoomed", z > 1.01);
+        return z;
+    };
+    // Zoomt so, dass der Punkt (cx, cy) am Bildschirm unter den Fingern bleibt
+    const zoomAround = (pg, z, cx, cy, fx, fy) => {
+        const box = $("menuPages"), pr = pg.getBoundingClientRect();
+        setPageZoom(pg, z);
+        const inn = pg.querySelector(".pg-in"), ir = inn.getBoundingClientRect();
+        pg.scrollLeft = fx * ir.width - (cx - pr.left);
+        box.scrollTop += (ir.top + fy * ir.height) - cy;
+    };
+    let pinch = null, pinchEnded = 0;
+    const tdist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    $("menuPages").addEventListener("touchstart", (e) => {
+        if (e.touches.length !== 2) return;
+        const [a, b] = e.touches;
+        const cx = (a.clientX + b.clientX) / 2, cy = (a.clientY + b.clientY) / 2;
+        const pg = (document.elementFromPoint(cx, cy) || e.target).closest(".pg") || e.target.closest(".pg");
+        if (!pg) return;
+        const ir = pg.querySelector(".pg-in").getBoundingClientRect();
+        pinch = { pg, d0: tdist(a, b) || 1, z0: +pg.dataset.zoom || 1, fx: (cx - ir.left) / ir.width, fy: (cy - ir.top) / ir.height };
+        e.preventDefault();
+    }, { passive: false });
+    $("menuPages").addEventListener("touchmove", (e) => {
+        if (!pinch || e.touches.length !== 2) return;
+        e.preventDefault();
+        const [a, b] = e.touches;
+        const cx = (a.clientX + b.clientX) / 2, cy = (a.clientY + b.clientY) / 2;
+        zoomAround(pinch.pg, pinch.z0 * tdist(a, b) / pinch.d0, cx, cy, pinch.fx, pinch.fy);
+    }, { passive: false });
+    const endPinch = (e) => {
+        if (!pinch || e.touches.length >= 2) return;
+        if ((+pinch.pg.dataset.zoom || 1) < 1.05) setPageZoom(pinch.pg, 1);
+        pinch = null; pinchEnded = Date.now();
+    };
+    $("menuPages").addEventListener("touchend", endPinch);
+    $("menuPages").addEventListener("touchcancel", endPinch);
+    // Safari: eigenes Seiten-Zoomen unterdrücken, damit nur die Karte zoomt
+    ["gesturestart", "gesturechange"].forEach(t => $("menuModal").addEventListener(t, (e) => e.preventDefault(), { passive: false }));
+    // Am PC: Strg + Mausrad zoomt die Karte
+    $("menuPages").addEventListener("wheel", (e) => {
+        if (!e.ctrlKey) return;
         const pg = e.target.closest(".pg");
-        if (pg) pg.classList.toggle("zoomed");
+        if (!pg) return;
+        e.preventDefault();
+        const ir = pg.querySelector(".pg-in").getBoundingClientRect();
+        zoomAround(pg, (+pg.dataset.zoom || 1) * Math.exp(-e.deltaY / 300), e.clientX, e.clientY, (e.clientX - ir.left) / ir.width, (e.clientY - ir.top) / ir.height);
+    }, { passive: false });
+
+    $("menuPages").onclick = (e) => {
+        if (Date.now() - pinchEnded < 400) return;
+        const pg = e.target.closest(".pg");
+        if (!pg) return;
+        const ir = pg.querySelector(".pg-in").getBoundingClientRect();
+        const z = (+pg.dataset.zoom || 1) > 1.01 ? 1 : ZOOM_TAP;
+        zoomAround(pg, z, e.clientX, e.clientY, (e.clientX - ir.left) / ir.width, (e.clientY - ir.top) / ir.height);
     };
     $("closeMenuBtn").onclick = () => closeSheet("menuModal");
 
