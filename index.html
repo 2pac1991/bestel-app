@@ -974,7 +974,17 @@
             box-shadow: 0 4px 12px rgba(0,0,0,.45) !important; border-radius: 4px !important; }
         #debtModal .debt-admin-card > .label, #debtModal .debt-admin-card .label { color: #5a3414 !important; font-family: 'Rye', serif; font-weight: 400; }
         #debtModal .debt-admin-card input { background: rgba(255,255,255,.55) !important; color: #2a1408; }
-        @media (prefers-reduced-motion: reduce) { body #debtModal, body #debtModal.ww-recoil, #debtModal .ww-hole.on { animation: none; opacity: 1; } }
+        /* Macheten: fliegen rein und bleiben stecken */
+        #debtModal .ww-mach { position: absolute; width: 0; height: 0; transform: rotate(var(--rot)); z-index: 2; }
+        #debtModal .ww-mach-fly { position: absolute; left: 0; top: -11px; width: 128px; height: 22px; transform-origin: 0 50%; opacity: 0; }
+        #debtModal .ww-mach-fly svg { display: block; width: 128px; height: 22px; filter: drop-shadow(3px 5px 3px rgba(0,0,0,.55)); }
+        #debtModal .ww-mach.on .ww-mach-fly { animation: wwThrow .42s cubic-bezier(.3,.1,.6,1) forwards, wwWobble .7s .42s ease-out; }
+        @keyframes wwThrow { 0% { opacity: 0; transform: translateX(340px) rotate(-900deg) scale(1.25); } 15% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+        @keyframes wwWobble { 0% { transform: rotate(0); } 15% { transform: rotate(-7deg); } 32% { transform: rotate(5deg); } 50% { transform: rotate(-3deg); } 68% { transform: rotate(1.6deg); } 85% { transform: rotate(-.6deg); } 100% { transform: rotate(0); } }
+        #debtModal .ww-slit { position: absolute; left: -7px; top: -2px; width: 14px; height: 4px; border-radius: 2px; background: #0d0502; box-shadow: 0 1px 0 rgba(255,210,160,.3); opacity: 0; }
+        #debtModal .ww-mach.on .ww-slit { animation: wwSlit .01s .42s forwards; }
+        @keyframes wwSlit { to { opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { body #debtModal, body #debtModal.ww-recoil, #debtModal .ww-hole.on, #debtModal .ww-mach.on .ww-mach-fly, #debtModal .ww-mach.on .ww-slit { animation: none; opacity: 1; } }
     </style>
 </head>
 <body>
@@ -2584,6 +2594,37 @@
         <g transform="rotate(${k * 47} 13 13)"><path d="M13 2 L14.5 9 L21 5 L16.5 11 L24 13 L16.5 15 L20 21 L14 16.5 L13 24 L11.5 16.8 L5 21 L9.3 15 L2 13 L9.5 11.2 L6 5 L11.6 9.2 Z" fill="rgba(255,205,150,.28)"/>
         <circle cx="13" cy="13" r="8.5" fill="url(#whg${k})"/><circle cx="13" cy="13" r="4.2" fill="#050200"/><circle cx="11.8" cy="11.6" r="1.1" fill="rgba(255,220,180,.25)"/></g></svg>`;
     const HOLE_SPOTS = [[3.5, 30], [96.5, 24], [3.5, 64], [96.5, 50], [96.5, 78], [3.5, 86], [62, 2.5], [36, 97.5]];
+    // Machete: Spitze links (x=0, steckt im Holz), Griff rechts
+    const macheteSvg = (k) => `<svg viewBox="0 0 128 22"><defs>
+        <linearGradient id="wmb${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f6f8"/><stop offset=".35" stop-color="#b9c0c8"/><stop offset=".6" stop-color="#7c848e"/><stop offset="1" stop-color="#4a5058"/></linearGradient>
+        <linearGradient id="wmh${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a4a26"/><stop offset=".5" stop-color="#4a2a12"/><stop offset="1" stop-color="#2a1608"/></linearGradient></defs>
+        <path d="M0 11 C14 3 40 2 84 5 L88 6 L88 15 L84 15 C52 16 22 16 0 11 Z" fill="url(#wmb${k})" stroke="#3a3f46" stroke-width=".6"/>
+        <path d="M4 10.4 C20 5.2 44 4.4 84 6.6" stroke="rgba(255,255,255,.85)" stroke-width=".9" fill="none"/>
+        <path d="M10 13.4 C30 14 56 13.6 84 13.2" stroke="rgba(40,30,20,.35)" stroke-width=".6" fill="none"/>
+        <path d="M30 8 l3 5 M46 7 l2 6" stroke="rgba(90,40,10,.45)" stroke-width="1" stroke-linecap="round"/>
+        <rect x="86" y="3.5" width="5" height="15" rx="1.5" fill="#6b5a3c" stroke="#2c2416" stroke-width=".6"/>
+        <path d="M91 6 L124 5.2 C127 5.2 128 8 128 11 C128 14 127 16.8 124 16.8 L91 16 Z" fill="url(#wmh${k})" stroke="#1d0f05" stroke-width=".6"/>
+        <path d="M95 7.6 L123 7" stroke="rgba(255,200,150,.25)" stroke-width="1"/>
+        <circle cx="101" cy="11" r="1.6" fill="#c9cdd2"/><circle cx="113" cy="11" r="1.6" fill="#c9cdd2"/>
+        <path d="M118 10 l5 0" stroke="rgba(0,0,0,.4)" stroke-width="1"/></svg>`;
+    // Position = Spitze (in %), rot = Richtung des Griffs; liegen am Rand, damit nichts verdeckt wird
+    const MACHETE_SPOTS = [{ x: 91, y: 22, rot: 162 }, { x: 22, y: 95.5, rot: -14 }];
+    const throwMachetes = (box, startAt, reduce) => {
+        MACHETE_SPOTS.forEach((m, k) => {
+            const el = document.createElement("span");
+            el.className = "ww-mach";
+            el.style.cssText = `left:${m.x}%;top:${m.y}%;--rot:${m.rot + (Math.random() * 8 - 4)}deg`;
+            el.innerHTML = `<i class="ww-slit"></i><span class="ww-mach-fly">${macheteSvg(k)}</span>`;
+            box.appendChild(el);
+            const hit = () => {
+                el.classList.add("on");
+                if (reduce) return;
+                const modal = document.getElementById("debtModal");
+                setTimeout(() => { modal.classList.remove("ww-recoil"); void modal.offsetWidth; modal.classList.add("ww-recoil"); }, 420);
+            };
+            if (reduce) hit(); else setTimeout(hit, startAt + k * 520);
+        });
+    };
     const shootHoles = () => {
         const box = document.getElementById("wwHoles");
         if (!box) return;
@@ -2598,6 +2639,7 @@
                 modal.classList.remove("ww-recoil"); void modal.offsetWidth; modal.classList.add("ww-recoil");
             }, 950 + k * 170);
         });
+        throwMachetes(box, 950 + spots.length * 170 + 150, reduce);
     };
     const openDebtModal = () => {
         document.getElementById("modalOverlay").style.display = "block";
