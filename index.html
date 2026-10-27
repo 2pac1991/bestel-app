@@ -467,6 +467,29 @@
         .add-rest input { margin-bottom: 8px; }
         .add-rest .btn { grid-column: 1 / -1; }
         .empty-note { color: var(--label-3); font-size: 15px; padding: 6px 0 4px; }
+        .pill + .pill { margin-left: 0; }
+        @media (max-width: 380px) { #menusTriggerBtn span { display: none; } #menusTriggerBtn { padding: 0 12px; } }
+        #menusModal { z-index: 2060; }
+        .menus-home { margin-bottom: 18px; }
+        .menus-grid { display: grid; gap: 8px; }
+        .menus-home .menus-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+        .menus-home .menu-tile b { white-space: normal; line-height: 1.2; }
+        .menus-home .menu-tile .mt-date { display: none; }
+        .menu-tile {
+            display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
+            padding: 12px 14px; border-radius: var(--r-lg); border: .5px solid var(--glass-edge); color: var(--label);
+            background: linear-gradient(180deg, var(--glass-hi) -60%, transparent 38%), var(--glass);
+            -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+            box-shadow: inset 0 1px 0 var(--glass-hi), var(--glass-shadow); font: inherit;
+            transition: transform .35s var(--spring);
+        }
+        #menusModal .menu-tile { background: var(--fill); box-shadow: none; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+        .menu-tile:active { transform: scale(.96); }
+        .menu-tile .mt-ic { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; color: #fff; background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 70%, #fff), var(--tint)); }
+        .menu-tile .mt-ic svg { width: 19px; height: 19px; }
+        .menu-tile .mt-tx { min-width: 0; }
+        .menu-tile b { display: block; font-weight: 650; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .menu-tile small { display: block; font-size: 13px; color: var(--label-3); margin-top: 1px; }
         li.empty-note, ul > .empty-note { padding: 14px 18px; }
         .progress-note { font-size: 14px; color: var(--tint); margin: 6px 0 0; }
 
@@ -1101,6 +1124,10 @@
                 <img src="logo.png" alt="" class="header-logo">
                 <span id="appTitle">Bestell-Liste</span>
             </div>
+            <button id="menusTriggerBtn" class="pill" type="button" aria-label="Alle Speisekarten">
+                <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>
+                <span>Karten</span>
+            </button>
             <button id="debtTriggerBtn" class="pill" type="button">
                 <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
                 <span>Schulden</span>
@@ -1143,6 +1170,10 @@
             <div id="roundsOverview" class="rounds-overview" style="display:none">
                 <div class="section-label"><span class="dot"></span>Laufende Bestellungen</div>
                 <div id="roundsList"></div>
+            </div>
+            <div id="menusHome" class="menus-home" hidden>
+                <div class="section-label">Speisekarten</div>
+                <div id="menusHomeList" class="menus-grid"></div>
             </div>
             <div class="card">
                 <h2 class="setup-title">Neue Bestellung starten</h2>
@@ -1315,6 +1346,15 @@
             <button class="btn" id="adminDebtBtn" type="button">Schulden verwalten</button>
             <button class="btn ghost" id="adminLogoutBtn" type="button" style="margin-top: 8px;">Admin auf diesem Gerät abmelden</button>
         </div>
+    </div>
+
+    <!-- ALLE SPEISEKARTEN -->
+    <div id="menusModal" class="sheet-modal" role="dialog" aria-label="Alle Speisekarten">
+        <div class="debt-modal-header">
+            <div><h2>Speisekarten</h2><span class="menu-meta">Alle verfügbaren Karten</span></div>
+            <button class="debt-modal-close" id="closeMenusBtn" type="button" aria-label="Schließen">✕</button>
+        </div>
+        <div id="menusList" class="menus-grid"></div>
     </div>
 
     <!-- SPEISEKARTE -->
@@ -2475,6 +2515,7 @@
         if (document.getElementById("orderEditModal").style.display === "block") { closeSheet("orderEditModal"); return; }
         if (document.getElementById("roundEditModal").style.display === "block") { closeSheet("roundEditModal"); return; }
         if (document.getElementById("menuModal").style.display === "block") { closeSheet("menuModal"); return; }
+        if (document.getElementById("menusModal").style.display === "block") { closeSheet("menusModal"); return; }
         if (document.getElementById("adminModal").style.display === "block" && document.getElementById("debtModal").style.display !== "block") { closeSheet("adminModal"); return; }
         if(document.getElementById("timeModal").style.display === "block") {
             document.getElementById("cancelModalBtn").click();
@@ -2616,7 +2657,7 @@
     };
     const closeSheet = (id) => {
         $(id).style.display = "none";
-        const stillOpen = ["adminModal", "debtModal", "timeModal", "menuModal", "roundEditModal", "orderEditModal"].some(m => $(m).style.display === "block");
+        const stillOpen = ["adminModal", "debtModal", "timeModal", "menuModal", "menusModal", "roundEditModal", "orderEditModal"].some(m => $(m).style.display === "block");
         if (!stillOpen) $("modalOverlay").style.display = "none";
         document.body.classList.remove("sheet-stack");
     };
@@ -2747,8 +2788,29 @@
         if (phone) { $("callBtn").href = `tel:${phone}`; $("callBtnText").textContent = `${r.name} anrufen`; }
     };
 
+    // ---------- Alle Speisekarten (für jeden, jederzeit) ----------
+    const renderMenuTiles = () => {
+        const list = restEntries().filter(([, r]) => r.menuPages);
+        const html = list.map(([id, r]) => `<button type="button" class="menu-tile" data-rid="${id}">
+                <span class="mt-ic">${bookIcon}</span>
+                <span class="mt-tx"><b>${escapeHtml(r.name)}</b><small>${r.menuPages} ${r.menuPages === 1 ? "Seite" : "Seiten"}<span class="mt-date"> · Stand ${fmtDate(r.menuUpdated)}</span></small></span>
+            </button>`).join("");
+        $("menusList").innerHTML = html || `<div class="empty-note">Noch keine Speisekarten vorhanden.</div>`;
+        $("menusHomeList").innerHTML = html;
+        $("menusHome").hidden = !list.length;
+    };
+    const onTileClick = (e) => {
+        const t = e.target.closest(".menu-tile");
+        if (t) openMenu(t.dataset.rid);
+    };
+    $("menusList").onclick = onTileClick;
+    $("menusHomeList").onclick = onTileClick;
+    $("menusTriggerBtn").onclick = () => { renderMenuTiles(); openSheet("menusModal"); };
+    $("closeMenusBtn").onclick = () => closeSheet("menusModal");
+
     onValue(ref(db, "restaurants"), snap => {
         restaurants = snap.val() || {};
+        renderMenuTiles();
         renderRestChips();
         renderRestList();
         updateRestaurantLinks();
