@@ -99,12 +99,14 @@ const saveState = () => fs.writeFileSync(stateFile, JSON.stringify(state));
 
 const hhmm = (ms) => new Intl.DateTimeFormat('de-AT', { hour: '2-digit', minute: '2-digit', timeZone: TZ }).format(new Date(ms));
 
-const notify = async (message, excludeUserId) => {
+// onlyUserId: nur an die Geräte dieser Person (Testmodus)
+const notify = async (message, excludeUserId, onlyUserId) => {
   const subs = (await dbGet('pushSubs')) || {};
   let sent = 0, removed = 0;
   await Promise.all(Object.entries(subs).map(async ([id, s]) => {
     if (!s || !s.sub || !s.sub.endpoint || s.key !== VAPID_PUBLIC) return;
-    if (excludeUserId && s.userId === excludeUserId) return;
+    if (onlyUserId && s.userId !== onlyUserId) return;
+    if (!onlyUserId && excludeUserId && s.userId === excludeUserId) return;
     if (DRY_RUN) { sent++; return; }
     try {
       const status = await sendPush(s.sub, message);
@@ -113,7 +115,7 @@ const notify = async (message, excludeUserId) => {
       else log(`Push an ${id} fehlgeschlagen: HTTP ${status}`);
     } catch (err) { log(`Push an ${id} fehlgeschlagen:`, err.message); }
   }));
-  log(`"${message.title}" an ${sent} Geräte gesendet${removed ? `, ${removed} abgelaufene entfernt` : ''}`);
+  log(`"${message.title}" an ${sent} Geräte gesendet${onlyUserId ? ' (Testmodus, nur Starter)' : ''}${removed ? `, ${removed} abgelaufene entfernt` : ''}`);
 };
 
 let rounds = {};
@@ -134,14 +136,18 @@ const check = async () => {
       changed = true;
     }
     const res = s.restaurant || 'Essen';
+    // Test-Bestellungen (Testmodus in der App): nur der Starter selbst bekommt die Nachricht
+    const test = !!s.test;
+    const pre = test ? '🧪 TEST · ' : '';
+    const only = test ? s.adminId || '__niemand__' : null;
     if (open && !st.start) {
       st.start = true; changed = true;
       const who = s.adminName ? `${s.adminName} hat eine Bestellung gestartet. ` : '';
       await notify({
-        title: `🍔 Neue Bestellung: ${res}`,
+        title: `${pre}🍔 Neue Bestellung: ${res}`,
         body: `${who}Bestellen bis ${hhmm(s.endTime)} Uhr · Lieferung ${s.time || '--:--'} Uhr · ${s.chamber || ''}`.trim(),
         url: `${SITE_URL}/?b=${id}`, tag: `round-${id}`,
-      }, s.adminId);
+      }, s.adminId, only);
     }
     if (!open && st.start && !st.stop) {
       st.stop = true; changed = true;
@@ -149,10 +155,10 @@ const check = async () => {
       const manual = s.orderActive === false;
       if (now - s.endTime < 60 * 60 * 1000 || manual) {
         await notify({
-          title: manual ? `✅ Bestellung beendet: ${res}` : `⏰ Bestellschluss: ${res}`,
+          title: `${pre}${manual ? `✅ Bestellung beendet: ${res}` : `⏰ Bestellschluss: ${res}`}`,
           body: `${count} ${count === 1 ? 'Bestellung' : 'Bestellungen'} · Lieferung ${s.time || '--:--'} Uhr · ${s.chamber || ''}`.trim(),
           url: `${SITE_URL}/?b=${id}`, tag: `round-${id}`,
-        }, manual ? s.stoppedBy : null);
+        }, manual ? s.stoppedBy : null, only);
       }
     }
     if (open && st.stop) { st.stop = false; changed = true; } // Bestellschluss wurde verlängert
