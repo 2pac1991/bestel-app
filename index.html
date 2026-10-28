@@ -317,6 +317,14 @@
             border: 0; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; font-weight: 700; color: #3a2000;
             background: linear-gradient(180deg, #ffd27a, #ff9f0a); box-shadow: 0 6px 18px -6px rgba(255,140,0,.6); white-space: nowrap;
         }
+        #langModal { z-index: 2065; }
+        .lang-choice { display: grid; gap: 10px; }
+        .lang-btn { display: flex; align-items: center; gap: 14px; text-align: left; padding: 14px 16px; margin: 0; }
+        .lang-btn .flag { font-size: 30px; line-height: 1; }
+        .lang-btn b { display: block; font-size: 17px; } .lang-btn small { display: block; font-size: 13px; color: var(--label-3); font-weight: 500; }
+        #langText { width: 100%; min-height: 230px; font-size: 15px; line-height: 1.45; margin-bottom: 12px; resize: vertical; }
+        .lang-send { width: 100%; }
+        .lang-send:disabled { opacity: .5; }
         .test-hint { margin: -8px 0 14px; padding: 9px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; color: #8a4b00; background: color-mix(in srgb, var(--orange) 16%, transparent); }
         .test-card { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--orange) 55%, transparent) !important; }
         .round-mine { align-self: flex-start; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--tint-soft); color: var(--tint); margin-bottom: 3px; }
@@ -1454,6 +1462,24 @@
         </div>
     </div>
 
+    <!-- SPRACHE FÜR WHATSAPP (z. B. Wok & Box) -->
+    <div id="langModal" class="sheet-modal" role="dialog" aria-label="Sprache wählen">
+        <div class="debt-modal-header">
+            <div><h2>Bestellung senden</h2><span class="menu-meta" id="langMeta">In welcher Sprache?</span></div>
+            <button class="debt-modal-close" id="closeLangBtn" type="button" aria-label="Schließen">✕</button>
+        </div>
+        <div id="langChoice" class="lang-choice">
+            <button class="btn lang-btn" id="langDeBtn" type="button"><span class="flag">🇩🇪</span><span><b>Deutsch</b><small>So wie immer</small></span></button>
+            <button class="btn lang-btn" id="langZhBtn" type="button"><span class="flag">🇨🇳</span><span><b>中文 · Chinesisch</b><small>Wird automatisch übersetzt</small></span></button>
+        </div>
+        <div id="langPreview" hidden>
+            <p class="setup-hint" id="langStatus">Wird übersetzt …</p>
+            <textarea id="langText" rows="12" spellcheck="false"></textarea>
+            <button class="wa-btn lang-send" id="langSendBtn" type="button" disabled>Auf WhatsApp senden</button>
+            <button class="btn ghost" id="langBackBtn" type="button" style="margin-top:8px">Zurück</button>
+        </div>
+    </div>
+
     <!-- ALLE SPEISEKARTEN -->
     <div id="menusModal" class="sheet-modal" role="dialog" aria-label="Alle Speisekarten">
         <div class="debt-modal-header">
@@ -2479,14 +2505,99 @@
         }
     };
 
+    const openWa = (text) => window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    const germanSummary = (s, items) => {
+        let m = `${seasonCfg ? seasonCfg.emoji + " " : ""}*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${items.length}\n––––––––––––––––––\n`;
+        items.forEach(it => { m += `• ${it.name} (${it.user})\n`; });
+        return m;
+    };
+    // Restaurants, bei denen nach der Sprache gefragt wird
+    const askLanguage = (name) => /wok\s*(&|und|n|and)?\s*box/i.test(String(name || ""));
+
+    // ---------- Übersetzung ins Chinesische ----------
+    // Begriffe aus der Wok-&-Box-Karte (Ersatz, falls die Online-Übersetzung nicht erreichbar ist)
+    const ZH_TERMS = [
+        ["gebratene nudeln", "炒面"], ["geb. nudeln", "炒面"], ["gebratener reis", "炒饭"], ["geb. eierreis", "蛋炒饭"], ["eierreis", "蛋炒饭"],
+        ["jasmin reis", "茉莉香米饭"], ["jasminreis", "茉莉香米饭"], ["geb. udon", "炒乌冬面"], ["udon", "乌冬面"], ["biang-biang nudeln", "biangbiang面"],
+        ["spicy rice bowl", "香辣饭"], ["poke bowl", "波奇饭"], ["bowl", "饭碗"], ["mit gemüse", "配蔬菜"], ["wok-gemüse", "炒蔬菜"], ["gemüse", "蔬菜"],
+        ["knuspriger huhn", "脆皮鸡"], ["knuspriges huhn", "脆皮鸡"], ["knusprige hähnchenkeule", "脆皮鸡腿"], ["hähnchenkeule", "鸡腿"],
+        ["knusprige ente", "脆皮鸭"], ["knuspriger ente", "脆皮鸭"], ["knusprigen ente", "脆皮鸭"], ["knuspriges hühnerfleisch", "脆皮鸡"], ["knusprigem huhn", "脆皮鸡"], ["knusprigen huhn", "脆皮鸡"], ["ente", "鸭肉"], ["hühnerfleisch", "鸡肉"], ["huhn", "鸡肉"], ["hühnerspieß", "鸡肉串"],
+        ["rindfleisch", "牛肉"], ["rind", "牛肉"], ["bulgogi", "韩式烤牛肉"], ["garnelen", "虾"], ["gegrillter lachs", "烤三文鱼"], ["lachs", "三文鱼"], ["tofu", "豆腐"],
+        ["süß-sauer", "酸甜"], ["sweet-sour", "酸甜"], ["sweet-chili", "甜辣"], ["knoblauch", "蒜蓉"], ["teriyaki", "照烧"], ["sauce", "酱"], ["soße", "酱"],
+        ["cashewnüsse", "腰果"], ["thai curry", "泰式咖喱"], ["szechuan", "四川风味"], ["gong bao", "宫保"], ["gala masala", "咖喱"],
+        ["mini frühlingsrollen", "迷你春卷"], ["frühlingsrollen", "春卷"], ["gyoza", "煎饺"], ["wantan suppe", "馄饨汤"], ["gebackene wantan", "炸馄饨"], ["wantan", "馄饨"],
+        ["pikant säuerliche suppe", "酸辣汤"], ["miso suppe", "味噌汤"], ["suppe", "汤"], ["edamame", "毛豆"], ["chicken nuggets", "鸡块"], ["popcorn chicken", "鸡米花"],
+        ["gebackene tempura garnelen", "天妇罗炸虾"], ["hummerchips", "虾片"], ["wakame salat", "海藻沙拉"], ["gurkensalat", "黄瓜沙拉"], ["salat", "沙拉"],
+        ["sushi set", "寿司套餐"], ["sushi", "寿司"], ["maki", "卷"], ["roll", "卷"], ["bento", "便当"], ["gebackene bananen", "炸香蕉"], ["taro kuchen", "芋头饼"],
+        ["mit", "加"], ["ohne", "不要"], ["extra", "多加"], ["scharf", "辣"], ["nicht scharf", "不辣"], ["groß", "大"], ["klein", "小"],
+        ["cola zero", "零度可乐"], ["cola", "可乐"], ["fanta", "芬达"], ["sprite", "雪碧"], ["eistee", "冰茶"], ["wasser", "水"], ["und", "和"]
+    ].sort((a, b) => b[0].length - a[0].length);
+    const zhByTerms = (t) => {
+        let out = " " + String(t) + " ";
+        for (const [de, zh] of ZH_TERMS) {
+            const re = new RegExp(`(^|[^a-zäöüß])${de.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[^a-zäöüß])`, "gi");
+            out = out.replace(re, `$1${zh}`);
+        }
+        // Leerzeichen zwischen chinesischen Zeichen entfernen, Komma anpassen
+        return out.trim().replace(/([\u4e00-\u9fff])\s+(?=[\u4e00-\u9fff])/g, "$1").replace(/([\u4e00-\u9fff]),\s*/g, "$1，");
+    };
+    // Online-Übersetzung (Google, ohne Schlüssel); jede Bestellung eine Zeile
+    const translateZh = async (lines) => {
+        const q = lines.map(l => l.replace(/\n/g, " ")).join("\n");
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 6000);
+        try {
+            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=de&tl=zh-CN&dt=t&q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const data = await res.json();
+            const out = (data[0] || []).map(seg => seg[0] || "").join("").split("\n").map(x => x.trim());
+            if (out.length !== lines.length) throw new Error("Zeilen passen nicht");
+            return { lines: out, online: true };
+        } catch {
+            return { lines: lines.map(zhByTerms), online: false };
+        } finally { clearTimeout(timer); }
+    };
+    const ZH_GATE = { "nord-tor": "北门", "haupt-tor": "正门" };
+    const chineseSummary = async (s, items) => {
+        const { lines, online } = await translateZh(items.map(it => it.name));
+        const gate = s.gate ? `${ZH_GATE[String(s.gate).toLowerCase()] || ""} (${s.gate})`.trim() : "---";
+        let m = `您好！我们想订餐 🙏\n*🍽️ 订单：${s.restaurant || '---'}*\n🕒 送餐时间：${s.time || '---'}\n🚪 门：${gate}\n🥡 份数：${items.length}\n––––––––––––––––––\n`;
+        items.forEach((it, i) => { m += `${i + 1}. ${lines[i] || it.name}\n    (${it.name})\n`; });
+        m += `––––––––––––––––––\n谢谢！`;
+        return { text: m, online };
+    };
+
+    let langCtx = null;
+    const showLangChoice = () => { $("langChoice").hidden = false; $("langPreview").hidden = true; $("langMeta").textContent = "In welcher Sprache?"; };
+    $("closeLangBtn").onclick = () => closeSheet("langModal");
+    $("langBackBtn").onclick = showLangChoice;
+    $("langDeBtn").onclick = () => { if (!langCtx) return; openWa(germanSummary(langCtx.s, langCtx.items)); closeSheet("langModal"); };
+    $("langZhBtn").onclick = async () => {
+        if (!langCtx) return;
+        const ctx = langCtx;
+        $("langChoice").hidden = true; $("langPreview").hidden = false;
+        $("langMeta").textContent = "Chinesisch · bitte kurz prüfen";
+        $("langStatus").textContent = "Wird übersetzt …";
+        $("langText").value = ""; $("langSendBtn").disabled = true;
+        const { text, online } = await chineseSummary(ctx.s, ctx.items);
+        if (langCtx !== ctx) return;
+        $("langText").value = text;
+        $("langStatus").textContent = online
+            ? "Automatisch übersetzt. Das Deutsche steht in Klammern dabei, du kannst den Text noch ändern."
+            : "Online-Übersetzung nicht erreichbar – Begriffe von der Speisekarte wurden ersetzt, das Deutsche steht in Klammern dabei.";
+        $("langSendBtn").disabled = false;
+    };
+    $("langSendBtn").onclick = () => { openWa($("langText").value); closeSheet("langModal"); };
+
     document.getElementById("shareWaBtn").onclick = async () => {
         const [sS, oS] = await Promise.all([get(ref(db, `${base}/settings`)), get(ref(db, `${base}/orders`))]);
         const s = sS.val() || {};
-        let m = `${seasonCfg ? seasonCfg.emoji + " " : ""}*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${oS.exists() ? oS.size : 0}\n––––––––––––––––––\n`;
-        if(oS.exists()) {
-            oS.forEach(c => { m += `• ${c.val().name} (${c.val().user})\n`; });
-        }
-        window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
+        const items = [];
+        if (oS.exists()) oS.forEach(c => { items.push({ name: c.val().name || "", user: c.val().user || "" }); });
+        if (!askLanguage(s.restaurant)) { openWa(germanSummary(s, items)); return; }
+        langCtx = { s, items };
+        showLangChoice();
+        openSheet("langModal");
     };
 
     document.getElementById("shareLinkBtn").onclick = async () => {
@@ -2683,6 +2794,7 @@
         if (document.getElementById("roundEditModal").style.display === "block") { closeSheet("roundEditModal"); return; }
         if (document.getElementById("menuModal").style.display === "block") { closeSheet("menuModal"); return; }
         if (document.getElementById("menusModal").style.display === "block") { closeSheet("menusModal"); return; }
+        if (document.getElementById("langModal").style.display === "block") { closeSheet("langModal"); return; }
         if (document.getElementById("adminModal").style.display === "block" && document.getElementById("debtModal").style.display !== "block") { closeSheet("adminModal"); return; }
         if(document.getElementById("timeModal").style.display === "block") {
             document.getElementById("cancelModalBtn").click();
@@ -2824,7 +2936,7 @@
     };
     const closeSheet = (id) => {
         $(id).style.display = "none";
-        const stillOpen = ["adminModal", "debtModal", "timeModal", "menuModal", "menusModal", "roundEditModal", "orderEditModal"].some(m => $(m).style.display === "block");
+        const stillOpen = ["adminModal", "debtModal", "timeModal", "menuModal", "menusModal", "langModal", "roundEditModal", "orderEditModal"].some(m => $(m).style.display === "block");
         if (!stillOpen) $("modalOverlay").style.display = "none";
         document.body.classList.remove("sheet-stack");
     };
