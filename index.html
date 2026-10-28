@@ -2505,6 +2505,7 @@
         }
     };
 
+    const byId = (id) => document.getElementById(id);
     const openWa = (text) => window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     const germanSummary = (s, items) => {
         let m = `${seasonCfg ? seasonCfg.emoji + " " : ""}*🍽️ BESTELLUNG: ${s.restaurant || '---'}*\n🕒 Zeit: ${s.time || '---'} Uhr\n🚪 Tor: ${s.gate || '---'}\n🥡 Mahlzeiten: x${items.length}\n––––––––––––––––––\n`;
@@ -2568,26 +2569,26 @@
     };
 
     let langCtx = null;
-    const showLangChoice = () => { $("langChoice").hidden = false; $("langPreview").hidden = true; $("langMeta").textContent = "In welcher Sprache?"; };
-    $("closeLangBtn").onclick = () => closeSheet("langModal");
-    $("langBackBtn").onclick = showLangChoice;
-    $("langDeBtn").onclick = () => { if (!langCtx) return; openWa(germanSummary(langCtx.s, langCtx.items)); closeSheet("langModal"); };
-    $("langZhBtn").onclick = async () => {
+    const showLangChoice = () => { byId("langChoice").hidden = false; byId("langPreview").hidden = true; byId("langMeta").textContent = "In welcher Sprache?"; };
+    byId("closeLangBtn").onclick = () => closeSheet("langModal");
+    byId("langBackBtn").onclick = showLangChoice;
+    byId("langDeBtn").onclick = () => { if (!langCtx) return; openWa(germanSummary(langCtx.s, langCtx.items)); closeSheet("langModal"); };
+    byId("langZhBtn").onclick = async () => {
         if (!langCtx) return;
         const ctx = langCtx;
-        $("langChoice").hidden = true; $("langPreview").hidden = false;
-        $("langMeta").textContent = "Chinesisch · bitte kurz prüfen";
-        $("langStatus").textContent = "Wird übersetzt …";
-        $("langText").value = ""; $("langSendBtn").disabled = true;
+        byId("langChoice").hidden = true; byId("langPreview").hidden = false;
+        byId("langMeta").textContent = "Chinesisch · bitte kurz prüfen";
+        byId("langStatus").textContent = "Wird übersetzt …";
+        byId("langText").value = ""; byId("langSendBtn").disabled = true;
         const { text, online } = await chineseSummary(ctx.s, ctx.items);
         if (langCtx !== ctx) return;
-        $("langText").value = text;
-        $("langStatus").textContent = online
+        byId("langText").value = text;
+        byId("langStatus").textContent = online
             ? "Automatisch übersetzt. Das Deutsche steht in Klammern dabei, du kannst den Text noch ändern."
             : "Online-Übersetzung nicht erreichbar – Begriffe von der Speisekarte wurden ersetzt, das Deutsche steht in Klammern dabei.";
-        $("langSendBtn").disabled = false;
+        byId("langSendBtn").disabled = false;
     };
-    $("langSendBtn").onclick = () => { openWa($("langText").value); closeSheet("langModal"); };
+    byId("langSendBtn").onclick = () => { openWa(byId("langText").value); closeSheet("langModal"); };
 
     document.getElementById("shareWaBtn").onclick = async () => {
         const [sS, oS] = await Promise.all([get(ref(db, `${base}/settings`)), get(ref(db, `${base}/orders`))]);
