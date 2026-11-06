@@ -1595,7 +1595,14 @@
 
     let userId = localStorage.getItem("userId") || Math.random().toString(36).substr(2, 9);
     localStorage.setItem("userId", userId);
-    let userName = localStorage.getItem("userName") || "Gast";
+    // Spitznamen: wer sich so nennt, heißt automatisch anders (Groß-/Kleinschreibung egal)
+    const NAME_ALIASES = { "meo": "Maniak" };
+    const fixName = (n) => {
+        const t = String(n ?? "").trim();
+        return NAME_ALIASES[t.toLowerCase()] || t;
+    };
+    let userName = fixName(localStorage.getItem("userName")) || "Gast";
+    if (userName !== "Gast") localStorage.setItem("userName", userName);
 
     let isDebtAdmin = false;
 
@@ -1946,7 +1953,7 @@
 
     const setUserName = (newName) => {
         if(newName && newName.trim() && newName.trim() !== "Gast") {
-            userName = newName.trim();
+            userName = fixName(newName);
             localStorage.setItem("userName", userName);
             updateAvatar();
             return true;
@@ -2355,7 +2362,7 @@
                 if(!setUserName(n)) return; 
             }
             const forInp = document.getElementById("orderForName");
-            const forName = hasAdminRights() ? forInp.value.trim() : "";
+            const forName = hasAdminRights() ? fixName(forInp.value) : "";
             const entry = {name: inp.value.trim(), user: forName || userName, owner: userId, paid: false};
             if (forName) entry.addedBy = userName;
             push(ref(db, `${base}/orders`), entry); 
@@ -2707,7 +2714,7 @@
         if (!item) { alert("Die Bestellung darf nicht leer sein."); return; }
         const changes = { name: item };
         if (hasAdminRights()) {
-            const n = document.getElementById("oeName").value.trim();
+            const n = fixName(document.getElementById("oeName").value);
             if (n) changes.user = n;
         }
         try {
@@ -2809,7 +2816,7 @@
         
         const userInp = document.getElementById("debtUser");
         const amountInp = document.getElementById("debtAmount");
-        const nameVal = userInp.value.trim();
+        const nameVal = fixName(userInp.value);
         let amountVal = amountInp.value.trim();
 
         if(nameVal && amountVal) {
@@ -3549,8 +3556,9 @@
         const n = document.getElementById("lateName"), it = document.getElementById("lateItem");
         if (!n.value.trim()) { n.focus(); return; }
         if (!it.value.trim()) { it.focus(); return; }
-        await push(ref(db, `${base}/orders`), { name: it.value.trim(), user: n.value.trim(), owner: userId, paid: false, addedBy: userName, late: true });
-        showToast(`Für ${n.value.trim()} nachgetragen`);
+        const lateUser = fixName(n.value);
+        await push(ref(db, `${base}/orders`), { name: it.value.trim(), user: lateUser, owner: userId, paid: false, addedBy: userName, late: true });
+        showToast(`Für ${lateUser} nachgetragen`);
         n.value = ""; it.value = "";
     };
 
