@@ -510,6 +510,7 @@
         .progress-note { font-size: 14px; color: var(--tint); margin: 6px 0 0; }
 
         /* Restaurant-Vorschläge beim Starten */
+        .rest-fav { margin: -6px 0 16px; }
         .rest-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 16px; }
         .rest-chip {
             border-radius: 999px; padding: 7px 13px; font-size: 14px; font-weight: 500; color: var(--label);
@@ -1280,17 +1281,13 @@
                 <div class="section-label"><span class="dot"></span>Laufende Bestellungen</div>
                 <div id="roundsList"></div>
             </div>
-            <div id="menusHome" class="menus-home" hidden>
-                <div class="section-label">Speisekarten</div>
-                <div id="menusHomeList" class="menus-grid"></div>
-            </div>
             <div class="card">
                 <h2 class="setup-title">Neue Bestellung starten</h2>
                 <p class="setup-hint">Alle anderen bekommen eine Benachrichtigung.</p>
                 <span class="label">Restaurant</span>
                 <input id="restaurant" placeholder="z. B. Baron" autocomplete="off" list="restDatalist">
                 <datalist id="restDatalist"></datalist>
-                <div id="restChips" class="rest-chips" hidden></div>
+                <select id="restFav" class="rest-fav" aria-label="Favoriten" hidden></select>
                 <div class="field-grid">
                     <div>
                         <span class="label">Lieferung um</span>
@@ -3040,20 +3037,20 @@
     const bookIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>`;
 
     const renderRestChips = () => {
-        const box = $("restChips");
+        const box = $("restFav");
         const list = restEntries();
         box.hidden = !list.length;
         const current = $("restaurant").value.trim().toLowerCase();
-        box.innerHTML = list.map(([id, r]) =>
-            `<button type="button" class="rest-chip" data-name="${escapeHtml(r.name)}" aria-pressed="${r.name.trim().toLowerCase() === current}">${r.menuPages ? bookIcon : ""}${escapeHtml(r.name)}</button>`
+        const hit = list.find(([, r]) => r.name.trim().toLowerCase() === current);
+        box.innerHTML = `<option value="">⭐ Favoriten auswählen …</option>` + list.map(([, r]) =>
+            `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`
         ).join("");
+        box.value = hit ? hit[1].name : "";
         $("restDatalist").innerHTML = list.map(([, r]) => `<option value="${escapeHtml(r.name)}">`).join("");
     };
-    $("restChips").onclick = (e) => {
-        const chip = e.target.closest(".rest-chip");
-        if (!chip) return;
-        $("restaurant").value = chip.dataset.name;
-        renderRestChips();
+    $("restFav").onchange = (e) => {
+        if (!e.target.value) return;
+        $("restaurant").value = e.target.value;
     };
     $("restaurant").addEventListener("input", renderRestChips);
 
@@ -3098,15 +3095,12 @@
                 <span class="mt-tx"><b>${escapeHtml(r.name)}</b><small>${r.menuPages} ${r.menuPages === 1 ? "Seite" : "Seiten"}<span class="mt-date"> · Stand ${fmtDate(r.menuUpdated)}</span></small></span>
             </button>`).join("");
         $("menusList").innerHTML = html || `<div class="empty-note">Noch keine Speisekarten vorhanden.</div>`;
-        $("menusHomeList").innerHTML = html;
-        $("menusHome").hidden = !list.length;
     };
     const onTileClick = (e) => {
         const t = e.target.closest(".menu-tile");
         if (t) openMenu(t.dataset.rid);
     };
     $("menusList").onclick = onTileClick;
-    $("menusHomeList").onclick = onTileClick;
     $("menusTriggerBtn").onclick = () => { renderMenuTiles(); openSheet("menusModal"); };
     $("closeMenusBtn").onclick = () => closeSheet("menusModal");
 
